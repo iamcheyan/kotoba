@@ -21,8 +21,8 @@
 ### インストール方法
 1. リポジトリをクローン：
 ```bash
-git clone https://github.com/yourusername/japanese-word-learning.git
-cd japanese-word-learning
+git clone https://github.com/iamcheyan/kotoba
+cd kotoba
 ```
 
 2. 依存関係のインストール：
@@ -71,8 +71,8 @@ A web-based Japanese language learning tool that helps users practice Japanese v
 ### Installation
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/japanese-word-learning.git
-cd japanese-word-learning
+git clone https://github.com/iamcheyan/kotoba
+cd kotoba
 ```
 
 2. Install dependencies:
@@ -121,8 +121,8 @@ MIT License
 ### 安装方法
 1. 克隆仓库：
 ```bash
-git clone https://github.com/yourusername/japanese-word-learning.git
-cd japanese-word-learning
+git clone https://github.com/iamcheyan/kotoba
+cd kotoba
 ```
 
 2. 安装依赖：
