@@ -11,11 +11,15 @@ import pywebio
 import urllib.parse
 import sys
 import argparse
+from pywebio.session import info as session_info
+from pywebio.session import run_async, run_js
+import threading
+import time
 
 # pywebio 基础配置
 pywebio.config(
     title='言葉',
-    theme="sketchy",
+    theme="sketchy",    # 可用主题有： dark, sketchy, minty, yeti 
     description='単語学習ツール'
 )
 
@@ -23,6 +27,10 @@ DICTIONARIES = [
     'base.json',
     'conversation.json'
 ]
+
+# 添加全局变量来跟踪在线用户
+online_users = {}
+users_lock = threading.Lock()
 
 # 从 JSON 文件加载单词库
 def load_words(dictionary_file='base.json'):
@@ -89,7 +97,48 @@ def get_url_params():
         print(f"Error in get_url_params: {e}")
         return {}
 
+def get_unique_session_id():
+    # 获取用户 IP
+    ip = session_info.user_ip
+    # 获取用户代理信息
+    user_agent = eval_js('navigator.userAgent')
+    # 获取浏览器指纹（使用用户代理的哈希值）
+    browser_fingerprint = hash(user_agent)
+    # 组合成唯一标识（不再使用时间戳）
+    return f"{ip}-{browser_fingerprint}"
+
 def main():
+    global online_users
+    
+    # 使用新的方法获取唯一会话 ID
+    user_id = get_unique_session_id()
+    
+    # 打印调试信息
+    print(f"New user connected: {user_id}")
+    
+    # 注册用户
+    with users_lock:
+        online_users[user_id] = time.time()
+        print(f"Current online users: {len(online_users)}")  # 调试信息
+    
+    # 定期更新用户活跃时间
+    def keep_alive():
+        while True:
+            with users_lock:
+                online_users[user_id] = time.time()
+            time.sleep(60)  # 每分钟更新一次
+    
+    # 启动保活线程
+    threading.Thread(target=keep_alive, daemon=True).start()
+    
+    # 注册会话结束回调
+    def on_close():
+        with users_lock:
+            if user_id in online_users:
+                del online_users[user_id]
+    
+    pywebio.session.register_thread(on_close)
+    
     # 在函数开始时声明全局变量
     global words
     
@@ -120,16 +169,12 @@ def main():
         }
     """)
     
-    # 创建固定的头部
-    with use_scope('header'):
-        put_markdown('### 🌱 言葉')
-        
     # 创建统计信息区域
     put_scope('stats')
     update_header(study_mode)
     
     # 创建问题区域的 scope
-    put_scope('question')
+    put_scope('question').style('margin: 0 20px; text-align: center;')
     put_scope('alerts')  # 添加一个专门的 scope 用于显示提示信息
     
     while True:
@@ -145,16 +190,16 @@ def main():
             # 更新问题区域
             with use_scope('question', clear=True):
                 # 显示汉字和释义
-                put_markdown(f'## {kanji}')
-                put_text(f'意味：{correct_answer[1]}')
+                put_markdown(f'## {kanji}').style("border:none;")
+                put_text(f'{correct_answer[1]}')
                 
                 # 默认显示假名，study_mode 时不显示
                 if not study_mode:
-                    put_text(f'読み方：{correct_answer[0]}').style('color: #999;')
+                    put_text(f'{correct_answer[0]}').style('color: #999;')
                 
                 # 获取用户输入，非学习模式下默认显示假名
                 answer = input(f'{kanji}', placeholder=correct_answer[0] if not study_mode else '')
-            
+                
             # 检查答案（在专门的提示区域显示结果）
             with use_scope('alerts', clear=True):
                 if check_answer(kanji, answer, correct_answer):
@@ -211,32 +256,72 @@ def update_header(study_mode):
                         close_popup()
                         break
 
-
-        # 添加统计信息
-        put_row([
-            # put_text(f'正解: {correct} | 不正解: {wrong} | 総単語: {len(words)}'), 
-            put_text(f'正解: {correct} |  総単語: {len(words)}'), 
-            put_html('''
-                <style>
-                    .btn-group-sm > .btn, .btn-sm {
-                        padding: 0;
-                    }
-                </style>
-            '''),
-            put_buttons(
-                [
-                    '📘 辞書',
-                    f'👍 通常' if study_mode else '👌 学習'
-                ],
-                onclick=[
-                    lambda: show_dictionary_selector(),
-                    lambda: run_js(f'window.location.href = "{normal_url if study_mode else study_url + "&study"}"')
-                ],
-                small=True,
-                link_style=True
-            ).style('text-align: right;')
-        ], size='50% 50%')
-
+        # 获取在线用户数
+        def get_online_users():
+            global online_users
+            with users_lock:
+                # 清理超时的用户（改为60秒超时）
+                current_time = time.time()
+                before_cleanup = len(online_users)
+                online_users = {k: v for k, v in online_users.items() if current_time - v < 60}  # 1分钟超时
+                after_cleanup = len(online_users)
+                
+                # 打印调试信息
+                print(f"Online users before cleanup: {before_cleanup}")
+                print(f"Online users after cleanup: {after_cleanup}")
+                print(f"Active sessions: {list(online_users.keys())}")
+                
+                return len(online_users)
+        
+        # 创建固定的头部
+        online_users = get_online_users()
+        with use_scope('header'):
+            
+            put_row([
+                # 添加logo
+                # https://www.svgrepo.com/svg/406038/leaf-fluttering-in-wind
+                # 5dadec
+                put_html('''
+                    <div style="margin-top: 0; position:relative; ">
+                        <svg width="42px" height="42px" viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" role="img" class="iconify iconify--twemoji" preserveAspectRatio="xMidYMid meet" fill="#000000"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"><path fill="#A6D388" d="M6.401 28.55c5.006 5.006 16.502 11.969 29.533-.07c-7.366-1.417-8.662-10.789-13.669-15.794c-5.006-5.007-11.991-6.139-16.998-1.133c-5.006 5.006-3.873 11.99 1.134 16.997z"></path><path fill="#77B255" d="M24.684 29.81c6.128 1.634 10.658-.738 11.076-1.156c0 0-3.786 1.751-10.359-1.476c.952-1.212 3.854-2.909 3.854-2.909c-.553-.346-4.078-.225-6.485 1.429a37.028 37.028 0 0 1-3.673-2.675l.84-.871c3.25-3.384 6.944-2.584 6.944-2.584c-.638-.613-5.599-3.441-9.583.7l-.613.638a54.727 54.727 0 0 1-1.294-1.25l-1.85-1.85l1.064-1.065c3.321-3.32 8.226-3.451 8.226-3.451c-.626-.627-6.863-2.649-10.924 1.412l-.736.735l-8.292-8.294c-.626-.627-1.692-.575-2.317.05c-.626.626-.677 1.691-.051 2.317l8.293 8.293l-.059.059C4.684 21.924 6.37 28.496 6.997 29.123c0 0 .468-5.242 3.789-8.562l.387-.388l3.501 3.502c.057.057.113.106.17.163c-2.425 4.797 1.229 10.34 1.958 10.784c0 0-1.465-4.723.48-8.635c1.526 1.195 3.02 2.095 4.457 2.755c.083 2.993 2.707 5.7 3.344 5.931c0 0-.911-3.003-.534-4.487l.135-.376z"></path><path d="M22.083 10a1.001 1.001 0 0 1-.375-1.927c.166-.068 4.016-1.698 4.416-6.163a1 1 0 1 1 1.992.178c-.512 5.711-5.451 7.755-5.661 7.839a.978.978 0 0 1-.372.073zm5 4a1 1 0 0 1-.334-1.942c.188-.068 4.525-1.711 5.38-8.188a.99.99 0 0 1 1.122-.86a.998.998 0 0 1 .86 1.122c-1.021 7.75-6.468 9.733-6.699 9.813c-.109.037-.22.055-.329.055zm3.001 6a1.001 1.001 0 0 1-.483-1.876c.027-.015 2.751-1.536 3.601-3.518a1 1 0 0 1 1.837.788c-1.123 2.62-4.339 4.408-4.475 4.483a1.003 1.003 0 0 1-.48.123z" fill="#5DADEC"></path></g></svg>   
+                        <a href='/' title='' style='position:absolute; bottom:15px;color: #000;'>言葉</a>
+                    </div>
+                    <style>
+                        .btn-group-sm > .btn, .btn-sm {
+                            padding: 0;
+                        }
+                        .markdown-body blockquote, .markdown-body dl, .markdown-body ol, .markdown-body p, .markdown-body pre, .markdown-body table, .markdown-body ul, .markdown-body details {
+                            margin: 0;
+                        }
+                    </style>
+                '''),
+                put_grid([
+                    [put_text(f'現在 {online_users}人が勉強中').style('color: #666; font-size: 0.8em;  ')], 
+                    [put_buttons(
+                        [
+                            '📘 辞書',
+                            f'👍 通常' if study_mode else '👌 学習'
+                        ],
+                        onclick=[
+                            lambda: show_dictionary_selector(),
+                            lambda: run_js(f'window.location.href = "{normal_url if study_mode else study_url + "&study"}"')
+                        ],
+                        small=True,
+                        link_style=True
+                    ).style('text-align: right;')],
+                    
+                ], ).style(' text-align: right;font-weight: normal;')
+            ], size='50% 50%')
+            
+            [put_text(f'正解: {correct} | 不正解: {wrong} | 総単語: {len(words)}').style("""white-space: pre-wrap;
+                                                                                            font-size: 0.8em;
+                                                                                            font-weight: normal;
+                                                                                            margin: 0 0 10px 0;
+                                                                                            color: #666;
+                                                                                            text-align: center;
+                                                                                            border-top: 1px solid #eee;
+                                                                                            padding-top: 20px;""")]
+                                                                                                        
 def switch_dictionary(dictionary_file):
     global words
     print(f"Switching to dictionary: {dictionary_file}")
