@@ -2,7 +2,7 @@
 
 ウェブベースの日本語学習ツールです。インタラクティブなインターフェースを通じて、ユーザーが日本語の語彙を練習することができます。学習モードと練習モードの両方をサポートしており、様々なレベルの学習者に適しています。
 
-![](/home/tetsuya/Development/iamcheyan.com/小工具/言葉/assets/image-20250105223827741.png)
+![](assets/image-20250105223827741.png)
 
  [日本語](#japanese) | [English](#english) | [中文](#chinese) 
 
