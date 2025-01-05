@@ -37,6 +37,15 @@ python app.py
 
 アプリケーションは `http://localhost:5000` で利用可能になります
 
+### Docker で一発で実行
+
+
+```bash
+docker run  --restart unless-stopped --name=kotoba -d -p 5000:5000 mkdirhao/kotoba:latest
+```
+アプリケーションは `http://localhost:5000` で利用可能になります
+
+
 ### 使用方法
 - ブラウザからウェブインターフェースにアクセス
 - 使用したい辞書を選択
@@ -85,6 +94,13 @@ pip install -r requirements.txt
 python app.py
 ```
 
+The application will be available at `http://localhost:5000`
+
+### One-click Docker execution
+
+```bash
+docker run  --restart unless-stopped --name=kotoba -d -p 5000:5000 mkdirhao/kotoba:latest
+```
 The application will be available at `http://localhost:5000`
 
 ### Usage
@@ -136,6 +152,14 @@ python app.py
 ```
 
 应用将在 `http://localhost:5000` 运行
+
+### docker一键运行
+
+```bash
+docker run  --restart unless-stopped --name=kotoba -d -p 5000:5000 mkdirhao/kotoba:latest
+```
+应用将在 `http://localhost:5000` 运行
+
 
 ### 使用方法
 - 通过浏览器访问网页界面
