@@ -26,7 +26,8 @@ pywebio.config(
 
 DICTIONARIES = [
     'base.json',
-    'conversation.json'
+    'conversation.json',
+    'katakana.json'
 ]
 
 # 添加全局变量来跟踪在线用户
@@ -371,7 +372,7 @@ def main():
                     put_text(f'{correct_answer[2]}').style('color: #999;')
                 
                 # 获取用户输入（根据设置显示或隐藏提示文字）
-                answer = input(f'{kanji}', placeholder=correct_answer[0] if show_placeholder else '')
+                answer = input(f'{kanji}', placeholder=correct_answer[0] if show_placeholder else '', autocomplete="off")   # 输入框
                 
             # 处理iOS软键盘收起时的页面滚动问题
             run_js('''
