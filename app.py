@@ -57,6 +57,7 @@ def load_words(dictionary_file='base.json'):
         }
 
 def check_answer(kanji, user_input, correct_answer):
+    
     # 检查汉字是否匹配
     if user_input.strip() == kanji:
         toast('👏 正解です！', color='#65e49b')
@@ -184,8 +185,8 @@ def main():
         
         # 继续尝试直到答对
         while True:
-            # 每次答题前滚动到顶部
-            run_js('window.scrollTo(0, 0);')
+            # # 滚动到顶部
+            # run_js('window.scrollTo(0, 0);')
             
             # 更新问题区域
             with use_scope('question', clear=True):
@@ -292,6 +293,35 @@ def main():
                 # 获取用户输入，非学习模式下默认显示假名
                 answer = input(f'{kanji}', placeholder=correct_answer[0] if not study_mode else '')
                 
+            # # 滚动到顶部
+            # run_js('window.scrollTo(0, 0);')
+            
+            # 处理iOS软键盘收起时的页面滚动问题
+            run_js('''
+                // 判断是否是iOS设备
+                const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+                if(isIOS) {
+                    // 记录当前滚动位置
+                    const scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
+                    // 设置页面固定
+                    document.body.style.position = 'fixed';
+                    document.body.style.width = '100%';
+                    document.body.style.top = -scrollTop + 'px';
+                    // 延迟执行滚动到顶部
+                    setTimeout(() => {
+                        // 恢复页面定位
+                        document.body.style.position = '';
+                        document.body.style.width = '';
+                        document.body.style.top = '';
+                        // 滚动到顶部
+                        window.scrollTo(0, 0);
+                    }, 300);
+                } else {
+                    // 非iOS设备直接滚动到顶部
+                    window.scrollTo(0, 0);
+                }
+            ''')
+        
             # 检查答案（在专门的提示区域显示结果）
             with use_scope('alerts', clear=True):
                 if check_answer(kanji, answer, correct_answer):
@@ -381,12 +411,16 @@ def update_header(study_mode):
                     <style>
                         .pywebio {
                             padding-top: 10px;
+                            min-height: auto;
                         }
                         .btn-group-sm > .btn, .btn-sm {
                             padding: 0;
                         }
                         .markdown-body blockquote, .markdown-body dl, .markdown-body ol, .markdown-body p, .markdown-body pre, .markdown-body table, .markdown-body ul, .markdown-body details {
                             margin: 0;
+                        }
+                        .footer {
+                            background-color: #fff;
                         }
                     </style>
                 '''),
