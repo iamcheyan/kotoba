@@ -5,28 +5,31 @@ def clean_duplicates(input_file):
     with open(input_file, 'r', encoding='utf-8') as file:
         data = json.load(file)
 
-    # 使用集合来去除重复项并清理数字
+    # 使用字典来检查重复项
     cleaned_data = {}
+    value_to_key = {}  # 用于检查值的重复
+    
     for key, value in data.items():
-        # 移除波浪线和括号
-        # 去掉所有标点符号
+        # 移除波浪线和括号等标点符号
         key = ''.join(c for c in key if c not in '~()、，。！？；：''""【】《》（）[]「」『』〈〉…・')
         
-        # 检查值是否包含读音(括号内的内容)
-        has_reading = '(' in value and ')' in value
-        
-        # 如果没有读音,跳过这个条目
-        if not has_reading:
-            continue
-        
-        # 如果包含括号，清理括号内的数字和加号
+        # 如果包含括号，只保留括号后的中文内容
         if '(' in value and ')' in value:
-            start = value.find('(')
             end = value.find(')')
-            reading = value[start+1:end]
-            # 移除阅读中的数字、加号和标点
-            reading = ''.join(c for c in reading if not c.isdigit() and c not in '~()、，。！？；：''""【】《》（）[]「」『』〈〉…・+')
-            value = f'({reading}){value[end+1:]}'
+            value = value[end+1:].strip()
+        
+        # 检查是否有重复的值
+        if value in value_to_key:
+            print(f"发现重复项: {key} 和 {value_to_key[value]} 的含义都是 {value}")
+            continue
+            
+        # 检查是否有重复的键
+        if key in cleaned_data:
+            print(f"发现重复键: {key}")
+            continue
+            
+        # 记录这个值对应的键
+        value_to_key[value] = key
         cleaned_data[key] = value
 
     # 将清理后的数据写入新的 JSON 文件
@@ -35,6 +38,9 @@ def clean_duplicates(input_file):
         json.dump(cleaned_data, file, ensure_ascii=False, indent=4)
 
     print(f"清理完成，结果已保存到 {output_file}")
+    print(f"原始数据条目: {len(data)}")
+    print(f"清理后条目: {len(cleaned_data)}")
+    print(f"去除重复项: {len(data) - len(cleaned_data)}")
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:
