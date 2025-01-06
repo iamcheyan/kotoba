@@ -154,19 +154,11 @@ def main():
     # 设置环境，禁用固定输入面板
     set_env(input_panel_fixed=False, auto_scroll_bottom=False, output_animation=False)
     
-    # 移除 footer
+    # footer
     run_js("""
-        document.addEventListener('DOMContentLoaded', function() {
-            var footer = document.querySelector('footer');
-            if (footer) {
-                footer.innerHTML = '© 2025 <a href="https://iamcheyan.com/">Cheyan</a> All Rights Reserved';
-            }
-        });
-        
-        // 立即尝试修改一次
         var footer = document.querySelector('footer');
         if (footer) {
-            footer.innerHTML = '© 2025 <a href="https://iamcheyan.com/">Cheyan</a> All Rights Reserved';
+            footer.innerHTML = '© <a href="https://iamcheyan.com/">Cheyan</a> All Rights Reserved';
         }
     """)
     
@@ -421,6 +413,10 @@ def update_header(study_mode):
                         }
                         .footer {
                             background-color: #fff;
+                            font-size: 0.8em;
+                            position: fixed;
+                            bottom: 0;
+                            width: 100%;
                         }
                     </style>
                 '''),
