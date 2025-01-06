@@ -1,0 +1,21 @@
+{
+    "dictionaries": [
+        {
+            "path": "dictionaries/grammar.json",
+            "name": "基本文法"
+        },
+        {
+            "path": "dictionaries/base.json",
+            "name": "N5-N1単語"
+        },
+        {
+            "path": "dictionaries/conversation.json", 
+            "name": "会話"
+        },
+        {
+            "path": "dictionaries/katakana.json",
+            "name": "カタカナ地獄"
+        }
+    ],
+    "default_dictionary": "dictionaries/base.json"
+}

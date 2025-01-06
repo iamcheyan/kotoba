@@ -16,6 +16,7 @@ from pywebio.session import run_async, run_js
 import threading
 import time
 import pykakasi
+import os
 
 # pywebio 基础配置
 pywebio.config(
@@ -24,11 +25,28 @@ pywebio.config(
     description='単語学習ツール'
 )
 
-DICTIONARIES = [
-    'base.json',
-    'conversation.json',
-    'katakana.json'
-]
+# 加载配置文件
+def load_config():
+    try:
+        with open('config.json', 'r', encoding='utf-8') as f:
+            config = json.load(f)
+            return config
+    except FileNotFoundError:
+        print("配置文件不存在，使用默认配置")
+        return {
+            "dictionaries": [
+                {
+                    "path": "dictionaries/base.json",
+                    "name": "基础词库"
+                }
+            ],
+            "default_dictionary": "dictionaries/base.json"
+        }
+
+# 获取配置
+config = load_config()
+DICTIONARIES = [d["path"] for d in config["dictionaries"]]
+DEFAULT_DICTIONARY = config["default_dictionary"]
 
 # 添加全局变量来跟踪在线用户
 online_users = {}
@@ -36,8 +54,12 @@ users_lock = threading.Lock()
 kks = pykakasi.Kakasi()
 
 # 从 JSON 文件加载单词库
-def load_words(dictionary_file='base.json'):
+def load_words(dictionary_file='dictionaries/base.json'):
     try:
+        # 如果传入的是相对路径，确保它在dictionaries目录下
+        if not dictionary_file.startswith('dictionaries/'):
+            dictionary_file = os.path.join('dictionaries', dictionary_file)
+            
         with open(dictionary_file, 'r', encoding='utf-8') as f:
             data = json.load(f)
             word_dict = {}
@@ -68,7 +90,7 @@ def load_words(dictionary_file='base.json'):
                 # 存储格式: [假名, 中文含义, 罗马音]
                 word_dict[kanji] = [reading, meaning, romaji]
                 
-            print(f"词典总数: {len(word_dict)}")
+            print(f"词典 {dictionary_file} 加载完成，包含 {len(word_dict)} 个单词")
             
             return word_dict
     except FileNotFoundError:
@@ -84,22 +106,22 @@ def check_answer(kanji, user_input, correct_answer):
     
     # 将用户输入转换为罗马音
     user_input_result = kks.convert(user_input)
-    user_input_romaji = ''.join([item['hepburn'] for item in user_input_result])
+    user_input_romaji = ''.join([item['hepburn'] for item in user_input_result]).lower()
     
     # 将正确答案转换为罗马音
     kanji_result = kks.convert(kanji)
-    kanji_romaji = ''.join([item['hepburn'] for item in kanji_result])
+    kanji_romaji = ''.join([item['hepburn'] for item in kanji_result]).lower()
     
     hiragana_result = kks.convert(correct_answer[0])
-    hiragana_romaji = ''.join([item['hepburn'] for item in hiragana_result])
+    hiragana_romaji = ''.join([item['hepburn'] for item in hiragana_result]).lower()
     
-    romaji_no_space = correct_answer[2].replace(" ", "")
+    romaji_no_space = correct_answer[2].replace(" ", "").lower()
     
     # 检查用户输入是否匹配
     answer = user_input.strip()
     # 将答案转换为罗马音
     answer_result = kks.convert(answer)
-    answer_romaji = ''.join([item['hepburn'] for item in answer_result])
+    answer_romaji = ''.join([item['hepburn'] for item in answer_result]).lower()
     
     # 检查用户输入是否与正确答案匹配
     if answer_romaji in [kanji_romaji, hiragana_romaji, romaji_no_space]:
@@ -124,10 +146,18 @@ def get_url_params():
         show_katakana_reading = eval_js("new URLSearchParams(window.location.search).get('show_katakana_reading')")
         
         # 检查 dict 参数
-        if current_dict in DICTIONARIES:
-            params['dict'] = current_dict
+        if current_dict:
+            # 首先尝试通过名称查找
+            found = False
+            for dict_info in config["dictionaries"]:
+                if dict_info["name"] == current_dict or os.path.basename(dict_info["path"]) == current_dict:
+                    params['dict'] = dict_info["path"]
+                    found = True
+                    break
+            if not found:
+                params['dict'] = DEFAULT_DICTIONARY
         else:
-            params['dict'] = 'base.json'  # 默认词典
+            params['dict'] = DEFAULT_DICTIONARY
             
         # 检查显示选项参数（默认都显示）
         params['show_reading'] = hide_reading is None      # 如果参数不存在则显示
@@ -135,10 +165,11 @@ def get_url_params():
         params['show_placeholder'] = hide_placeholder is None  # 如果参数不存在则显示
         params['show_katakana_reading'] = show_katakana_reading == '1'  # 默认不显示片假名振り仮名
         
+        print(f"URL params: {params}")  # 添加调试信息
         return params
     except Exception as e:
         print(f"Error in get_url_params: {e}")
-        return {'dict': 'base.json', 'show_reading': True, 'show_romaji': True, 'show_placeholder': True, 'show_katakana_reading': False}  # 出错时返回默认值
+        return {'dict': DEFAULT_DICTIONARY, 'show_reading': True, 'show_romaji': True, 'show_placeholder': True, 'show_katakana_reading': False}  # 出错时返回默认值
 
 def get_unique_session_id():
     # 获取用户 IP
@@ -174,7 +205,7 @@ def show_settings():
             
             # 获取当前词典
             params = get_url_params()
-            current_dict = params.get('dict', 'base.json')
+            current_dict = os.path.basename(params.get('dict', DEFAULT_DICTIONARY))
             
             # 构建新的 URL
             base_url = eval_js("window.location.origin + window.location.pathname")
@@ -206,19 +237,62 @@ def show_dictionary_selector():
     with popup('辞書選択'):
         # 从 URL 获取当前词典
         params = get_url_params()
-        current_dict = params.get('dict', 'base.json')
+        current_dict = os.path.basename(params.get('dict', DEFAULT_DICTIONARY))
         
-        # 直接使用 DICTIONARIES 列表作为选项
+        # 使用配置中的词典信息，但这次使用名称作为值
+        options = [(d["name"], d["name"]) for d in config["dictionaries"]]
+        
+        # 找到当前词典的名称
+        current_name = None
+        for d in config["dictionaries"]:
+            if os.path.basename(d["path"]) == current_dict:
+                current_name = d["name"]
+                break
+        
+        # 创建下拉选择框
         put_select('dictionary', 
-                  options=[(d, d) for d in DICTIONARIES],
-                  value=current_dict)
+                  options=options,
+                  value=current_name or options[0][0])
         
         def on_confirm():
-            # 获取选择的词典
-            selected_dict = pin.dictionary
-            # 切换到新词典
-            switch_dictionary(selected_dict)
+            # 获取选择的词典名称
+            selected_name = pin.dictionary
+            print(f"Selected dictionary name: {selected_name}")  # 添加调试信息
+            
+            # 查找对应的文件名
+            selected_file = None
+            for d in config["dictionaries"]:
+                if d["name"] == selected_name:
+                    selected_file = os.path.basename(d["path"])
+                    break
+            
+            if not selected_file:
+                selected_file = os.path.basename(DEFAULT_DICTIONARY)
+            
+            print(f"Selected file: {selected_file}")  # 添加调试信息
+            
+            # 获取当前参数
+            params = get_url_params()
+            base_url = eval_js("window.location.origin + window.location.pathname")
+            
+            # 构建新的 URL，使用文件名
+            new_url = f"{base_url}?dict={selected_file}"
+            
+            # 保持显示设置（如果需要隐藏则添加参数）
+            if not params.get('show_reading'):
+                new_url += "&hide_reading=1"
+            if not params.get('show_romaji'):
+                new_url += "&hide_romaji=1"
+            if not params.get('show_placeholder'):
+                new_url += "&hide_placeholder=1"
+            if params.get('show_katakana_reading'):
+                new_url += "&show_katakana_reading=1"
+            
+            print(f"Redirecting to: {new_url}")  # 添加调试信息
+            
+            # 关闭弹窗并跳转
             close_popup()
+            run_js(f'window.location.href = "{new_url}"')
         
         # 添加确认按钮
         put_buttons(['確認'], onclick=[on_confirm])
@@ -263,7 +337,8 @@ def main():
     params = get_url_params()
     
     # 从 URL 参数获取词典，如果没有则使用默认词典
-    current_dict = params.get('dict', 'base.json')
+    current_dict = params.get('dict', DEFAULT_DICTIONARY)
+    print(f"Loading dictionary: {current_dict}")  # 添加调试信息
     words = load_words(current_dict)
     
     # 设置环境，禁用固定输入面板
@@ -387,6 +462,10 @@ def main():
                 # 获取用户输入（根据设置显示或隐藏提示文字）
                 answer = input(f'{kanji}', placeholder=correct_answer[0] if show_placeholder else '', autocomplete="off")   # 输入框
                 
+                # 如果用户没有输入直接提交,跳过当前题目
+                if not answer.strip():
+                    break
+                
             # 处理iOS软键盘收起时的页面滚动问题
             run_js('''
                 // 判断是否是iOS设备
@@ -422,8 +501,8 @@ def main():
                     break  # 跳出内层循环，进入下一个单词
                 else:
                     # 答错了，显示错误对比
-                    put_text(f'😭 あなたの答え：{answer.replace(" ", "")}').style('color: red;')
-                    put_text(f'👉 正しい答え：{kanji}/{correct_answer[0].replace(" ", "")}/{correct_answer[2].replace(" ", "")}').style('color: green;')
+                    put_text(f'❎ {answer.replace(" ", "")}').style('color: red;')
+                    put_text(f'✅ {kanji}/{correct_answer[0].replace(" ", "")}/{correct_answer[2].replace(" ", "")}').style('color: green;')
                     run_js('document.querySelector("form").reset()')
                     continue  # 继续内层循环，重新输入
 
@@ -465,7 +544,8 @@ def update_header(study_mode):
                 ]).style('text-align: right;font-weight: normal;')
             ], size='50% 50%')
             
-            put_text(f'正解: {correct} | 不正解: {wrong} | 総単語: {len(words)}').style("""
+            put_text(f'正解: {correct} | 不正解: {wrong} | 総単語: {len(words)}').style(
+                '''
                 white-space: pre-wrap;
                 font-size: 0.8em;
                 font-weight: normal;
@@ -474,18 +554,28 @@ def update_header(study_mode):
                 text-align: center;
                 border-top: 1px solid #eee;
                 padding-top: 20px;
-            """)
+                '''
+            )
 
 def switch_dictionary(dictionary_file):
-    if dictionary_file not in DICTIONARIES:
-        dictionary_file = 'base.json'
+    # 在配置中查找完整路径
+    full_path = None
+    for dict_info in config["dictionaries"]:
+        if os.path.basename(dict_info["path"]) == dictionary_file:
+            full_path = dict_info["path"]
+            break
+    
+    if not full_path:
+        full_path = DEFAULT_DICTIONARY
+    
+    print(f"Switching to dictionary: {full_path}")  # 添加调试信息
     
     # 获取当前参数
     params = get_url_params()
     base_url = eval_js("window.location.origin + window.location.pathname")
     
-    # 构建新的 URL，保持其他参数不变
-    new_url = f"{base_url}?dict={dictionary_file}"
+    # 构建新的 URL，使用文件名而不是完整路径
+    new_url = f"{base_url}?dict={os.path.basename(full_path)}"
     
     # 保持显示设置（如果需要隐藏则添加参数）
     if not params.get('show_reading'):
@@ -494,6 +584,10 @@ def switch_dictionary(dictionary_file):
         new_url += "&hide_romaji=1"
     if not params.get('show_placeholder'):
         new_url += "&hide_placeholder=1"
+    if params.get('show_katakana_reading'):
+        new_url += "&show_katakana_reading=1"
+    
+    print(f"Redirecting to: {new_url}")  # 添加调试信息
     
     # 跳转到新的 URL
     run_js(f'window.location.href = "{new_url}"')
