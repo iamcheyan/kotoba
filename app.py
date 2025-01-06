@@ -59,12 +59,12 @@ def load_words(dictionary_file='base.json'):
 def check_answer(kanji, user_input, correct_answer):
     # 检查汉字是否匹配
     if user_input.strip() == kanji:
-        toast('正解です！')
+        toast('👏 正解です！', color='#65e49b')
         run_js('localStorage.correct = parseInt(localStorage.correct || 0) + 1')
         return True
     # 检查假名是否匹配
     elif user_input.strip() == correct_answer[0]:
-        toast('正解です！')
+        toast('👏 正解です！', color='#65e49b')
         run_js('localStorage.correct = parseInt(localStorage.correct || 0) + 1')
         return True
     else:
@@ -197,6 +197,98 @@ def main():
                 if not study_mode:
                     put_text(f'{correct_answer[0]}').style('color: #999;')
                 
+                    # 假名到罗马音的映射字典
+                    hiragana_to_romaji = {
+                        'あ': 'a', 'い': 'i', 'う': 'u', 'え': 'e', 'お': 'o',
+                        'か': 'ka', 'き': 'ki', 'く': 'ku', 'け': 'ke', 'こ': 'ko',
+                        'さ': 'sa', 'し': 'shi', 'す': 'su', 'せ': 'se', 'そ': 'so',
+                        'た': 'ta', 'ち': 'chi', 'つ': 'tsu', 'て': 'te', 'と': 'to',
+                        'な': 'na', 'に': 'ni', 'ぬ': 'nu', 'ね': 'ne', 'の': 'no',
+                        'は': 'ha', 'ひ': 'hi', 'ふ': 'fu', 'へ': 'he', 'ほ': 'ho',
+                        'ま': 'ma', 'み': 'mi', 'む': 'mu', 'め': 'me', 'も': 'mo',
+                        'や': 'ya', 'ゆ': 'yu', 'よ': 'yo',
+                        'ら': 'ra', 'り': 'ri', 'る': 'ru', 'れ': 're', 'ろ': 'ro',
+                        'わ': 'wa', 'を': 'wo', 'ん': 'n',
+                        'が': 'ga', 'ぎ': 'gi', 'ぐ': 'gu', 'げ': 'ge', 'ご': 'go',
+                        'ざ': 'za', 'じ': 'ji', 'ず': 'zu', 'ぜ': 'ze', 'ぞ': 'zo',
+                        'だ': 'da', 'ぢ': 'ji', 'づ': 'zu', 'で': 'de', 'ど': 'do',
+                        'ば': 'ba', 'び': 'bi', 'ぶ': 'bu', 'べ': 'be', 'ぼ': 'bo',
+                        'ぱ': 'pa', 'ぴ': 'pi', 'ぷ': 'pu', 'ぺ': 'pe', 'ぽ': 'po',
+                        'きょ': 'kyo', 'しょ': 'sho', 'ちょ': 'cho', 'にょ': 'nyo',
+                        'ひょ': 'hyo', 'みょ': 'myo', 'りょ': 'ryo', 'ぎょ': 'gyo',
+                        'じょ': 'jo', 'びょ': 'byo', 'ぴょ': 'pyo',
+                        'きゃ': 'kya', 'しゃ': 'sha', 'ちゃ': 'cha', 'にゃ': 'nya',
+                        'ひゃ': 'hya', 'みゃ': 'mya', 'りゃ': 'rya', 'ぎゃ': 'gya',
+                        'じゃ': 'ja', 'びゃ': 'bya', 'ぴゃ': 'pya',
+                        'きゅ': 'kyu', 'しゅ': 'shu', 'ちゅ': 'chu', 'にゅ': 'nyu',
+                        'ひゅ': 'hyu', 'みゅ': 'myu', 'りゅ': 'ryu', 'ぎゅ': 'gyu',
+                        'じゅ': 'ju', 'びゅ': 'byu', 'ぴゅ': 'pyu',
+                        'っ': '',  # 小っ的处理
+                        'ー': '-',   # 长音符的处理
+                        # 片假名
+                        'ア': 'a', 'イ': 'i', 'ウ': 'u', 'エ': 'e', 'オ': 'o',
+                        'カ': 'ka', 'キ': 'ki', 'ク': 'ku', 'ケ': 'ke', 'コ': 'ko',
+                        'サ': 'sa', 'シ': 'shi', 'ス': 'su', 'セ': 'se', 'ソ': 'so',
+                        'タ': 'ta', 'チ': 'chi', 'ツ': 'tsu', 'テ': 'te', 'ト': 'to',
+                        'ナ': 'na', 'ニ': 'ni', 'ヌ': 'nu', 'ネ': 'ne', 'ノ': 'no',
+                        'ハ': 'ha', 'ヒ': 'hi', 'フ': 'fu', 'ヘ': 'he', 'ホ': 'ho',
+                        'マ': 'ma', 'ミ': 'mi', 'ム': 'mu', 'メ': 'me', 'モ': 'mo',
+                        'ヤ': 'ya', 'ユ': 'yu', 'ヨ': 'yo',
+                        'ラ': 'ra', 'リ': 'ri', 'ル': 'ru', 'レ': 're', 'ロ': 'ro',
+                        'ワ': 'wa', 'ヲ': 'wo', 'ン': 'n',
+                        'ガ': 'ga', 'ギ': 'gi', 'グ': 'gu', 'ゲ': 'ge', 'ゴ': 'go',
+                        'ザ': 'za', 'ジ': 'ji', 'ズ': 'zu', 'ゼ': 'ze', 'ゾ': 'zo',
+                        'ダ': 'da', 'ヂ': 'ji', 'ヅ': 'zu', 'デ': 'de', 'ド': 'do',
+                        'バ': 'ba', 'ビ': 'bi', 'ブ': 'bu', 'ベ': 'be', 'ボ': 'bo',
+                        'パ': 'pa', 'ピ': 'pi', 'プ': 'pu', 'ペ': 'pe', 'ポ': 'po',
+                        'キョ': 'kyo', 'ショ': 'sho', 'チョ': 'cho', 'ニョ': 'nyo',
+                        'ヒョ': 'hyo', 'ミョ': 'myo', 'リョ': 'ryo', 'ギョ': 'gyo',
+                        'ジョ': 'jo', 'ビョ': 'byo', 'ピョ': 'pyo',
+                        'キャ': 'kya', 'シャ': 'sha', 'チャ': 'cha', 'ニャ': 'nya',
+                        'ヒャ': 'hya', 'ミャ': 'mya', 'リャ': 'rya', 'ギャ': 'gya',
+                        'ジャ': 'ja', 'ビャ': 'bya', 'ピャ': 'pya',
+                        'キュ': 'kyu', 'シュ': 'shu', 'チュ': 'chu', 'ニュ': 'nyu',
+                        'ヒュ': 'hyu', 'ミュ': 'myu', 'リュ': 'ryu', 'ギュ': 'gyu',
+                        'ジュ': 'ju', 'ビュ': 'byu', 'ピュ': 'pyu',
+                        'ッ': '',  # 小ッ的处理
+                    }
+                    # 将假名转换为罗马音
+                    kana = correct_answer[0]
+                    romaji = ''
+                    i = 0
+                    while i < len(kana):
+                        # 检查是否是双字符假名
+                        if i + 1 < len(kana) and kana[i:i+2] in hiragana_to_romaji:
+                            romaji += hiragana_to_romaji[kana[i:i+2]]
+                            i += 2
+                        # 单字符假名
+                        elif kana[i] in hiragana_to_romaji:
+                            romaji += hiragana_to_romaji[kana[i]]
+                            i += 1
+                        else:
+                            romaji += kana[i]
+                            i += 1
+                            
+                    # 对罗马音进行分词
+                    romaji_parts = []
+                    i = 0
+                    while i < len(romaji):
+                        # 先检查三字符的组合
+                        if i + 2 < len(romaji) and romaji[i:i+3] in ['shu', 'chu', 'nyu', 'hyu', 'myu', 'ryu', 'gyu', 'byu', 'pyu', 'kyo', 'cho', 'nyo', 'hyo', 'myo', 'ryo', 'gyo', 'byo', 'pyo', 'kya', 'sha', 'cha', 'nya', 'hya', 'mya', 'rya', 'gya', 'bya', 'pya', 'kyu']:
+                            romaji_parts.append(romaji[i:i+3])
+                            i += 3
+                        # 然后检查两字符的组合
+                        elif i + 1 < len(romaji) and romaji[i:i+2] in ['ka', 'ki', 'ku', 'ke', 'ko', 'sa', 'shi', 'su', 'se', 'so', 'ta', 'chi', 'tsu', 'te', 'to', 'na', 'ni', 'nu', 'ne', 'no', 'ha', 'hi', 'fu', 'he', 'ho', 'ma', 'mi', 'mu', 'me', 'mo', 'ya', 'yu', 'yo', 'ra', 'ri', 'ru', 're', 'ro', 'wa', 'wo', 'ga', 'gi', 'gu', 'ge', 'go', 'za', 'ji', 'zu', 'ze', 'zo', 'da', 'de', 'do', 'ba', 'bi', 'bu', 'be', 'bo', 'pa', 'pi', 'pu', 'pe', 'po']:
+                            romaji_parts.append(romaji[i:i+2])
+                            i += 2
+                        # 最后检查单字符
+                        else:
+                            romaji_parts.append(romaji[i])
+                            i += 1
+                    
+                    # 用空格连接并显示
+                    put_text(' '.join(romaji_parts)).style('color: #999;')
+                
                 # 获取用户输入，非学习模式下默认显示假名
                 answer = input(f'{kanji}', placeholder=correct_answer[0] if not study_mode else '')
                 
@@ -209,8 +301,8 @@ def main():
                     break  # 跳出内层循环，进入下一个单词
                 else:
                     # 答错了，显示错误对比
-                    put_text(f'あなたの答え：{answer}').style('color: red;')
-                    put_text(f'正しい答え：{kanji} / {correct_answer[0]}').style('color: green;')
+                    put_text(f'😭 あなたの答え：{answer}').style('color: red;')
+                    put_text(f'👉 正しい答え：{kanji} / {correct_answer[0]}').style('color: green;')
                     run_js('document.querySelector("form").reset()')
                     continue  # 继续内层循环，重新输入
 
@@ -287,6 +379,9 @@ def update_header(study_mode):
                         <a href='/' title='' style='position:absolute; bottom:15px;color: #000;'>言葉</a>
                     </div>
                     <style>
+                        .pywebio {
+                            padding-top: 10px;
+                        }
                         .btn-group-sm > .btn, .btn-sm {
                             padding: 0;
                         }
