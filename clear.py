@@ -12,21 +12,11 @@ def clean_duplicates(input_file):
         # 去掉所有标点符号
         key = ''.join(c for c in key if c not in '~()、，。！？；：''""【】《》（）[]「」『』〈〉…・')
         
-        # 检查值是否包含读音(括号内的内容)
-        has_reading = '(' in value and ')' in value
-        
-        # 如果没有读音,跳过这个条目
-        if not has_reading:
-            continue
-        
-        # 如果包含括号，清理括号内的数字和加号
+        # 如果包含括号，只保留括号后的中文内容
         if '(' in value and ')' in value:
-            start = value.find('(')
             end = value.find(')')
-            reading = value[start+1:end]
-            # 移除阅读中的数字、加号和标点
-            reading = ''.join(c for c in reading if not c.isdigit() and c not in '~()、，。！？；：''""【】《》（）[]「」『』〈〉…・+')
-            value = f'({reading}){value[end+1:]}'
+            value = value[end+1:].strip()
+            
         cleaned_data[key] = value
 
     # 将清理后的数据写入新的 JSON 文件
