@@ -121,6 +121,7 @@ def get_url_params():
         hide_reading = eval_js("new URLSearchParams(window.location.search).get('hide_reading')")
         hide_romaji = eval_js("new URLSearchParams(window.location.search).get('hide_romaji')")
         hide_placeholder = eval_js("new URLSearchParams(window.location.search).get('hide_placeholder')")
+        show_katakana_reading = eval_js("new URLSearchParams(window.location.search).get('show_katakana_reading')")
         
         # 检查 dict 参数
         if current_dict in DICTIONARIES:
@@ -132,11 +133,12 @@ def get_url_params():
         params['show_reading'] = hide_reading is None      # 如果参数不存在则显示
         params['show_romaji'] = hide_romaji is None       # 如果参数不存在则显示
         params['show_placeholder'] = hide_placeholder is None  # 如果参数不存在则显示
+        params['show_katakana_reading'] = show_katakana_reading == '1'  # 默认不显示片假名振り仮名
         
         return params
     except Exception as e:
         print(f"Error in get_url_params: {e}")
-        return {'dict': 'base.json', 'show_reading': True, 'show_romaji': True, 'show_placeholder': True}  # 出错时返回默认值
+        return {'dict': 'base.json', 'show_reading': True, 'show_romaji': True, 'show_placeholder': True, 'show_katakana_reading': False}  # 出错时返回默认值
 
 def get_unique_session_id():
     # 获取用户 IP
@@ -155,17 +157,20 @@ def show_settings():
         show_reading = params.get('show_reading', True)
         show_romaji = params.get('show_romaji', True)
         show_placeholder = params.get('show_placeholder', True)
+        show_katakana_reading = params.get('show_katakana_reading', False)
         
         # 创建复选框组（选中表示显示）
         put_checkbox('reading_mode', options=[{'label': '読み方を表示する', 'value': 'show', 'selected': show_reading}])
         put_checkbox('romaji_mode', options=[{'label': 'ローマ字を表示する', 'value': 'show', 'selected': show_romaji}])
         put_checkbox('placeholder_mode', options=[{'label': '入力ヒントを表示する', 'value': 'show', 'selected': show_placeholder}])
+        put_checkbox('katakana_reading_mode', options=[{'label': 'カタカナにも振り仮名を表示する', 'value': 'show', 'selected': show_katakana_reading}])
         
         def on_confirm():
             # 获取当前复选框状态
             show_reading = 'show' in pin.reading_mode
             show_romaji = 'show' in pin.romaji_mode
             show_placeholder = 'show' in pin.placeholder_mode
+            show_katakana_reading = 'show' in pin.katakana_reading_mode
             
             # 获取当前词典
             params = get_url_params()
@@ -182,6 +187,8 @@ def show_settings():
                 new_url += "&hide_romaji=1"
             if not show_placeholder:
                 new_url += "&hide_placeholder=1"
+            if show_katakana_reading:
+                new_url += "&show_katakana_reading=1"
             
             # 关闭弹窗并跳转
             close_popup()
@@ -192,7 +199,7 @@ def show_settings():
         
         # 等待用户操作
         while True:
-            changed = pin_wait_change(['reading_mode', 'romaji_mode', 'placeholder_mode'])
+            changed = pin_wait_change(['reading_mode', 'romaji_mode', 'placeholder_mode', 'katakana_reading_mode'])
             # 不要立即应用更改，等待用户点击确认按钮
 
 def show_dictionary_selector():
@@ -232,12 +239,16 @@ def create_ruby_html(text, reading):
     result = kks.convert(text)
     html_parts = []
     
+    # 获取片假名显示设置
+    params = get_url_params()
+    show_katakana_reading = params.get('show_katakana_reading', False)
+    
     for item in result:
-        # 如果是汉字，添加振り仮名
-        if any(is_kanji(char) for char in item['orig']):
+        # 如果是汉字，或者（启用了片假名显示且是片假名），则添加振り仮名
+        if any(is_kanji(char) for char in item['orig']) or (show_katakana_reading and any(0x30A0 <= ord(char) <= 0x30FF for char in item['orig'])):
             html_parts.append(f'<ruby>{item["orig"]}<rt style="color: #666;">{item["hira"]}</rt></ruby>')
         else:
-            # 如果不是汉字（比如平假名、片假名等），直接添加原文
+            # 如果不是汉字或片假名，直接添加原文
             html_parts.append(item['orig'])
     
     # 返回完整的 HTML
@@ -352,6 +363,8 @@ def main():
         while True:
             # 更新问题区域
             with use_scope('question', clear=True):
+                
+                # 单词位置
                 # 显示带振り仮名的汉字（如果是汉字的话）
                 ruby_html = create_ruby_html(kanji, correct_answer[0])
                 put_html(f'<h2 style="border:none; margin: 20px 0;">{ruby_html}</h2>')
