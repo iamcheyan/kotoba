@@ -32,12 +32,11 @@ def clean_duplicates(input_file):
         value_to_key[value] = key
         cleaned_data[key] = value
 
-    # 将清理后的数据写入新的 JSON 文件
-    output_file = f'cleaned_{input_file}'
-    with open(output_file, 'w', encoding='utf-8') as file:
+    # 将清理后的数据写回原文件
+    with open(input_file, 'w', encoding='utf-8') as file:
         json.dump(cleaned_data, file, ensure_ascii=False, indent=4)
 
-    print(f"清理完成，结果已保存到 {output_file}")
+    print(f"清理完成，结果已保存回原文件 {input_file}")
     print(f"原始数据条目: {len(data)}")
     print(f"清理后条目: {len(cleaned_data)}")
     print(f"去除重复项: {len(data) - len(cleaned_data)}")
