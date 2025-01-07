@@ -425,7 +425,7 @@ def update_header(study_mode):
                 put_grid([
                     [put_text(f'現在 {online_users}人が勉強中').style('color: #666; font-size: 0.8em;')],
                     [put_buttons(
-                        ['📘 辞書', '⚙️ 設定', '🔄 キャッシュ'],
+                        ['📘 辞書', '⚙️ 設定', '⚡ キャッシュ'],
                         onclick=[
                             lambda: show_dictionary_selector(),
                             lambda: show_settings(),
