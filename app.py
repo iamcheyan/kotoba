@@ -22,7 +22,22 @@ import os
 pywebio.config(
     title='言葉',
     theme="sketchy",    # 可用主题有： dark, sketchy, minty, yeti 
-    description='単語学習ツール'
+    description='単語学習ツール',
+    js_file=[
+        'https://cdn.jsdelivr.net/npm/darkmode-js@1.5.7/lib/darkmode-js.min.js',
+    ],
+    js_code='''
+        const options = {
+            bottom: '32px',
+            right: '32px',
+            time: '0.5s',
+            saveInCookies: true,
+            label: '🌓',
+            autoMatchOsTheme: true
+        };
+        const darkmode = new Darkmode(options);
+        darkmode.showWidget();
+    '''
 )
 
 # 加载配置文件
@@ -144,6 +159,7 @@ def get_url_params():
         hide_romaji = eval_js("new URLSearchParams(window.location.search).get('hide_romaji')")
         hide_placeholder = eval_js("new URLSearchParams(window.location.search).get('hide_placeholder')")
         show_katakana_reading = eval_js("new URLSearchParams(window.location.search).get('show_katakana_reading')")
+        hide_furigana = eval_js("new URLSearchParams(window.location.search).get('hide_furigana')")
         
         # 检查 dict 参数
         if current_dict:
@@ -164,12 +180,13 @@ def get_url_params():
         params['show_romaji'] = hide_romaji is None       # 如果参数不存在则显示
         params['show_placeholder'] = hide_placeholder is None  # 如果参数不存在则显示
         params['show_katakana_reading'] = show_katakana_reading == '1'  # 默认不显示片假名振り仮名
+        params['show_furigana'] = hide_furigana is None  # 如果参数不存在则显示振り仮名
         
         print(f"URL params: {params}")  # 添加调试信息
         return params
     except Exception as e:
         print(f"Error in get_url_params: {e}")
-        return {'dict': DEFAULT_DICTIONARY, 'show_reading': True, 'show_romaji': True, 'show_placeholder': True, 'show_katakana_reading': False}  # 出错时返回默认值
+        return {'dict': DEFAULT_DICTIONARY, 'show_reading': True, 'show_romaji': True, 'show_placeholder': True, 'show_katakana_reading': False, 'show_furigana': True}  # 出错时返回默认值
 
 def get_unique_session_id():
     # 获取用户 IP
@@ -189,12 +206,14 @@ def show_settings():
         show_romaji = params.get('show_romaji', True)
         show_placeholder = params.get('show_placeholder', True)
         show_katakana_reading = params.get('show_katakana_reading', False)
+        show_furigana = params.get('show_furigana', True)
         
         # 创建复选框组（选中表示显示）
         put_checkbox('reading_mode', options=[{'label': '読み方を表示する', 'value': 'show', 'selected': show_reading}])
         put_checkbox('romaji_mode', options=[{'label': 'ローマ字を表示する', 'value': 'show', 'selected': show_romaji}])
         put_checkbox('placeholder_mode', options=[{'label': '入力ヒントを表示する', 'value': 'show', 'selected': show_placeholder}])
         put_checkbox('katakana_reading_mode', options=[{'label': 'カタカナにも振り仮名を表示する', 'value': 'show', 'selected': show_katakana_reading}])
+        put_checkbox('furigana_mode', options=[{'label': '振り仮名を表示する', 'value': 'show', 'selected': show_furigana}])
         
         def on_confirm():
             # 获取当前复选框状态
@@ -202,6 +221,7 @@ def show_settings():
             show_romaji = 'show' in pin.romaji_mode
             show_placeholder = 'show' in pin.placeholder_mode
             show_katakana_reading = 'show' in pin.katakana_reading_mode
+            show_furigana = 'show' in pin.furigana_mode
             
             # 获取当前词典
             params = get_url_params()
@@ -220,6 +240,8 @@ def show_settings():
                 new_url += "&hide_placeholder=1"
             if show_katakana_reading:
                 new_url += "&show_katakana_reading=1"
+            if not show_furigana:
+                new_url += "&hide_furigana=1"
             
             # 关闭弹窗并跳转
             close_popup()
@@ -230,7 +252,7 @@ def show_settings():
         
         # 等待用户操作
         while True:
-            changed = pin_wait_change(['reading_mode', 'romaji_mode', 'placeholder_mode', 'katakana_reading_mode'])
+            changed = pin_wait_change(['reading_mode', 'romaji_mode', 'placeholder_mode', 'katakana_reading_mode', 'furigana_mode'])
             # 不要立即应用更改，等待用户点击确认按钮
 
 def show_dictionary_selector():
@@ -313,11 +335,17 @@ def create_ruby_html(text, reading):
     result = kks.convert(text)
     html_parts = []
     
-    # 获取片假名显示设置
+    # 获取片假名显示设置和振り仮名显示设置
     params = get_url_params()
     show_katakana_reading = params.get('show_katakana_reading', False)
+    show_furigana = params.get('show_furigana', True)
     
     for item in result:
+        # 如果不显示振り仮名，直接添加原文
+        if not show_furigana:
+            html_parts.append(item['orig'])
+            continue
+            
         # 如果是汉字，或者（启用了片假名显示且是片假名），则添加振り仮名
         if any(is_kanji(char) for char in item['orig']) or (show_katakana_reading and any(0x30A0 <= ord(char) <= 0x30FF for char in item['orig'])):
             html_parts.append(f'<ruby>{item["orig"]}<rt style="color: #666;">{item["hira"]}</rt></ruby>')
@@ -374,18 +402,46 @@ def main():
                     padding-top: 10px;
                     min-height: auto;
                 }
-                .btn-group-sm > .btn, .btn-sm {
+                .btn-group-sm > .btn, 
+                .btn-sm {
                     padding: 0;
                 }
-                .markdown-body blockquote, .markdown-body dl, .markdown-body ol, .markdown-body p, .markdown-body pre, .markdown-body table, .markdown-body ul, .markdown-body details {
+                .markdown-body blockquote, 
+                .markdown-body dl, 
+                .markdown-body ol, 
+                .markdown-body p, 
+                .markdown-body pre, 
+                .markdown-body table, 
+                .markdown-body ul, 
+                .markdown-body details {
                     margin: 0;
                 }
                 .footer {
-                    background-color: #fff;
+                    background-color: transparent;
                     font-size: 0.8em;
                     position: fixed;
                     bottom: 0;
                     width: 100%;
+                }
+                button {
+                    margin: 0;
+                }
+                .darkmode--activated {
+                    color: #999;
+                    .card,
+                    .form-control,
+                    .form-control:focus {
+                        background-color: transparent;
+                    }
+                    #input-container h5.card-header {
+                        color: #999;
+                    }
+                    .card-body .form-control {
+                        color: #fff;
+                    }
+                    .modal-content {
+                        background-color: #000;
+                    }
                 }
             </style>
         ''')
