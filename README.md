@@ -60,6 +60,23 @@ python app.py
 
 アプリケーションは `http://localhost:5000` で利用可能になります
 
+#### 本番デプロイ（Gunicorn）
+1. 依存のインストール（仮想環境推奨）
+```bash
+python3 -m venv .venv && source .venv/bin/activate
+pip install -U pip
+pip install gunicorn gevent gevent-websocket
+pip install -r requirements.txt
+```
+2. Gunicorn で起動（WebSocket 対応）
+```bash
+gunicorn app:app -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker -b 0.0.0.0:8000 --workers 2 --threads 4 --timeout 60
+```
+3. バックグラウンド実行（任意）
+```bash
+nohup gunicorn app:app -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker -b 0.0.0.0:8000 --workers 2 --threads 4 --timeout 60 > gunicorn.log 2>&1 &
+```
+
 ### 使用方法
 - ブラウザからウェブインターフェースにアクセス
 - 使用したい辞書を選択
@@ -110,6 +127,23 @@ python app.py
 
 The application will be available at `http://localhost:5000`
 
+#### Production deployment (Gunicorn)
+1. Install runtime (virtualenv recommended)
+```bash
+python3 -m venv .venv && source .venv/bin/activate
+pip install -U pip
+pip install gunicorn gevent gevent-websocket
+pip install -r requirements.txt
+```
+2. Start with gunicorn (WebSocket support)
+```bash
+gunicorn app:app -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker -b 0.0.0.0:8000 --workers 2 --threads 4 --timeout 60
+```
+3. Optional: run in background
+```bash
+nohup gunicorn app:app -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker -b 0.0.0.0:8000 --workers 2 --threads 4 --timeout 60 > gunicorn.log 2>&1 &
+```
+
 ### Usage
 - Access the web interface through your browser
 - Choose your preferred dictionary
@@ -159,6 +193,23 @@ python app.py
 ```
 
 应用将在 `http://localhost:5000` 运行
+
+#### 生产部署（Gunicorn）
+1. 安装运行环境（推荐使用虚拟环境）
+```bash
+python3 -m venv .venv && source .venv/bin/activate
+pip install -U pip
+pip install gunicorn gevent gevent-websocket
+pip install -r requirements.txt
+```
+2. 使用 gunicorn 启动（支持 WebSocket）
+```bash
+gunicorn app:app -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker -b 0.0.0.0:8000 --workers 2 --threads 4 --timeout 60
+```
+3. 后台运行（可选）
+```bash
+nohup gunicorn app:app -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker -b 0.0.0.0:8000 --workers 2 --threads 4 --timeout 60 > gunicorn.log 2>&1 &
+```
 
 ### 使用方法
 - 通过浏览器访问网页界面

@@ -8,7 +8,6 @@ from pywebio.pin import put_select, pin, pin_wait_change, put_checkbox
 import random
 import json
 import pywebio
-import urllib.parse
 import sys
 import argparse
 from pywebio.session import info as session_info
@@ -17,6 +16,7 @@ import threading
 import time
 import pykakasi
 import os
+import socket
 
 # pywebio 基础配置
 pywebio.config(
@@ -37,6 +37,20 @@ pywebio.config(
         };
         const darkmode = new Darkmode(options);
         darkmode.showWidget();
+
+        // 设置本地 favicon
+        (function(){
+            try {
+                let link = document.querySelector('link[rel="icon"]');
+                if (!link) {
+                    link = document.createElement('link');
+                    link.setAttribute('rel', 'icon');
+                    document.head.appendChild(link);
+                }
+                link.setAttribute('type', 'image/svg+xml');
+                link.setAttribute('href', '/static/favicon.svg?v=1');
+            } catch(e) { console.error(e); }
+        })();
     '''
 )
 
@@ -67,6 +81,29 @@ DEFAULT_DICTIONARY = config["default_dictionary"]
 online_users = {}
 users_lock = threading.Lock()
 kks = pykakasi.Kakasi()
+
+def is_port_available(port):
+    """检查端口是否可用"""
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        try:
+            s.bind(('', port))
+            return True
+        except OSError:
+            return False
+
+def find_available_port(start_port, max_attempts=10):
+    """查找可用端口"""
+    for i in range(max_attempts):
+        port = start_port + i
+        if is_port_available(port):
+            return port
+    return None
+
+def get_random_free_port():
+    """随机获取一个可用端口"""
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.bind(('', 0))
+        return s.getsockname()[1]
 
 # 从 JSON 文件加载单词库
 def load_words(dictionary_file='dictionaries/base.json'):
@@ -381,6 +418,8 @@ def main():
             localStorage.setItem('hideRomaji', 'false');
         }
     ''')
+
+    
     
     # footer
     run_js("""
@@ -562,6 +601,18 @@ def main():
                     run_js('document.querySelector("form").reset()')
                     continue  # 继续内层循环，重新输入
 
+from flask import Flask
+from werkzeug.middleware.proxy_fix import ProxyFix
+from pywebio.platform.flask import webio_view
+
+# 提供给 gunicorn 的 Flask 应用实例
+app = Flask(__name__)
+# 识别反向代理的头，避免 http/https 主机头不一致引起的重定向循环
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_port=1, x_prefix=1)
+# 关闭全局严格尾斜杠匹配
+app.url_map.strict_slashes = False
+app.add_url_rule('/', 'index', webio_view(main), methods=['GET', 'POST', 'OPTIONS'], strict_slashes=False)
+
 def update_header(study_mode):
     with use_scope('stats', clear=True):
         correct = eval_js('parseInt(localStorage.correct || 0)')
@@ -649,16 +700,42 @@ def switch_dictionary(dictionary_file):
     run_js(f'window.location.href = "{new_url}"')
 
 if __name__ == '__main__':
-    # 创建命令行参数解析器
-    parser = argparse.ArgumentParser(description='単語学習')
-    parser.add_argument('port', nargs='?', type=int, default=5000,
-                      help='服务器端口号 (默认: 5000)')
-    
-    # 解析命令行参数
-    args = parser.parse_args()
-    
-    # 启动服务器
-    print(f"Starting server on port {args.port}")
-    start_server(main, port=args.port, debug=True)
+    import time
 
+    def get_available_port(port=None):
+        """
+        获取可用端口。如果指定端口被占用，则自动查找随机可用端口。
+        """
+        while True:
+            candidate_port = get_random_free_port() if port is None else port
+            if is_port_available(candidate_port):
+                return candidate_port
+            print(f"端口 {candidate_port} 已被占用，正在查找可用端口...")
+            port = None  # 后续都用随机端口
+            time.sleep(0.2)
+
+    parser = argparse.ArgumentParser(description='単語学習')
+    parser.add_argument('port', nargs='?', type=int, default=None,
+                        help='服务器端口号（不指定则随机可用端口）')
+    args = parser.parse_args()
+
+    # 解决 debug 模式下重载导致端口变化：首次确定端口并写入环境变量，后续重载复用
+    fixed_port_env = os.environ.get('KOTOBA_FIXED_PORT')
+    if fixed_port_env:
+        port = int(fixed_port_env)
+    else:
+        port = get_available_port(args.port)
+        os.environ['KOTOBA_FIXED_PORT'] = str(port)
+    print(f"Starting server on port {port}")
+
+    try:
+        start_server(main, port=port, debug=True)
+    except OSError as e:
+        if "Address already in use" in str(e):
+            print(f"端口 {port} 启动时被占用，自动查找可用端口...")
+            port = get_available_port()
+            print(f"使用可用端口: {port}")
+            start_server(main, port=port, debug=True)
+        else:
+            raise
 
