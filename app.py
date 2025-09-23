@@ -719,23 +719,29 @@ if __name__ == '__main__':
                         help='服务器端口号（不指定则随机可用端口）')
     args = parser.parse_args()
 
-    # 解决 debug 模式下重载导致端口变化：首次确定端口并写入环境变量，后续重载复用
-    fixed_port_env = os.environ.get('KOTOBA_FIXED_PORT')
-    if fixed_port_env:
-        port = int(fixed_port_env)
+    # 端口选择：指定则严格使用；未指定则随机获取
+    if args.port is not None:
+        port = args.port
+        if not is_port_available(port):
+            print(f"端口 {port} 已被占用，尝试查找可用端口...")
+            alt = find_available_port(port) or get_random_free_port()
+            print(f"使用可用端口: {alt}")
+            port = alt
     else:
-        port = get_available_port(args.port)
-        os.environ['KOTOBA_FIXED_PORT'] = str(port)
+        port = get_available_port()
+
+    # 生产环境默认关闭 debug；如需开启，设置环境变量 KOTOBA_DEBUG=1
+    debug_enabled = os.environ.get('KOTOBA_DEBUG') == '1'
     print(f"Starting server on port {port}")
 
     try:
-        start_server(main, port=port, debug=True)
+        start_server(main, port=port, debug=debug_enabled)
     except OSError as e:
         if "Address already in use" in str(e):
             print(f"端口 {port} 启动时被占用，自动查找可用端口...")
             port = get_available_port()
             print(f"使用可用端口: {port}")
-            start_server(main, port=port, debug=True)
+            start_server(main, port=port, debug=debug_enabled)
         else:
             raise
 
