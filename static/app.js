@@ -83,6 +83,8 @@
         toggleKatakana: document.getElementById('toggle-katakana'),
         toggleFurigana: document.getElementById('toggle-furigana'),
         settingsSave: document.getElementById('settings-save'),
+        loadingIndicator: document.getElementById('loading-indicator'),
+        loadingText: document.querySelector('#loading-indicator .loading-text'),
     };
 
     function setButtonToAnswer() {
@@ -104,6 +106,37 @@
         }
         if (elements.answerInput) {
             elements.answerInput.readOnly = true;
+        }
+    }
+
+    function showLoading(message) {
+        state.awaitingNext = false;
+        if (elements.loadingIndicator) {
+            elements.loadingIndicator.classList.remove('hidden');
+        }
+        if (elements.loadingText) {
+            elements.loadingText.textContent = message || '読み込み中…';
+        }
+        if (elements.answerSubmit) {
+            elements.answerSubmit.disabled = true;
+            elements.answerSubmit.textContent = '読み込み中…';
+        }
+        if (elements.answerInput) {
+            elements.answerInput.readOnly = true;
+            elements.answerInput.value = '';
+        }
+    }
+
+    function hideLoading() {
+        if (elements.loadingIndicator) {
+            elements.loadingIndicator.classList.add('hidden');
+        }
+        if (elements.answerSubmit) {
+            elements.answerSubmit.disabled = state.awaitingNext;
+            elements.answerSubmit.textContent = state.awaitingNext ? '次へ' : '回答';
+        }
+        if (elements.answerInput) {
+            elements.answerInput.readOnly = state.awaitingNext;
         }
     }
 
@@ -555,6 +588,20 @@
 
     async function handleAnswerSubmit(event) {
         event.preventDefault();
+
+        if (state.awaitingNext) {
+            setButtonToAnswer();
+            setLoading(true);
+            try {
+                await loadRandomEntry();
+            } catch (error) {
+                showAlert('error', error.message || String(error));
+            } finally {
+                setLoading(false);
+            }
+            return;
+        }
+
         const value = elements.answerInput ? elements.answerInput.value : '';
         if (!value.trim()) {
             try {
@@ -564,6 +611,7 @@
             }
             return;
         }
+
         setLoading(true);
         try {
             const result = await evaluateAnswer(value);
@@ -576,6 +624,7 @@
                 incrementCounter('wrong');
                 updateScoreboard();
                 showIncorrectFeedback(value, state.currentEntry);
+                setButtonToNext();
             }
         } catch (error) {
             showAlert('error', error.message || String(error));
@@ -657,9 +706,12 @@
                 updateDictionaryLabel();
                 populateDictionarySelect();
                 try {
+                    showLoading('新しい辞書を読み込んでいます…');
                     await loadRandomEntry();
                 } catch (error) {
                     showAlert('error', error.message || String(error));
+                } finally {
+                    hideLoading();
                 }
             });
         }
@@ -724,6 +776,7 @@
         initDarkMode();
         initFooterFavicon();
         const params = parseSettingsFromParams();
+        showLoading('辞書を読み込んでいます…');
         try {
             await initKuroshiro();
         } catch (error) {
@@ -735,6 +788,8 @@
             await loadRandomEntry();
         } catch (error) {
             showAlert('error', error.message || String(error));
+        } finally {
+            hideLoading();
         }
     }
 
