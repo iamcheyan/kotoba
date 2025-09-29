@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>言葉 | Kotoba Vocabulary Trainer</title>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg?v=1">
+    <link rel="stylesheet" href="/static/styles.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/darkmode-js@1.5.7/lib/darkmode-js.min.js"></script>
+    <script>
+        (function () {
+            function prepareModuleEnv() {
+                window.module = { exports: {} };
+                window.exports = window.module.exports;
+            }
+
+            window.__captureModule = function (target) {
+                if (!window.module || !window.module.exports) {
+                    return;
+                }
+                const exported = window.module.exports;
+                const ctor = exported && (exported.default || exported[target] || exported);
+                if (ctor) {
+                    window[target] = ctor;
+                }
+                prepareModuleEnv();
+            };
+
+            if (typeof window.require === 'undefined') {
+                window.require = function (name) {
+                    if (name === 'kuromoji') {
+                        return window.kuromoji;
+                    }
+                    return null;
+                };
+            }
+
+            prepareModuleEnv();
+        })();
+    </script>
+    <script defer src="https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dist/kuromoji.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/kuroshiro@1.2.0/dist/kuroshiro.min.js" onload="window.__captureModule('Kuroshiro')"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/kuroshiro-analyzer-kuromoji@1.1.0/dist/kuroshiro-analyzer-kuromoji.min.js" onload="window.__captureModule('KuromojiAnalyzer')"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/wanakana@4.0.2/wanakana.min.js"></script>
+    <script>
+        window.addEventListener('load', function () {
+            delete window.module;
+            delete window.exports;
+            delete window.require;
+            delete window.__captureModule;
+        });
+    </script>
+    <script defer src="/static/app.js"></script>
+</head>
+<body>
+    <div class="app">
+        <header class="app-header">
+            <div class="branding">
+                <span class="branding-logo" aria-hidden="true">
+                    <svg width="42" height="42" viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg" role="img">
+                        <path fill="#A6D388" d="M6.401 28.55c5.006 5.006 16.502 11.969 29.533-.07c-7.366-1.417-8.662-10.789-13.669-15.794c-5.006-5.007-11.991-6.139-16.998-1.133c-5.006 5.006-3.873 11.99 1.134 16.997z"></path>
+                        <path fill="#77B255" d="M24.684 29.81c6.128 1.634 10.658-.738 11.076-1.156c0 0-3.786 1.751-10.359-1.476c.952-1.212 3.854-2.909 3.854-2.909c-.553-.346-4.078-.225-6.485 1.429a37.028 37.028 0 0 1-3.673-2.675l.84-.871c3.25-3.384 6.944-2.584 6.944-2.584c-.638-.613-5.599-3.441-9.583.7l-.613.638a54.727 54.727 0 0 1-1.294-1.25l-1.85-1.85l1.064-1.065c3.321-3.32 8.226-3.451 8.226-3.451c-.626-.627-6.863-2.649-10.924 1.412l-.736.735l-8.292-8.294c-.626-.627-1.692-.575-2.317.05c-.626.626-.677 1.691-.051 2.317l8.293 8.293l-.059.059C4.684 21.924 6.37 28.496 6.997 29.123c0 0 .468-5.242 3.789-8.562l.387-.388l3.501 3.502c.057.057.113.106.17.163c-2.425 4.797 1.229 10.34 1.958 10.784c0 0-1.465-4.723.48-8.635c1.526 1.195 3.02 2.095 4.457 2.755c.083 2.993 2.707 5.7 3.344 5.931c0 0-.911-3.003-.534-4.487l.135-.376z"></path>
+                        <path fill="#5DADEC" d="M22.083 10a1.001 1.001 0 0 1-.375-1.927c.166-.068 4.016-1.698 4.416-6.163a1 1 0 1 1 1.992.178c-.512 5.711-5.451 7.755-5.661 7.839a.978.978 0 0 1-.372.073zm5 4a1 1 0 0 1-.334-1.942c.188-.068 4.525-1.711 5.38-8.188a.99.99 0 0 1 1.122-.86a.998.998 0 0 1 .86 1.122c-1.021 7.75-6.468 9.733-6.699 9.813c-.109.037-.22.055-.329.055zm3.001 6a1.001 1.001 0 0 1-.483-1.876c.027-.015 2.751-1.536 3.601-3.518a1 1 0 0 1 1.837.788c-1.123 2.62-4.339 4.408-4.475 4.483a1.003 1.003 0 0 1-.48.123z"></path>
+                    </svg>
+                </span>
+                <a href="/" class="branding-title">言葉</a>
+                <span id="dictionary-name" class="dictionary-name"></span>
+            </div>
+            <div class="header-meta">
+                <div id="online-count" class="online-count">オフラインモード</div>
+                <div id="score" class="score">正解: 0 | 不正解: 0 | 総単語: 0</div>
+            </div>
+            <div class="header-actions">
+                <button id="dictionary-button" type="button" class="ghost-button">📘 辞書</button>
+                <button id="settings-button" type="button" class="ghost-button">⚙️ 設定</button>
+            </div>
+        </header>
+
+        <main class="main">
+            <section id="question" class="card">
+                <h1 id="question-word" class="word" aria-live="polite"></h1>
+                <p id="question-meaning" class="meaning"></p>
+                <p id="question-reading" class="reading"></p>
+                <p id="question-romaji" class="romaji"></p>
+                <form id="answer-form" class="answer-form" autocomplete="off">
+                    <label class="sr-only" for="answer-input">答えを入力してください</label>
+                    <input id="answer-input" type="text" inputmode="text" autocomplete="off" placeholder="" required>
+                    <button type="submit" id="answer-submit">回答</button>
+                </form>
+            </section>
+            <section id="alerts" class="alerts" aria-live="polite"></section>
+        </main>
+
+        <footer class="footer">
+            © <a href="https://iamcheyan.com/" target="_blank" rel="noreferrer noopener">Cheyan</a> All Rights Reserved ·
+            <a href="https://github.com/iamcheyan/kotoba" target="_blank" rel="noreferrer noopener">GitHub</a>
+        </footer>
+    </div>
+
+    <div id="modal-backdrop" class="modal-backdrop hidden" data-close="modal"></div>
+
+    <div id="dictionary-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="dictionary-modal-title">
+        <div class="modal-header">
+            <h2 id="dictionary-modal-title">辞書選択</h2>
+            <button type="button" class="modal-close" data-close="modal" aria-label="閉じる">×</button>
+        </div>
+        <div class="modal-body">
+            <label for="dictionary-select">利用する辞書を選択</label>
+            <select id="dictionary-select"></select>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="ghost-button" data-close="modal">キャンセル</button>
+            <button type="button" id="dictionary-save">確認</button>
+        </div>
+    </div>
+
+    <div id="settings-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="settings-modal-title">
+        <div class="modal-header">
+            <h2 id="settings-modal-title">設定</h2>
+            <button type="button" class="modal-close" data-close="modal" aria-label="閉じる">×</button>
+        </div>
+        <div class="modal-body">
+            <label class="checkbox">
+                <input type="checkbox" id="toggle-reading" checked>
+                読み方を表示する
+            </label>
+            <label class="checkbox">
+                <input type="checkbox" id="toggle-romaji" checked>
+                ローマ字を表示する
+            </label>
+            <label class="checkbox">
+                <input type="checkbox" id="toggle-placeholder" checked>
+                入力ヒントを表示する
+            </label>
+            <label class="checkbox">
+                <input type="checkbox" id="toggle-katakana">
+                カタカナにも振り仮名を表示する
+            </label>
+            <label class="checkbox">
+                <input type="checkbox" id="toggle-furigana" checked>
+                振り仮名を表示する
+            </label>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="ghost-button" data-close="modal">キャンセル</button>
+            <button type="button" id="settings-save">確認</button>
+        </div>
+    </div>
+</body>
+</html>
