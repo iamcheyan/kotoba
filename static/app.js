@@ -60,7 +60,6 @@
 
     const elements = {
         dictionaryName: document.getElementById('dictionary-name'),
-        onlineCount: document.getElementById('online-count'),
         score: document.getElementById('score'),
         questionWord: document.getElementById('question-word'),
         questionMeaning: document.getElementById('question-meaning'),
@@ -397,12 +396,136 @@
         }
     }
 
-    function showAlert(type, message) {
+    function showAlert(type, message, isCelebration = false) {
         clearAlerts();
         const div = document.createElement('div');
         div.className = `alert ${type === 'error' ? 'alert-error' : 'alert-success'}`;
+        if (isCelebration) {
+            div.classList.add('alert-celebration');
+        }
         div.textContent = message;
         elements.alerts.appendChild(div);
+        
+        if (isCelebration) {
+            // 添加庆祝效果
+            triggerCelebration();
+        }
+    }
+
+    function triggerCelebration() {
+        // 播放庆祝音效
+        playCelebrationSound();
+        
+        // 创建彩纸效果
+        createConfetti();
+        
+        // 为卡片添加庆祝动画
+        const card = document.querySelector('.card');
+        if (card) {
+            card.classList.add('celebration-bounce', 'celebration-glow');
+            
+            // 移除动画类
+            setTimeout(() => {
+                card.classList.remove('celebration-bounce', 'celebration-glow');
+            }, 1500);
+        }
+        
+        // 为分数显示添加动画
+        const score = document.getElementById('score');
+        if (score) {
+            score.classList.add('celebration-bounce');
+            setTimeout(() => {
+                score.classList.remove('celebration-bounce');
+            }, 600);
+        }
+        
+        // 为品牌标题添加庆祝效果
+        const branding = document.querySelector('.branding-title');
+        if (branding) {
+            branding.classList.add('celebration-bounce');
+            setTimeout(() => {
+                branding.classList.remove('celebration-bounce');
+            }, 600);
+        }
+    }
+
+    function playCelebrationSound() {
+        try {
+            // 创建音频上下文
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            
+            // 创建庆祝音效 - 上升音阶
+            const frequencies = [523.25, 587.33, 659.25, 698.46, 783.99]; // C5, D5, E5, F5, G5
+            
+            frequencies.forEach((freq, index) => {
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.setValueAtTime(freq, audioContext.currentTime);
+                oscillator.type = 'sine';
+                
+                gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+                gainNode.gain.linearRampToValueAtTime(0.1, audioContext.currentTime + 0.05);
+                gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.3);
+                
+                oscillator.start(audioContext.currentTime + index * 0.1);
+                oscillator.stop(audioContext.currentTime + index * 0.1 + 0.3);
+            });
+        } catch (error) {
+            // 静默处理音频错误，不影响主要功能
+            console.debug('Audio playback not available:', error);
+        }
+    }
+
+    function createConfetti() {
+        // 移除现有的庆祝覆盖层
+        const existingOverlay = document.querySelector('.celebration-overlay');
+        if (existingOverlay) {
+            existingOverlay.remove();
+        }
+        
+        const overlay = document.createElement('div');
+        overlay.className = 'celebration-overlay';
+        
+        // 创建70个彩纸片，增加密度
+        for (let i = 0; i < 70; i++) {
+            const confetti = document.createElement('div');
+            confetti.className = 'celebration-confetti';
+            
+            // 随机位置
+            confetti.style.left = Math.random() * 100 + '%';
+            confetti.style.animationDelay = Math.random() * 2 + 's';
+            confetti.style.animationDuration = (Math.random() * 2 + 2) + 's';
+            
+            // 随机大小
+            const size = Math.random() * 8 + 6; // 6-14px
+            confetti.style.width = size + 'px';
+            confetti.style.height = size + 'px';
+            
+            // 随机形状
+            if (Math.random() > 0.6) {
+                confetti.style.borderRadius = '50%';
+            } else if (Math.random() > 0.8) {
+                confetti.style.borderRadius = '2px';
+            }
+            
+            // 随机旋转
+            confetti.style.transform = `rotate(${Math.random() * 360}deg)`;
+            
+            overlay.appendChild(confetti);
+        }
+        
+        document.body.appendChild(overlay);
+        
+        // 4秒后移除覆盖层
+        setTimeout(() => {
+            if (overlay.parentNode) {
+                overlay.remove();
+            }
+        }, 4000);
     }
 
     function showIncorrectFeedback(answer, entry) {
@@ -630,8 +753,29 @@
             if (result.correct) {
                 incrementCounter('correct');
                 updateScoreboard();
-                showAlert('success', '👏 正解です！');
-                await loadRandomEntry();
+                
+                // 根据连续正确次数显示不同的庆祝消息
+                const correctCount = parseInt(localStorage.getItem('correct') || '0', 10);
+                let celebrationMessage = '👏 正解です！';
+                
+                if (correctCount % 10 === 0 && correctCount > 0) {
+                    celebrationMessage = '🎉 すごい！10問連続正解！';
+                } else if (correctCount % 5 === 0 && correctCount > 0) {
+                    celebrationMessage = '✨ 素晴らしい！5問連続正解！';
+                } else if (correctCount === 1) {
+                    celebrationMessage = '🎯 初回正解！おめでとう！';
+                }
+                
+                showAlert('success', celebrationMessage, true); // 第三个参数启用庆祝效果
+                
+                // 延迟加载下一个问题，让用户有时间享受庆祝效果
+                setTimeout(async () => {
+                    try {
+                        await loadRandomEntry();
+                    } catch (error) {
+                        showAlert('error', error.message || String(error));
+                    }
+                }, 1500);
             } else {
                 incrementCounter('wrong');
                 updateScoreboard();
@@ -754,24 +898,7 @@
         });
     }
 
-    function initDarkMode() {
-        if (window.Darkmode) {
-            const options = {
-                bottom: '32px',
-                right: '32px',
-                time: '0.5s',
-                saveInCookies: true,
-                label: '🌓',
-                autoMatchOsTheme: true,
-            };
-            try {
-                const darkmode = new window.Darkmode(options);
-                darkmode.showWidget();
-            } catch (error) {
-                console.warn('Darkmode init failed', error);
-            }
-        }
-    }
+
 
     function initFooterFavicon() {
         const link = document.querySelector('link[rel="icon"]') || document.createElement('link');
@@ -785,7 +912,6 @@
 
     async function init() {
         bindEvents();
-        initDarkMode();
         initFooterFavicon();
         const params = parseSettingsFromParams();
         showLoading('辞書を読み込んでいます…');
