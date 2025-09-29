@@ -103,7 +103,7 @@ npm install kuromoji kuroshiro kuroshiro-analyzer-kuromoji wanakana
 3. Copy the browser bundles and Kuromoji dictionary assets into the project:
 ```bash
 mkdir -p static/vendor/kuromoji static/vendor/kuroshiro static/vendor/kuroshiro-analyzer-kuromoji static/vendor/wanakana
-cp node_modules/kuromoji/dist/browser/kuromoji.js static/vendor/kuromoji/
+cp node_modules/kuromoji/build/kuromoji.js static/vendor/kuromoji/
 cp node_modules/kuroshiro/dist/kuroshiro.min.js static/vendor/kuroshiro/
 cp node_modules/kuroshiro-analyzer-kuromoji/dist/kuroshiro-analyzer-kuromoji.min.js static/vendor/kuroshiro-analyzer-kuromoji/
 cp node_modules/wanakana/wanakana.min.js static/vendor/wanakana/
@@ -163,7 +163,7 @@ cd kotoba
 npm install kuromoji kuroshiro kuroshiro-analyzer-kuromoji wanakana
 
 mkdir -p static/vendor/kuromoji static/vendor/kuroshiro static/vendor/kuroshiro-analyzer-kuromoji static/vendor/wanakana
-cp node_modules/kuromoji/dist/browser/kuromoji.js static/vendor/kuromoji/
+cp node_modules/kuromoji/build/kuromoji.js static/vendor/kuromoji/
 cp node_modules/kuroshiro/dist/kuroshiro.min.js static/vendor/kuroshiro/
 cp node_modules/kuroshiro-analyzer-kuromoji/dist/kuroshiro-analyzer-kuromoji.min.js static/vendor/kuroshiro-analyzer-kuromoji/
 cp node_modules/wanakana/wanakana.min.js static/vendor/wanakana/
