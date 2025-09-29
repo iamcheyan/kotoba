@@ -1,197 +1,100 @@
-# 言葉
+# 言葉 | Kotoba Vocabulary Trainer
 
-ウェブベースの日本語学習ツールです。インタラクティブなインターフェースで日本語の語彙を練習しながら、読み方・ローマ字・振り仮名などの表示を柔軟に切り替えられます。
+🎯 **纯前端日语词汇学习应用** - 无需服务器，直接在浏览器中打开即可使用！
 
-## 🚀 技术架构与特色
+## ✨ 主要功能
 
-### 核心技术栈
-- **HTML/CSS/JavaScript** - 纯前端渲染界面，支持响应式布局
-- **Kuroshiro + Kuromoji** - 在浏览器端完成汉字到假名、罗马音的实时转换
-- **Wanakana** - 统一用户输入格式，支持假名与罗马音互转
-- **Darkmode.js** - 一键切换暗黑模式，自动跟随系统主题
+### 🎉 丰富的学习体验
+- **庆祝反馈系统** - 回答正确时触发彩纸动画、音效和弹跳效果
+- **智能庆祝消息** - 根据连续正确次数显示不同的庆祝提示
+- **即时反馈** - 支持汉字、假名、罗马音多种输入方式
 
-### 技术亮点
-- **纯前端智能假名转换** - 借助 Kuroshiro 在浏览器内生成读音与罗马音，支持振り仮名渲染
-- **多词典系统** - JSON 配置驱动，可在界面中即时切换 N5-N1、语法、会话、片假名等词库
-- **离线友好** - 除第三方 CDN 依赖外无需后端服务，静态托管即可使用
-- **自定义显示选项** - 通过 URL 参数和 localStorage 控制读音、罗马音、振り仮名等显示
-- **响应式体验** - 针对移动端与桌面端优化，包含 iOS 虚拟键盘调整
-- **持久化进度** - 浏览器 localStorage 记录正误统计，随时继续练习
+### 📚 多词典支持
+- **基础词汇** - N5-N1级别日语词汇
+- **语法练习** - 日语语法要点
+- **会话词汇** - 日常对话常用词
+- **片假名词汇** - 外来语专用练习
 
-### 架构特点
-- **模块化设计** - 词典配置、UI 组件与业务逻辑解耦，易于扩展新功能
-- **纯静态部署** - 任意 HTTP 静态服务即可托管（GitHub Pages、Vercel、Netlify 等）
-- **配置驱动** - JSON 配置文件支持词典与功能的灵活扩展
-- **跨平台兼容** - 支持 Windows、macOS、Linux 等操作系统与现代浏览器
+### ⚙️ 个性化设置
+- **显示选项** - 可切换读音、罗马音、振假名显示
+- **输入提示** - 智能输入提示开关
+- **进度追踪** - 自动记录正误统计
 
-![](assets/image-20250105223827741.png)
+## 🚀 快速开始
 
- [日本語](#japanese) | [English](#english) | [中文](#chinese) 
+### 方法一：直接使用（推荐）
+1. 下载项目文件
+2. 在浏览器中直接打开 `index.html`
+3. 开始学习！
 
-<a name="japanese"></a>
-
-## 🇯🇵 日本語
-
-### 特徴
-- 📚 複数の辞書をサポート
-- ⚙️ 表示設定のカスタマイズ
-- ✅ 即時フィードバック
-- 📊 進捗状況の追跡
-- 🎯 漢字・かな・ローマ字入力に対応
-- 🌐 ウェブベース、インストール不要
-
-### セットアップ
-1. リポジトリをクローン：
+### 方法二：本地服务器
 ```bash
+# 克隆项目
 git clone https://github.com/iamcheyan/kotoba
 cd kotoba
-```
 
-2. 任意の静的サーバーで `index.html` を配信（例）：
-```bash
-# Node.js を利用する場合
+# 使用任意静态服务器（可选）
 npx serve .
-
-# または Bun / Deno / 任意の HTTP サーバー
-bunx http-server .
+# 或
+python3 -m http.server 8000
 ```
 
-ブラウザで `http://localhost:3000`（使用するサーバーによって異なります）へアクセスすると利用を開始できます。`file://` 直接オープンでは `fetch` が制限されるため、必ず HTTP サーバー経由で配信してください。
+## 🎨 技术特色
 
-### 使用方法
-- ブラウザからウェブインターフェースにアクセス
-- 使用したい辞書を選択
-- 設定メニューで読み方・ローマ字・振り仮名の表示を調整
-- 漢字・かな・ローマ字で回答を入力
-- 即時フィードバックを確認
+- **纯前端架构** - 无需后端服务器，静态托管即可
+- **智能假名转换** - 基于Kuroshiro的浏览器端转换
+- **响应式设计** - 完美适配桌面和移动设备
+- **离线友好** - 除初始加载外无需网络连接
 
-### 動作環境
-- 最新版の Chrome / Firefox / Safari / Edge
-- インターネット接続（Kuroshiro の辞書 CDN 利用時）
+## 🎊 庆祝效果展示
 
-### ライセンス
-MIT License 
+当您回答正确时，应用会触发：
 
----
+1. **彩纸飘落** - 70个彩色纸片从屏幕顶部飘落
+2. **音效反馈** - 上升音阶的庆祝音效
+3. **视觉动画** - 卡片弹跳、发光效果
+4. **智能消息**：
+   - 普通正解：👏 正解です！
+   - 初回正解：🎯 初回正解！おめでとう！
+   - 5问连续：✨ 素晴らしい！5問連続正解！
+   - 10问连续：🎉 すごい！10問連続正解！
 
-<a name="english"></a>
-## 🇬🇧 English
+## 📁 项目结构
 
-### Overview
-A web-based Japanese language learning tool that helps users practice vocabulary through an interactive interface. Flexible display controls let you tailor readings, romaji, and furigana to suit your study preference.
-
-### Features
-- 📚 Multiple dictionary support
-- ⚙️ Display settings you can tailor per session
-- ✅ Instant feedback on answers
-- 📊 Progress tracking
-- 🎯 Accepts kanji, kana, or romaji answers
-- 🌐 Web-based interface, no installation required
-
-### Installation
-1. Clone the repository:
-```bash
-git clone https://github.com/iamcheyan/kotoba
-cd kotoba
+```
+Kotoba/
+├── index.html              # 主页面
+├── static/
+│   ├── app.js             # 应用逻辑（包含庆祝系统）
+│   ├── styles.css         # 样式文件（包含动画效果）
+│   ├── vendor/            # JavaScript库文件
+│   └── kuromoji-dict/     # 日语词典数据
+└── dictionaries/          # 词汇数据文件
+    ├── base.json          # 基础词汇
+    ├── grammar.json       # 语法词汇
+    ├── conversation.json  # 会话词汇
+    └── katakana.json      # 片假名词汇
 ```
 
-2. Install frontend dependencies locally (only once):
-```bash
-npm install kuromoji kuroshiro kuroshiro-analyzer-kuromoji wanakana
-```
+## 🌟 使用技巧
 
-3. Copy the browser bundles and Kuromoji dictionary assets into the project:
-```bash
-mkdir -p static/vendor/kuromoji static/vendor/kuroshiro static/vendor/kuroshiro-analyzer-kuromoji static/vendor/wanakana
-cp node_modules/kuromoji/build/kuromoji.js static/vendor/kuromoji/
-cp node_modules/kuroshiro/dist/kuroshiro.min.js static/vendor/kuroshiro/
-cp node_modules/kuroshiro-analyzer-kuromoji/dist/kuroshiro-analyzer-kuromoji.min.js static/vendor/kuroshiro-analyzer-kuromoji/
-cp node_modules/wanakana/wanakana.min.js static/vendor/wanakana/
-cp -R node_modules/kuromoji/dict static/kuromoji-dict
-```
+1. **多种输入方式** - 可以用汉字、平假名、片假名或罗马音回答
+2. **设置调优** - 根据学习阶段调整显示选项
+3. **进度追踪** - 查看右上角的统计信息
+4. **词典切换** - 点击"📘 辞書"按钮切换不同词库
 
-4. Serve the project with any static file server (examples):
-```bash
-# Using Node.js
-npx serve .
+## 🔧 系统要求
 
-# Using any other HTTP static server
-bunx http-server .
-```
-
-Open the reported local address (for example `http://localhost:3000`) in your browser. Loading `index.html` via `file://` is not supported because the app relies on `fetch`.
-
-### Usage
-- Access the web interface through your browser
-- Choose your preferred dictionary
-- Adjust the display options (reading, romaji, furigana) from the settings menu
-- Enter your answer in kanji, kana, or romaji
-- Get instant feedback on your responses
-
-### Requirements
-- Modern browser (Chrome, Firefox, Safari, Edge)
-- Internet access for the CDN-hosted Kuromoji dictionary data
-
-### License
-MIT License
-
----
-
-<a name="chinese"></a>
-## 🇨🇳 中文
-
-### 概述
-这是一个基于网页的日语学习工具，通过交互式界面帮助用户练习日语词汇。用户可以自由切换读音、罗马音和振假名等显示方式，适合不同水平的学习者使用。
-
-### 功能特点
-- 📚 支持多个词典
-- ⚙️ 可自定义的显示选项
-- ✅ 即时答案反馈
-- 📊 学习进度追踪
-- 🎯 支持汉字、假名和罗马音输入
-- 🌐 网页端应用，无需安装
-
-### 安装方法
-1. 克隆仓库：
-```bash
-git clone https://github.com/iamcheyan/kotoba
-cd kotoba
-```
-
-2. 安装前端依赖并拷贝浏览器版本资源：
-```bash
-npm install kuromoji kuroshiro kuroshiro-analyzer-kuromoji wanakana
-
-mkdir -p static/vendor/kuromoji static/vendor/kuroshiro static/vendor/kuroshiro-analyzer-kuromoji static/vendor/wanakana
-cp node_modules/kuromoji/build/kuromoji.js static/vendor/kuromoji/
-cp node_modules/kuroshiro/dist/kuroshiro.min.js static/vendor/kuroshiro/
-cp node_modules/kuroshiro-analyzer-kuromoji/dist/kuroshiro-analyzer-kuromoji.min.js static/vendor/kuroshiro-analyzer-kuromoji/
-cp node_modules/wanakana/wanakana.min.js static/vendor/wanakana/
-cp -R node_modules/kuromoji/dict static/kuromoji-dict
-```
-
-3. 使用任意静态服务器部署（示例）：
-```bash
-# 使用 Node.js
-npx serve .
-
-# 或任何 HTTP 静态服务器
-bunx http-server .
-```
-
-在浏览器中打开提示的本地地址（如 `http://localhost:3000`）即可使用。由于应用依赖 `fetch` 请求，不能直接通过 `file://` 打开。
-
-### 使用方法
-- 通过浏览器访问网页界面
-- 选择想要使用的词典
-- 通过设置按钮调整读音、罗马音、振假名等显示
-- 以汉字、假名或罗马音输入答案
-- 获取即时反馈
-
-### 系统要求
 - 现代浏览器（Chrome、Firefox、Safari、Edge）
-- 访问互联网以加载 CDN 上的 Kuromoji 词典数据
-  （如果已按上述步骤拷贝本地资源，则无需联网）
+- 支持JavaScript和CSS3动画
+- 建议使用最新版本浏览器以获得最佳体验
 
-### 开源协议
-MIT License
+## 📄 开源协议
+
+MIT License - 自由使用、修改和分发
+
+---
+
+**立即开始您的日语学习之旅！** 🎌
+
+打开 `index.html`，享受互动式的学习体验和令人愉悦的庆祝反馈！
