@@ -95,7 +95,22 @@ git clone https://github.com/iamcheyan/kotoba
 cd kotoba
 ```
 
-2. Serve the project with any static file server (examples):
+2. Install frontend dependencies locally (only once):
+```bash
+npm install kuromoji kuroshiro kuroshiro-analyzer-kuromoji wanakana
+```
+
+3. Copy the browser bundles and Kuromoji dictionary assets into the project:
+```bash
+mkdir -p static/vendor/kuromoji static/vendor/kuroshiro static/vendor/kuroshiro-analyzer-kuromoji static/vendor/wanakana
+cp node_modules/kuromoji/dist/browser/kuromoji.js static/vendor/kuromoji/
+cp node_modules/kuroshiro/dist/kuroshiro.min.js static/vendor/kuroshiro/
+cp node_modules/kuroshiro-analyzer-kuromoji/dist/kuroshiro-analyzer-kuromoji.min.js static/vendor/kuroshiro-analyzer-kuromoji/
+cp node_modules/wanakana/wanakana.min.js static/vendor/wanakana/
+cp -R node_modules/kuromoji/dict static/kuromoji-dict
+```
+
+4. Serve the project with any static file server (examples):
 ```bash
 # Using Node.js
 npx serve .
@@ -143,7 +158,19 @@ git clone https://github.com/iamcheyan/kotoba
 cd kotoba
 ```
 
-2. 使用任意静态服务器部署（示例）：
+2. 安装前端依赖并拷贝浏览器版本资源：
+```bash
+npm install kuromoji kuroshiro kuroshiro-analyzer-kuromoji wanakana
+
+mkdir -p static/vendor/kuromoji static/vendor/kuroshiro static/vendor/kuroshiro-analyzer-kuromoji static/vendor/wanakana
+cp node_modules/kuromoji/dist/browser/kuromoji.js static/vendor/kuromoji/
+cp node_modules/kuroshiro/dist/kuroshiro.min.js static/vendor/kuroshiro/
+cp node_modules/kuroshiro-analyzer-kuromoji/dist/kuroshiro-analyzer-kuromoji.min.js static/vendor/kuroshiro-analyzer-kuromoji/
+cp node_modules/wanakana/wanakana.min.js static/vendor/wanakana/
+cp -R node_modules/kuromoji/dict static/kuromoji-dict
+```
+
+3. 使用任意静态服务器部署（示例）：
 ```bash
 # 使用 Node.js
 npx serve .
@@ -164,6 +191,7 @@ bunx http-server .
 ### 系统要求
 - 现代浏览器（Chrome、Firefox、Safari、Edge）
 - 访问互联网以加载 CDN 上的 Kuromoji 词典数据
+  （如果已按上述步骤拷贝本地资源，则无需联网）
 
 ### 开源协议
 MIT License

@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    const KUROMOJI_DICT_PATH = 'https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dict/';
+    const KUROMOJI_DICT_PATHS = ['/static/kuromoji-dict/'];
 
     const state = {
         kuroshiro: null,
@@ -292,10 +292,22 @@
             throw new Error('Kuroshiro の読み込みに失敗しました');
         }
         const kuroshiro = new KuroshiroCtor();
-        const analyzer = new AnalyzerCtor({ dictPath: KUROMOJI_DICT_PATH });
-        await kuroshiro.init(analyzer);
-        state.kuroshiro = kuroshiro;
-        state.kuroshiroReady = true;
+        let lastError = null;
+        for (const path of KUROMOJI_DICT_PATHS) {
+            try {
+                const analyzer = new AnalyzerCtor({ dictPath: path });
+                await kuroshiro.init(analyzer);
+                state.kuroshiro = kuroshiro;
+                state.kuroshiroReady = true;
+                console.info(`[Kuroshiro] dictionary loaded from ${path}`);
+                return;
+            } catch (error) {
+                console.warn(`[Kuroshiro] failed to init with ${path}`, error);
+                lastError = error;
+            }
+        }
+        state.kuroshiroReady = false;
+        throw lastError || new Error('Kuroshiro の読み込みに失敗しました');
     }
 
     function resolveDictionaryId(requested) {
