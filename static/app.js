@@ -46,6 +46,42 @@
             .replace(/'/g, '&#39;');
     }
 
+    function updatePreviewButton() {
+        if (!elements.voicePreview) return;
+        elements.voicePreview.textContent = state.previewPlaying ? '⏹ 停止' : '▶︎ 試聴';
+        elements.voicePreview.classList.toggle('is-playing', state.previewPlaying);
+    }
+
+    function startVoicePreview() {
+        const sample = 'こんにちは、音声サンプルです。';
+        try { speechSynthesis.cancel(); } catch (_) {}
+        state.previewPlaying = true;
+        updatePreviewButton();
+        const utter = new SpeechSynthesisUtterance(sample);
+        const voices = speechSynthesis.getVoices();
+        let selected = null;
+        if (state.selectedVoice) {
+            selected = voices.find(v => v.name === state.selectedVoice) || null;
+        }
+        if (!selected) {
+            selected = voices.find(v => (v.lang || '').toLowerCase().startsWith('ja')) || voices.find(v => v.default) || voices[0] || null;
+        }
+        if (selected) {
+            utter.voice = selected;
+            utter.lang = selected.lang || 'ja-JP';
+        } else {
+            utter.lang = 'ja-JP';
+        }
+        utter.rate = state.speechRate || 1.0;
+        utter.onend = () => { state.previewPlaying = false; updatePreviewButton(); };
+        utter.onerror = () => { state.previewPlaying = false; updatePreviewButton(); };
+        try {
+            speechSynthesis.speak(utter);
+        } catch (_) {
+            state.previewPlaying = false;
+            updatePreviewButton();
+        }
+    }
     function isKanji(char) {
         if (!char) {
             return false;
@@ -1508,6 +1544,10 @@
             elements.voiceSelect.addEventListener('change', function() {
                 state.selectedVoice = this.value;
                 localStorage.setItem('selectedVoice', this.value);
+                // 如果正在试听，切换声音后立即用新声音重播
+                if (state.previewPlaying) {
+                    startVoicePreview();
+                }
             });
         }
 
