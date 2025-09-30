@@ -17,6 +17,8 @@
         showPlaceholder: true,
         showKatakanaReading: false,
         showFurigana: true,
+        selectedVoice: null,
+        speechRate: 1.0,
         awaitingNext: false,
     };
 
@@ -81,6 +83,9 @@
         togglePlaceholder: document.getElementById('toggle-placeholder'),
         toggleKatakana: document.getElementById('toggle-katakana'),
         toggleFurigana: document.getElementById('toggle-furigana'),
+        voiceSelect: document.getElementById('voice-select'),
+        rateSlider: document.getElementById('rate-slider'),
+        rateValue: document.getElementById('rate-value'),
         settingsSave: document.getElementById('settings-save'),
         loadingIndicator: document.getElementById('loading-indicator'),
         loadingText: document.querySelector('#loading-indicator .loading-text'),
@@ -336,9 +341,25 @@
     }
 
     async function loadConfig(params) {
-        const response = await fetch('config.json', { cache: 'no-cache' });
-        if (!response.ok) {
-            throw new Error(`設定の取得に失敗しました (HTTP ${response.status})`);
+        // 兼容不同部署路径：优先 /config.json，其次 相对路径 config.json，最后 /static/config.json
+        const candidates = ['/config.json', 'config.json', '/static/config.json'];
+        let response = null;
+        for (const url of candidates) {
+            try {
+                const res = await fetch(url, { cache: 'no-cache' });
+                if (res && res.ok) {
+                    response = res;
+                    console.log('[Config] loaded from', url);
+                    break;
+                } else {
+                    console.log('[Config] try', url, '->', res ? res.status : 'no response');
+                }
+            } catch (e) {
+                console.log('[Config] fetch failed for', url, e);
+            }
+        }
+        if (!response || !response.ok) {
+            throw new Error(`設定の取得に失敗しました (HTTP ${response ? response.status : 'N/A'})`);
         }
         const data = await response.json();
         state.dictionaries = (data.dictionaries || []).map((item) => ({
@@ -547,7 +568,7 @@
         if (state.dictionaryMap.has(dictPath)) {
             return state.dictionaryMap.get(dictPath);
         }
-        const response = await fetch(dictPath, { cache: 'no-cache' });
+        const response = await fetch('/static/' + dictPath, { cache: 'no-cache' });
         if (!response.ok) {
             throw new Error(`辞書の読み込みに失敗しました (HTTP ${response.status})`);
         }
@@ -845,6 +866,8 @@
             elements.settingsButton.addEventListener('click', () => {
                 applySettingsToModal();
                 showModal(elements.settingsModal);
+                // 打开设置面板时，强制刷新一次语音列表（应对延迟加载）
+                waitForVoices(1500).then(() => populateVoiceSelect());
             });
         }
         if (elements.dictionarySave) {
@@ -896,9 +919,220 @@
                 hideModals();
             }
         });
+        
+        // TTS button event listener
+        const ttsButton = document.getElementById('tts-button');
+        console.log('=== TTS Button Binding Debug ===');
+        console.log('TTS button found:', !!ttsButton);
+        console.log('TTS button element:', ttsButton);
+        if (ttsButton) {
+            console.log('Adding TTS click event listener...');
+            ttsButton.addEventListener('click', handleTTSClick);
+            console.log('TTS event listener added successfully');
+            
+            // Test click handler immediately
+            console.log('Testing TTS button click handler...');
+            ttsButton.onclick = function(e) {
+                console.log('TTS button onclick fired!', e);
+                handleTTSClick();
+            };
+        } else {
+            console.error('TTS button not found in DOM!');
+            console.log('Available elements with id containing "tts":', Array.from(document.querySelectorAll('[id*="tts"]')));
+        }
     }
 
+    function handleTTSClick() {
+        console.log('=== TTS Debug Start ===');
+        console.log('TTS button clicked'); // Debug log
+        console.log('speechSynthesis object:', speechSynthesis);
+        console.log('speechSynthesis.speaking:', speechSynthesis.speaking);
+        console.log('speechSynthesis.pending:', speechSynthesis.pending);
+        console.log('speechSynthesis.paused:', speechSynthesis.paused);
+        
+        const questionWord = document.getElementById('question-word');
+        if (!questionWord || !questionWord.textContent) {
+            console.log('No question word found'); // Debug log
+            return;
+        }
+        
+        const word = questionWord.textContent.trim();
+        console.log('Speaking word:', word); // Debug log
+        speakJapanese(word);
+    }
 
+    function speakJapanese(text) {
+        console.log('=== TTS Debug Information ===');
+        console.log('Text to speak:', text);
+        console.log('speechSynthesis object:', speechSynthesis);
+        console.log('speechSynthesis.speaking:', speechSynthesis.speaking);
+        console.log('speechSynthesis.pending:', speechSynthesis.pending);
+        console.log('speechSynthesis.paused:', speechSynthesis.paused);
+        console.log('User agent:', navigator.userAgent);
+        
+        if (!speechSynthesis) {
+            console.error('speechSynthesis not supported');
+            return;
+        }
+
+        // Cancel any ongoing speech and resume if paused
+        try { 
+            speechSynthesis.cancel(); 
+            speechSynthesis.resume(); 
+        } catch (e) {
+            console.warn('Error canceling/resuming speech:', e);
+        }
+
+        function loadVoicesAndSpeak() {
+            const voices = speechSynthesis.getVoices();
+            console.log('All available voices:', voices.map(v => `${v.name} (${v.lang})`));
+            
+            const japaneseVoices = voices.filter(voice => 
+                voice.lang.startsWith('ja') || 
+                voice.name.toLowerCase().includes('japanese') ||
+                voice.name.toLowerCase().includes('japan')
+            );
+            
+            console.log('Japanese voices found:', japaneseVoices.map(v => ({
+                name: v.name,
+                lang: v.lang,
+                default: v.default,
+                localService: v.localService
+            })));
+
+            const utterance = new SpeechSynthesisUtterance(text);
+            
+            let selectedVoice = null;
+            
+            // Use user's selected voice if available
+            if (state.selectedVoice) {
+                selectedVoice = voices.find(voice => voice.name === state.selectedVoice);
+                console.log('User selected voice:', state.selectedVoice);
+                console.log('Found selected voice:', selectedVoice);
+            }
+            
+            // Fallback to preferred Japanese voice if selected voice not found
+            if (!selectedVoice && japaneseVoices.length > 0) {
+                // Try to find Kyoko or other preferred voices
+                const kyokoVoice = japaneseVoices.find(voice => 
+                    /kyoko/i.test(voice.name || '') && 
+                    (voice.lang || '').toLowerCase().startsWith('ja')
+                );
+                selectedVoice = kyokoVoice || japaneseVoices[0];
+                console.log('Using fallback voice:', selectedVoice.name);
+            }
+            
+            // Apply voice settings
+            try {
+                if (selectedVoice) {
+                    utterance.voice = selectedVoice;
+                    utterance.lang = selectedVoice.lang || 'ja-JP';
+                    console.log('Voice set to:', selectedVoice.name, selectedVoice.lang);
+                } else {
+                    console.warn('No Japanese voice found, using default');
+                    // Try to use any available voice as fallback
+                    const fallbackVoice = voices.find(v => v.default) || voices[0];
+                    if (fallbackVoice) {
+                        utterance.voice = fallbackVoice;
+                        console.log('Using fallback voice:', fallbackVoice.name);
+                    } else {
+                        utterance.lang = 'ja-JP';
+                    }
+                }
+            } catch (e) {
+                console.warn('Error setting voice:', e);
+                utterance.lang = 'ja-JP';
+            }
+
+            // Apply speech rate from user settings
+            utterance.rate = state.speechRate || 1.0;
+            utterance.pitch = 1.0;
+            utterance.volume = 1.0;
+
+            console.log('Utterance properties:');
+            console.log('- text:', utterance.text);
+            console.log('- voice:', utterance.voice ? utterance.voice.name : 'default');
+            console.log('- lang:', utterance.lang);
+            console.log('- rate:', utterance.rate);
+            console.log('- pitch:', utterance.pitch);
+            console.log('- volume:', utterance.volume);
+
+            // Event handlers for debugging
+            utterance.onstart = function(event) {
+                console.log('Speech started successfully!');
+            };
+
+            utterance.onend = function(event) {
+                console.log('Speech ended');
+            };
+
+            utterance.onerror = function(event) {
+                console.error('Speech synthesis error:', event.error);
+                showAlert('error', '音声の再生中にエラーが発生しました: ' + event.error);
+            };
+
+            utterance.onpause = function(event) {
+                console.log('Speech paused');
+            };
+
+            utterance.onresume = function(event) {
+                console.log('Speech resumed');
+            };
+
+            utterance.onmark = function(event) {
+                console.log('Speech mark event:', event);
+            };
+
+            utterance.onboundary = function(event) {
+                console.log('Speech boundary event:', event);
+            };
+
+            // Check system audio settings
+            console.log('System audio check:');
+            console.log('- speechSynthesis.speaking before speak:', speechSynthesis.speaking);
+            console.log('- speechSynthesis.pending before speak:', speechSynthesis.pending);
+
+            // Speak the text
+            console.log('Calling speechSynthesis.speak()...');
+            try {
+                speechSynthesis.speak(utterance);
+                console.log('speechSynthesis.speak() called successfully');
+                
+                // Check status after calling speak
+                setTimeout(() => {
+                    console.log('Status after 100ms:');
+                    console.log('- speechSynthesis.speaking:', speechSynthesis.speaking);
+                    console.log('- speechSynthesis.pending:', speechSynthesis.pending);
+                    console.log('- speechSynthesis.paused:', speechSynthesis.paused);
+                }, 100);
+                
+            } catch (error) {
+                console.error('Error calling speechSynthesis.speak():', error);
+            }
+            
+            console.log('=== TTS Debug End ===');
+        }
+
+        // Some browsers need time to load voices
+        if (speechSynthesis.getVoices().length === 0) {
+            console.log('No voices available yet, waiting for voiceschanged event...');
+            speechSynthesis.addEventListener('voiceschanged', function() {
+                console.log('voiceschanged event fired');
+                loadVoicesAndSpeak();
+            }, { once: true });
+            
+            // Fallback: try again after a short delay
+            setTimeout(() => {
+                if (speechSynthesis.getVoices().length === 0) {
+                    console.log('Still no voices after timeout, trying anyway...');
+                    loadVoicesAndSpeak();
+                }
+            }, 1000);
+        } else {
+            console.log('Voices already available, proceeding...');
+            loadVoicesAndSpeak();
+        }
+    }
 
     function initFooterFavicon() {
         const link = document.querySelector('link[rel="icon"]') || document.createElement('link');
@@ -910,9 +1144,188 @@
         }
     }
 
+    function populateVoiceSelect() {
+        if (!elements.voiceSelect) {
+            return;
+        }
+
+        const voices = speechSynthesis.getVoices();
+        console.log('[TTS] populateVoiceSelect: voices length =', voices ? voices.length : 'null');
+        const japaneseVoices = voices.filter(voice => 
+            voice.lang.startsWith('ja') || 
+            voice.name.toLowerCase().includes('japanese') ||
+            voice.name.toLowerCase().includes('japan')
+        ).sort((a, b) => {
+            // Prioritize Japanese voices
+            const jaA = (a.lang || '').toLowerCase().startsWith('ja') ? 0 : 1;
+            const jaB = (b.lang || '').toLowerCase().startsWith('ja') ? 0 : 1;
+            if (jaA !== jaB) return jaA - jaB;
+            
+            // Prioritize default voices
+            if (a.default && !b.default) return -1;
+            if (!a.default && b.default) return 1;
+            
+            // Sort by name
+            return (a.name || '').localeCompare(b.name || '');
+        });
+
+        // Clear existing options
+        elements.voiceSelect.innerHTML = '';
+        console.log('[TTS] japaneseVoices length =', japaneseVoices.length);
+
+        // 当下没有可用日语声音时，提供回退选项，仍可朗读
+        if (japaneseVoices.length === 0) {
+            const option = document.createElement('option');
+            option.value = '';
+            option.textContent = '自動 (ja-JP) — 音声未検出';
+            option.selected = true;
+            elements.voiceSelect.appendChild(option);
+            state.selectedVoice = '';
+            console.log('[TTS] No Japanese voices found, fallback option inserted');
+            return;
+        }
+
+        // Find preferred voice (Kyoko or similar)
+        const savedVoice = localStorage.getItem('selectedVoice');
+        const kyokoVoice = japaneseVoices.find(voice => 
+            /kyoko/i.test(voice.name || '') && 
+            (voice.lang || '').toLowerCase().startsWith('ja')
+        );
+        const preferredVoice = 
+            japaneseVoices.find(voice => (voice.voiceURI || voice.name) === savedVoice) ||
+            kyokoVoice ||
+            japaneseVoices.find(voice => (voice.lang || '').toLowerCase().startsWith('ja')) ||
+            japaneseVoices[0];
+
+        // Add Japanese voices
+        japaneseVoices.forEach((voice) => {
+            const option = document.createElement('option');
+            option.value = voice.name;
+            option.textContent = `${voice.name} — ${voice.lang}${voice.default ? ' (默认)' : ''}`;
+            if (preferredVoice && voice.name === preferredVoice.name) {
+                option.selected = true;
+                state.selectedVoice = voice.name;
+            }
+            elements.voiceSelect.appendChild(option);
+        });
+        console.log('[TTS] Voice select populated. Selected =', state.selectedVoice);
+    }
+
+    // 轮询等待浏览器加载 voices，避免某些环境下 voiceschanged 不触发
+    function waitForVoices(maxWaitMs = 3000) {
+        console.log('[TTS] waitForVoices start, maxWaitMs =', maxWaitMs);
+        return new Promise((resolve) => {
+            const start = Date.now();
+            function check() {
+                const list = speechSynthesis.getVoices();
+                console.log('[TTS] waitForVoices poll, length =', list ? list.length : 'null');
+                if (list && list.length > 0) {
+                    resolve(list);
+                    return;
+                }
+                if (Date.now() - start >= maxWaitMs) {
+                    console.log('[TTS] waitForVoices timeout');
+                    resolve(list);
+                    return;
+                }
+                setTimeout(check, 150);
+            }
+            // 事件 + 轮询双保险
+            const handler = () => resolve(speechSynthesis.getVoices());
+            try {
+                speechSynthesis.addEventListener('voiceschanged', () => {
+                    console.log('[TTS] voiceschanged fired');
+                    handler();
+                }, { once: true });
+            } catch (_) {
+                // 忽略旧浏览器异常
+            }
+            check();
+        });
+    }
+
+    function printVoicesLog() {
+        const list = speechSynthesis.getVoices() || [];
+        const ja = list.filter(v => /^(ja)/i.test(v.lang) || /japan|japanese/i.test(v.name));
+        console.group('[TTS] Voices');
+        console.log('Total =', list.length);
+        try { console.table(list.map(v => ({ name: v.name, lang: v.lang, default: v.default, local: v.localService }))); } catch (_) { /* console.table 可能不可用 */ }
+        console.log('Japanese =', ja.length);
+        try { console.table(ja.map(v => ({ name: v.name, lang: v.lang, default: v.default, local: v.localService }))); } catch (_) { /* 忽略错误 */ }
+        console.groupEnd();
+    }
+
+    function initVoiceSelection() {
+        console.log('[TTS] initVoiceSelection');
+        // 立即打印一次（可能为 0），便于观察后续变化
+        printVoicesLog();
+        // Load saved voice preference
+        const savedVoice = localStorage.getItem('selectedVoice');
+        if (savedVoice) {
+            state.selectedVoice = savedVoice;
+        }
+
+        // Load saved speech rate
+        const savedRate = localStorage.getItem('speechRate');
+        if (savedRate) {
+            state.speechRate = Math.min(2, Math.max(0.5, parseFloat(savedRate) || 1));
+        }
+
+        // Initialize rate slider
+        if (elements.rateSlider) {
+            elements.rateSlider.value = String(state.speechRate);
+        }
+        if (elements.rateValue) {
+            elements.rateValue.textContent = `${state.speechRate.toFixed(1)}x`;
+        }
+
+        // Populate voice select when voices are available（事件 + 轮询）
+        waitForVoices(3000).then(() => {
+            console.log('[TTS] initVoiceSelection -> populateVoiceSelect');
+            populateVoiceSelect();
+            printVoicesLog();
+        });
+
+        // Add event listener for voice selection change
+        if (elements.voiceSelect) {
+            elements.voiceSelect.addEventListener('change', function() {
+                state.selectedVoice = this.value;
+                localStorage.setItem('selectedVoice', this.value);
+            });
+        }
+
+        // Add event listener for rate slider change
+        if (elements.rateSlider) {
+            elements.rateSlider.addEventListener('input', function() {
+                state.speechRate = Math.min(2, Math.max(0.5, parseFloat(this.value) || 1));
+                if (elements.rateValue) {
+                    elements.rateValue.textContent = `${state.speechRate.toFixed(1)}x`;
+                }
+                localStorage.setItem('speechRate', String(state.speechRate));
+            });
+        }
+    }
+
+    // 暴露手动刷新接口，便于控制台调试
+    window.__refreshVoices = function () {
+        console.log('[TTS] __refreshVoices called');
+        return waitForVoices(2000).then(() => populateVoiceSelect());
+    };
+
+    // 暴露打印接口
+    window.__printVoices = function () {
+        printVoicesLog();
+    };
+
     async function init() {
+        console.log('=== Application Initialization ===');
+        console.log('Starting app initialization...');
         bindEvents();
+        console.log('Events bound successfully');
         initFooterFavicon();
+        console.log('Footer favicon initialized');
+        initVoiceSelection();
+        console.log('Voice selection initialized');
         const params = parseSettingsFromParams();
         showLoading('辞書を読み込んでいます…');
         try {

@@ -48,10 +48,17 @@ a:hover {
 }
 
 .app-header {
-    display: grid;
-    gap: 12px;
+    display: flex;
+    justify-content: space-between;
     align-items: center;
-    margin-bottom: 24px;
+    margin-bottom: 16px;
+    padding: 8px 0;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
 }
 
 .branding {
@@ -149,6 +156,40 @@ a:hover {
     font-size: 2.4rem;
     margin: 0 0 12px;
     word-break: break-word;
+}
+
+.word-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.tts-button {
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 1.2rem;
+    transition: all 0.2s ease;
+    color: var(--muted);
+}
+
+.tts-button:hover {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+    transform: scale(1.05);
+}
+
+.tts-button:active {
+    transform: scale(0.95);
 }
 
 .meaning {
@@ -335,14 +376,7 @@ ruby rt {
 }
 
 @media (min-width: 640px) {
-    .app-header {
-        grid-template-columns: auto 1fr auto;
-    }
-
-    .header-meta {
-        align-items: flex-end;
-        text-align: right;
-    }
+    /* Desktop styles already handled by main flexbox layout */
 }
 
 /* 庆祝效果样式 */
@@ -443,14 +477,21 @@ ruby rt {
 
 @media (max-width: 639px) {
     .app-header {
-        grid-template-columns: minmax(0, 1fr);
-        justify-items: center;
+        flex-direction: column;
+        gap: 8px;
         text-align: center;
+        padding: 4px 0;
+        margin-bottom: 12px;
+    }
+
+    .header-left {
+        flex-direction: column;
         gap: 8px;
     }
 
     .branding {
         justify-content: center;
+        zoom: 0.8;
     }
 
     .header-meta {
