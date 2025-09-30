@@ -2,6 +2,12 @@
     'use strict';
 
     const KUROMOJI_DICT_PATHS = ['/static/kuromoji-dict/'];
+    const DEFAULT_THEME = 'classic';
+    const THEMES = {
+        classic: { name: 'Classic' },
+        sakura: { name: 'Sakura Blossom' },
+    };
+    const THEME_STORAGE_KEY = 'kotoba.theme';
 
     const state = {
         kuroshiro: null,
@@ -20,6 +26,10 @@
         selectedVoice: null,
         speechRate: 1.0,
         awaitingNext: false,
+        autoPronunciation: false,
+        theme: DEFAULT_THEME,
+        pendingTheme: DEFAULT_THEME,
+        previewPlaying: false,
     };
 
     const CHAR_RANGE = {
@@ -85,13 +95,66 @@
         togglePlaceholder: document.getElementById('toggle-placeholder'),
         toggleKatakana: document.getElementById('toggle-katakana'),
         toggleFurigana: document.getElementById('toggle-furigana'),
+        toggleAutoPronunciation: document.getElementById('toggle-auto-pronunciation'),
+        themeRadios: Array.from(document.querySelectorAll('input[name="theme"]')),
         voiceSelect: document.getElementById('voice-select'),
+        voicePreview: document.getElementById('voice-preview'),
         rateSlider: document.getElementById('rate-slider'),
         rateValue: document.getElementById('rate-value'),
         settingsSave: document.getElementById('settings-save'),
         loadingIndicator: document.getElementById('loading-indicator'),
         loadingText: document.querySelector('#loading-indicator .loading-text'),
     };
+
+    function isSupportedTheme(theme) {
+        return typeof theme === 'string' && Object.prototype.hasOwnProperty.call(THEMES, theme);
+    }
+
+    function updateThemeOptionUI(theme) {
+        if (!elements.themeRadios || !elements.themeRadios.length) {
+            return;
+        }
+        elements.themeRadios.forEach((radio) => {
+            const isActive = radio.value === theme;
+            radio.checked = isActive;
+            const option = radio.closest('.theme-option');
+            if (option) {
+                option.classList.toggle('is-active', isActive);
+            }
+        });
+    }
+
+    function applyTheme(theme, { persist = true } = {}) {
+        const targetTheme = isSupportedTheme(theme) ? theme : DEFAULT_THEME;
+        const body = document.body;
+        if (body) {
+            Object.keys(THEMES).forEach((name) => {
+                body.classList.toggle(`theme-${name}`, name === targetTheme);
+            });
+            body.dataset.theme = targetTheme;
+        }
+        state.theme = targetTheme;
+        state.pendingTheme = targetTheme;
+        if (persist) {
+            try {
+                localStorage.setItem(THEME_STORAGE_KEY, targetTheme);
+            } catch (error) {
+                console.warn('[Theme] Failed to persist selection', error);
+            }
+        }
+        updateThemeOptionUI(targetTheme);
+    }
+
+    function initTheme() {
+        let savedTheme = null;
+        try {
+            savedTheme = localStorage.getItem(THEME_STORAGE_KEY);
+        } catch (error) {
+            console.warn('[Theme] Failed to read stored selection', error);
+        }
+        const initialTheme = isSupportedTheme(savedTheme) ? savedTheme : DEFAULT_THEME;
+        applyTheme(initialTheme, { persist: false });
+    }
 
     function setButtonToAnswer() {
         state.awaitingNext = false;
@@ -682,6 +745,9 @@
             elements.questionWord.innerHTML = markup;
             // 添加data-tts属性，存储TTS应该读取的纯文本
             elements.questionWord.setAttribute('data-tts', entry.kanji);
+            
+            // 动态调整字体大小
+            adjustFontSize(elements.questionWord, entry.kanji);
         }
         if (elements.questionMeaning) {
             elements.questionMeaning.textContent = entry.meaning;
@@ -701,6 +767,14 @@
             elements.answerInput.focus({ preventScroll: true });
         }
         setButtonToAnswer();
+        
+        // 如果启用了自动发音，则自动播放
+        if (state.autoPronunciation) {
+            // 延迟一点时间确保DOM更新完成
+            setTimeout(() => {
+                playTTS();
+            }, 100);
+        }
         clearAlerts();
     }
 
@@ -857,6 +931,9 @@
         elements.togglePlaceholder.checked = state.showPlaceholder;
         elements.toggleKatakana.checked = state.showKatakanaReading;
         elements.toggleFurigana.checked = state.showFurigana;
+        elements.toggleAutoPronunciation.checked = state.autoPronunciation;
+        state.pendingTheme = state.theme;
+        updateThemeOptionUI(state.pendingTheme);
     }
 
     function hideModals() {
@@ -868,6 +945,8 @@
         if (elements.modalBackdrop) {
             elements.modalBackdrop.classList.add('hidden');
         }
+        state.pendingTheme = state.theme;
+        updateThemeOptionUI(state.theme);
     }
 
     function showModal(modal) {
@@ -887,6 +966,7 @@
         state.showPlaceholder = !params.has('hide_placeholder');
         state.showKatakanaReading = params.get('show_katakana_reading') === '1';
         state.showFurigana = !params.has('hide_furigana');
+        state.autoPronunciation = params.get('auto_pronunciation') === '1';
         return params;
     }
 
@@ -909,16 +989,26 @@
         }
         if (elements.dictionaryButton) {
             elements.dictionaryButton.addEventListener('click', () => {
+                hideModals();
                 populateDictionarySelect();
                 showModal(elements.dictionaryModal);
+                waitForVoices(1500).then(() => populateVoiceSelect());
             });
         }
         if (elements.settingsButton) {
             elements.settingsButton.addEventListener('click', () => {
+                hideModals();
                 applySettingsToModal();
                 showModal(elements.settingsModal);
-                // 打开设置面板时，强制刷新一次语音列表（应对延迟加载）
-                waitForVoices(1500).then(() => populateVoiceSelect());
+            });
+        }
+        if (elements.themeRadios && elements.themeRadios.length) {
+            elements.themeRadios.forEach((radio) => {
+                radio.addEventListener('change', () => {
+                    const value = radio.value;
+                    state.pendingTheme = isSupportedTheme(value) ? value : DEFAULT_THEME;
+                    updateThemeOptionUI(state.pendingTheme);
+                });
             });
         }
         if (elements.dictionarySave) {
@@ -953,7 +1043,10 @@
                 elements.togglePlaceholder.checked ? params.delete('hide_placeholder') : params.set('hide_placeholder', '1');
                 elements.toggleKatakana.checked ? params.set('show_katakana_reading', '1') : params.delete('show_katakana_reading');
                 elements.toggleFurigana.checked ? params.delete('hide_furigana') : params.set('hide_furigana', '1');
+                elements.toggleAutoPronunciation.checked ? params.set('auto_pronunciation', '1') : params.delete('auto_pronunciation');
                 updateBrowserParams(params);
+                const selectedTheme = isSupportedTheme(state.pendingTheme) ? state.pendingTheme : state.theme;
+                applyTheme(selectedTheme);
                 hideModals();
                 parseSettingsFromParams();
                 renderQuestion();
@@ -970,6 +1063,17 @@
                 hideModals();
             }
         });
+        if (elements.voicePreview) {
+            elements.voicePreview.addEventListener('click', () => {
+                if (state.previewPlaying) {
+                    try { speechSynthesis.cancel(); } catch (_) {}
+                    state.previewPlaying = false;
+                    updatePreviewButton();
+                    return;
+                }
+                startVoicePreview();
+            });
+        }
         
         // TTS button event listener
         const ttsButton = document.getElementById('tts-button');
@@ -994,6 +1098,25 @@
         console.log('speechSynthesis.pending:', speechSynthesis.pending);
         console.log('speechSynthesis.paused:', speechSynthesis.paused);
         
+        // 如果正在发音，则暂停或停止
+        if (speechSynthesis.speaking) {
+            console.log('Speech is currently playing, stopping...');
+            speechSynthesis.cancel();
+            return;
+        }
+        
+        // 如果暂停中，则恢复
+        if (speechSynthesis.paused) {
+            console.log('Speech is paused, resuming...');
+            speechSynthesis.resume();
+            return;
+        }
+        
+        // 否则开始新的发音
+        playTTS();
+    }
+
+    function playTTS() {
         const questionWord = document.getElementById('question-word');
         if (!questionWord) {
             console.log('No question word element found'); // Debug log
@@ -1031,14 +1154,14 @@
             speechSynthesis.cancel();
             // Wait for cancel to complete before proceeding
             setTimeout(() => {
-                loadVoicesAndSpeak();
+                loadVoicesAndSpeakDouble();
             }, 100);
         } else {
             // No existing speech, proceed immediately
-            loadVoicesAndSpeak();
+            loadVoicesAndSpeakDouble();
         }
 
-        function loadVoicesAndSpeak() {
+        function loadVoicesAndSpeakDouble() {
             const voices = speechSynthesis.getVoices();
             console.log('All available voices:', voices.map(v => `${v.name} (${v.lang})`));
             
@@ -1055,8 +1178,6 @@
                 localService: v.localService
             })));
 
-            const utterance = new SpeechSynthesisUtterance(text);
-            
             let selectedVoice = null;
             
             // Use user's selected voice if available
@@ -1076,6 +1197,38 @@
                 selectedVoice = kyokoVoice || japaneseVoices[0];
                 console.log('Using fallback voice:', selectedVoice.name);
             }
+            
+            // 创建第一次播放（慢速）
+            const firstUtterance = createUtterance(text, selectedVoice, voices, 0.5); // 最慢速度
+            
+            // 创建第二次播放（正常速度）
+            const secondUtterance = createUtterance(text, selectedVoice, voices, state.speechRate || 1.0); // 正常速度
+            
+            console.log('Starting double TTS playback - First: slow (0.5x), Second: normal (' + (state.speechRate || 1.0) + 'x)');
+            
+            // 第一次播放结束后播放第二次
+            firstUtterance.onend = function(event) {
+                console.log('First speech (slow) ended, starting second speech (normal)');
+                setTimeout(() => {
+                    try {
+                        speechSynthesis.speak(secondUtterance);
+                    } catch (error) {
+                        console.error('Error starting second speech:', error);
+                    }
+                }, 200); // 短暂间隔
+            };
+            
+            // 开始第一次播放
+            console.log('Starting first speech (slow)...');
+            try {
+                speechSynthesis.speak(firstUtterance);
+            } catch (error) {
+                console.error('Error starting first speech:', error);
+            }
+        }
+        
+        function createUtterance(text, selectedVoice, voices, rate) {
+            const utterance = new SpeechSynthesisUtterance(text);
             
             // Apply voice settings
             try {
@@ -1099,12 +1252,12 @@
                 utterance.lang = 'ja-JP';
             }
 
-            // Apply speech rate from user settings
-            utterance.rate = state.speechRate || 1.0;
+            // Apply speech settings
+            utterance.rate = rate;
             utterance.pitch = 1.0;
             utterance.volume = 1.0;
 
-            console.log('Utterance properties:');
+            console.log('Utterance properties (rate: ' + rate + '):');
             console.log('- text:', utterance.text);
             console.log('- voice:', utterance.voice ? utterance.voice.name : 'default');
             console.log('- lang:', utterance.lang);
@@ -1114,15 +1267,15 @@
 
             // Event handlers for debugging
             utterance.onstart = function(event) {
-                console.log('Speech started successfully!');
+                console.log('Speech started successfully! (rate: ' + rate + ')');
             };
 
             utterance.onend = function(event) {
-                console.log('Speech ended');
+                console.log('Speech ended (rate: ' + rate + ')');
             };
 
             utterance.onerror = function(event) {
-                console.error('Speech synthesis error:', event.error);
+                console.error('Speech synthesis error (rate: ' + rate + '):', event.error);
                 
                 // Handle specific error types
                 if (event.error === 'canceled' || event.error === 'interrupted') {
@@ -1159,45 +1312,22 @@
             };
 
             utterance.onpause = function(event) {
-                console.log('Speech paused');
+                console.log('Speech paused (rate: ' + rate + ')');
             };
 
             utterance.onresume = function(event) {
-                console.log('Speech resumed');
+                console.log('Speech resumed (rate: ' + rate + ')');
             };
 
             utterance.onmark = function(event) {
-                console.log('Speech mark event:', event);
+                console.log('Speech mark event (rate: ' + rate + '):', event);
             };
 
             utterance.onboundary = function(event) {
-                console.log('Speech boundary event:', event);
+                console.log('Speech boundary event (rate: ' + rate + '):', event);
             };
-
-            // Check system audio settings
-            console.log('System audio check:');
-            console.log('- speechSynthesis.speaking before speak:', speechSynthesis.speaking);
-            console.log('- speechSynthesis.pending before speak:', speechSynthesis.pending);
-
-            // Speak the text
-            console.log('Calling speechSynthesis.speak()...');
-            try {
-                speechSynthesis.speak(utterance);
-                console.log('speechSynthesis.speak() called successfully');
-                
-                // Check status after calling speak
-                setTimeout(() => {
-                    console.log('Status after 100ms:');
-                    console.log('- speechSynthesis.speaking:', speechSynthesis.speaking);
-                    console.log('- speechSynthesis.pending:', speechSynthesis.pending);
-                    console.log('- speechSynthesis.paused:', speechSynthesis.paused);
-                }, 100);
-                
-            } catch (error) {
-                console.error('Error calling speechSynthesis.speak():', error);
-            }
             
-            console.log('=== TTS Debug End ===');
+            return utterance;
         }
 
         // Some browsers need time to load voices
@@ -1205,19 +1335,19 @@
             console.log('No voices available yet, waiting for voiceschanged event...');
             speechSynthesis.addEventListener('voiceschanged', function() {
                 console.log('voiceschanged event fired');
-                loadVoicesAndSpeak();
+                loadVoicesAndSpeakDouble();
             }, { once: true });
             
             // Fallback: try again after a short delay
             setTimeout(() => {
                 if (speechSynthesis.getVoices().length === 0) {
                     console.log('Still no voices after timeout, trying anyway...');
-                    loadVoicesAndSpeak();
+                    loadVoicesAndSpeakDouble();
                 }
             }, 1000);
         } else {
             console.log('Voices already available, proceeding...');
-            loadVoicesAndSpeak();
+            loadVoicesAndSpeakDouble();
         }
     }
 
@@ -1404,9 +1534,34 @@
         printVoicesLog();
     };
 
+    // 动态调整字体大小函数
+    function adjustFontSize(element, text) {
+        if (!element || !text) return;
+        
+        // 移除之前的字体大小类
+        element.classList.remove('long-text', 'very-long-text');
+        
+        // 根据文本长度判断应用哪个类
+        const textLength = text.length;
+        
+        if (textLength > 15) {
+            // 超过15个字符，使用最小字体
+            element.classList.add('very-long-text');
+            console.log('Applied very-long-text class for text length:', textLength);
+        } else if (textLength > 8) {
+            // 超过8个字符，使用中等字体
+            element.classList.add('long-text');
+            console.log('Applied long-text class for text length:', textLength);
+        } else {
+            console.log('Using default font size for text length:', textLength);
+        }
+    }
+
     async function init() {
         console.log('=== Application Initialization ===');
         console.log('Starting app initialization...');
+        initTheme();
+        console.log('Theme initialized');
         bindEvents();
         console.log('Events bound successfully');
         initFooterFavicon();

@@ -122,9 +122,25 @@
             <h2 id="dictionary-modal-title">辞書選択</h2>
             <button type="button" class="modal-close" data-close="modal" aria-label="閉じる">×</button>
         </div>
-        <div class="modal-body">
-            <label for="dictionary-select">利用する辞書を選択</label>
-            <select id="dictionary-select"></select>
+        <div class="modal-body dictionary-modal-body">
+            <div class="dictionary-select-group">
+                <label for="dictionary-select">利用する辞書を選択</label>
+                <select id="dictionary-select"></select>
+            </div>
+            <div class="voice-selection">
+                <label for="voice-select">音声選択:</label>
+                <select id="voice-select">
+                    <option value="">読み込み中...</option>
+                </select>
+                <button type="button" id="voice-preview" class="ghost-button" title="選択中の音声で試聴します" aria-label="音声を試聴">▶︎ 試聴</button>
+            </div>
+            <div class="rate-control">
+                <label for="rate-slider">読み上げ速度:</label>
+                <div class="rate-control__track">
+                    <input id="rate-slider" type="range" min="0.5" max="2" step="0.1" value="1" />
+                    <span id="rate-value">1.0x</span>
+                </div>
+            </div>
         </div>
         <div class="modal-footer">
             <button type="button" class="ghost-button" data-close="modal">キャンセル</button>
@@ -138,37 +154,53 @@
             <button type="button" class="modal-close" data-close="modal" aria-label="閉じる">×</button>
         </div>
         <div class="modal-body">
-            <label class="checkbox">
-                <input type="checkbox" id="toggle-reading" checked>
-                読み方を表示する
-            </label>
-            <label class="checkbox">
-                <input type="checkbox" id="toggle-romaji" checked>
-                ローマ字を表示する
-            </label>
-            <label class="checkbox">
-                <input type="checkbox" id="toggle-placeholder" checked>
-                入力ヒントを表示する
-            </label>
-            <label class="checkbox">
-                <input type="checkbox" id="toggle-katakana">
-                カタカナにも振り仮名を表示する
-            </label>
-            <label class="checkbox">
-                <input type="checkbox" id="toggle-furigana" checked>
-                振り仮名を表示する
-            </label>
-            <div class="voice-selection">
-                <label for="voice-select">音声選択:</label>
-                <select id="voice-select">
-                    <option value="">読み込み中...</option>
-                </select>
+            <div class="settings-checkbox-grid">
+                <label class="checkbox">
+                    <input type="checkbox" id="toggle-reading" checked>
+                    読み方を表示する
+                </label>
+                <label class="checkbox">
+                    <input type="checkbox" id="toggle-romaji" checked>
+                    ローマ字を表示する
+                </label>
+                <label class="checkbox">
+                    <input type="checkbox" id="toggle-placeholder" checked>
+                    入力ヒントを表示する
+                </label>
+                <label class="checkbox">
+                    <input type="checkbox" id="toggle-katakana">
+                    カタカナにも振り仮名を表示する
+                </label>
+                <label class="checkbox">
+                    <input type="checkbox" id="toggle-furigana" checked>
+                    振り仮名を表示する
+                </label>
+                <label class="checkbox">
+                    <input type="checkbox" id="toggle-auto-pronunciation">
+                    自動発音
+                </label>
             </div>
-            <div class="rate-control">
-                <label for="rate-slider">読み上げ速度:</label>
-                <input id="rate-slider" type="range" min="0.5" max="2" step="0.1" value="1" />
-                <span id="rate-value">1.0x</span>
-            </div>
+            <fieldset class="theme-options">
+                <legend>テーマ</legend>
+                <label class="theme-option" for="theme-classic">
+                    <input type="radio" name="theme" id="theme-classic" value="classic" checked>
+                    <span class="theme-option__indicator" aria-hidden="true"></span>
+                    <span class="theme-option__preview theme-option__preview--classic" aria-hidden="true"></span>
+                    <span class="theme-option__content">
+                        <span class="theme-option__name">クラシック</span>
+                        <span class="theme-option__description">落ち着いたブルーとホワイト</span>
+                    </span>
+                </label>
+                <label class="theme-option" for="theme-sakura">
+                    <input type="radio" name="theme" id="theme-sakura" value="sakura">
+                    <span class="theme-option__indicator" aria-hidden="true"></span>
+                    <span class="theme-option__preview theme-option__preview--sakura" aria-hidden="true"></span>
+                    <span class="theme-option__content">
+                        <span class="theme-option__name">桜ブロッサム</span>
+                        <span class="theme-option__description">春らしい桜色の柔らかなテーマ</span>
+                    </span>
+                </label>
+            </fieldset>
         </div>
         <div class="modal-footer">
             <button type="button" class="ghost-button" data-close="modal">キャンセル</button>
