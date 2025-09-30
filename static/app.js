@@ -70,6 +70,7 @@
         answerForm: document.getElementById('answer-form'),
         answerInput: document.getElementById('answer-input'),
         answerSubmit: document.getElementById('answer-submit'),
+        skipButton: document.getElementById('skip-button'),
         alerts: document.getElementById('alerts'),
         dictionaryButton: document.getElementById('dictionary-button'),
         settingsButton: document.getElementById('settings-button'),
@@ -856,6 +857,19 @@
         if (elements.answerForm) {
             elements.answerForm.addEventListener('submit', handleAnswerSubmit);
         }
+        if (elements.skipButton) {
+            elements.skipButton.addEventListener('click', async () => {
+                setButtonToAnswer();
+                setLoading(true);
+                try {
+                    await loadRandomEntry();
+                } catch (error) {
+                    showAlert('error', error.message || String(error));
+                } finally {
+                    setLoading(false);
+                }
+            });
+        }
         if (elements.dictionaryButton) {
             elements.dictionaryButton.addEventListener('click', () => {
                 populateDictionarySelect();
@@ -975,12 +989,17 @@
             return;
         }
 
-        // Cancel any ongoing speech and resume if paused
-        try { 
-            speechSynthesis.cancel(); 
-            speechSynthesis.resume(); 
-        } catch (e) {
-            console.warn('Error canceling/resuming speech:', e);
+        // Only cancel if there's actually something speaking or pending
+        if (speechSynthesis.speaking || speechSynthesis.pending) {
+            console.log('Canceling existing speech...');
+            speechSynthesis.cancel();
+            // Wait for cancel to complete before proceeding
+            setTimeout(() => {
+                loadVoicesAndSpeak();
+            }, 100);
+        } else {
+            // No existing speech, proceed immediately
+            loadVoicesAndSpeak();
         }
 
         function loadVoicesAndSpeak() {
@@ -1068,7 +1087,39 @@
 
             utterance.onerror = function(event) {
                 console.error('Speech synthesis error:', event.error);
-                showAlert('error', '音声の再生中にエラーが発生しました: ' + event.error);
+                
+                // Handle specific error types
+                if (event.error === 'canceled' || event.error === 'interrupted') {
+                    console.log('Speech was canceled/interrupted, attempting retry...');
+                    // Wait a bit and retry once
+                    setTimeout(() => {
+                        try {
+                            speechSynthesis.cancel(); // Clear any pending speech
+                            const retryUtterance = new SpeechSynthesisUtterance(text);
+                            retryUtterance.voice = utterance.voice;
+                            retryUtterance.lang = utterance.lang;
+                            retryUtterance.rate = utterance.rate;
+                            retryUtterance.pitch = utterance.pitch;
+                            retryUtterance.volume = utterance.volume;
+                            
+                            retryUtterance.onerror = function(retryEvent) {
+                                console.error('Retry also failed:', retryEvent.error);
+                                showAlert('error', '音声の再生中にエラーが発生しました: ' + retryEvent.error);
+                            };
+                            
+                            retryUtterance.onstart = function() {
+                                console.log('Retry speech started successfully!');
+                            };
+                            
+                            speechSynthesis.speak(retryUtterance);
+                        } catch (retryError) {
+                            console.error('Error during retry:', retryError);
+                            showAlert('error', '音声の再生中にエラーが発生しました: ' + event.error);
+                        }
+                    }, 200);
+                } else {
+                    showAlert('error', '音声の再生中にエラーが発生しました: ' + event.error);
+                }
             };
 
             utterance.onpause = function(event) {
@@ -1118,7 +1169,7 @@
             console.log('No voices available yet, waiting for voiceschanged event...');
             speechSynthesis.addEventListener('voiceschanged', function() {
                 console.log('voiceschanged event fired');
-                loadVoicesAndSpeak();
+                setTimeout(() => loadVoicesAndSpeak(), 50);
             }, { once: true });
             
             // Fallback: try again after a short delay
@@ -1130,7 +1181,7 @@
             }, 1000);
         } else {
             console.log('Voices already available, proceeding...');
-            loadVoicesAndSpeak();
+            setTimeout(() => loadVoicesAndSpeak(), 50);
         }
     }
 

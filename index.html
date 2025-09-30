@@ -94,7 +94,11 @@
                 <form id="answer-form" class="answer-form" autocomplete="off">
                     <label class="sr-only" for="answer-input">答えを入力してください</label>
                     <input id="answer-input" type="text" inputmode="text" autocomplete="off" placeholder="" required>
-                    <button type="submit" id="answer-submit">回答</button>
+                    <div class="actions">
+                        <button type="submit" id="answer-submit">回答</button>
+                        <button type="button" id="skip-button" class="skip-button" title="この問題をスキップ">跳过</button>
+                        
+                    </div>
                 </form>
             </section>
             <section id="alerts" class="alerts" aria-live="polite"></section>

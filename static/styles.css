@@ -229,6 +229,12 @@ ruby rt {
     outline-offset: 2px;
 }
 
+.answer-form .actions {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 8px;
+}
+
 .answer-form button {
     padding: 10px 16px;
     font-size: 1rem;
@@ -247,6 +253,18 @@ ruby rt {
 
 .answer-form button:hover:not(:disabled) {
     background: var(--accent-hover);
+}
+
+.skip-button {
+    background: transparent;
+    color: var(--text);
+    border: 1px solid var(--border);
+    min-width: 72px;
+}
+
+.skip-button:hover,
+.skip-button:focus-visible {
+    background: rgba(79, 70, 229, 0.08);
 }
 
 .alerts {
