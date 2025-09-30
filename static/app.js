@@ -680,6 +680,8 @@
                 ? createRubyMarkup(entry.segments)
                 : escapeHtml(entry.kanji);
             elements.questionWord.innerHTML = markup;
+            // 添加data-tts属性，存储TTS应该读取的纯文本
+            elements.questionWord.setAttribute('data-tts', entry.kanji);
         }
         if (elements.questionMeaning) {
             elements.questionMeaning.textContent = entry.meaning;
@@ -993,12 +995,18 @@
         console.log('speechSynthesis.paused:', speechSynthesis.paused);
         
         const questionWord = document.getElementById('question-word');
-        if (!questionWord || !questionWord.textContent) {
-            console.log('No question word found'); // Debug log
+        if (!questionWord) {
+            console.log('No question word element found'); // Debug log
             return;
         }
         
-        const word = questionWord.textContent.trim();
+        // 优先读取data-tts属性，如果没有则使用textContent
+        const word = questionWord.getAttribute('data-tts') || questionWord.textContent.trim();
+        if (!word) {
+            console.log('No text to speak found'); // Debug log
+            return;
+        }
+        
         console.log('Speaking word:', word); // Debug log
         speakJapanese(word);
     }

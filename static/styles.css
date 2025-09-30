@@ -193,6 +193,22 @@ a:hover {
     transform: scale(0.95);
 }
 
+.tts-icon {
+    width: 22px;
+    height: 22px;
+    fill: currentColor;
+    transition: transform 0.2s ease;
+    pointer-events: none;
+}
+
+.tts-button:hover .tts-icon {
+    transform: scale(1.1);
+}
+
+.tts-button:active .tts-icon {
+    transform: scale(0.95);
+}
+
 .meaning {
     margin: 0 0 12px;
     font-size: 1rem;

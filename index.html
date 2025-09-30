@@ -85,7 +85,12 @@
                 <div class="word-container">
                     <h1 id="question-word" class="word" aria-live="polite"></h1>
                     <button id="tts-button" type="button" class="tts-button" title="発音を聞く" aria-label="発音を聞く">
-                        🔊
+                        <svg class="tts-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                            <path d="M4 9v6h3.5L12 18V6L7.5 9H4z"></path>
+                            <path d="M16 12a2 2 0 01-1.17 1.83l-.33.12v-3.9l.33.12A2 2 0 0116 12z"></path>
+                            <path d="M18.5 12a4.5 4.5 0 01-3.05 4.24l-.45.15v-1.66l.18-.08A2.9 2.9 0 0017 12a2.9 2.9 0 00-1.82-2.65l-.18-.07V7.62l.45.15A4.5 4.5 0 0118.5 12z"></path>
+                        </svg>
+                        <span class="sr-only">発音を聞く</span>
                     </button>
                 </div>
                 <p id="question-meaning" class="meaning"></p>
