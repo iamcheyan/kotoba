@@ -30,6 +30,7 @@
         theme: DEFAULT_THEME,
         pendingTheme: DEFAULT_THEME,
         previewPlaying: false,
+        userCancelledSpeech: false,
     };
 
     const CHAR_RANGE = {
@@ -1007,6 +1008,19 @@
     }
 
     function bindEvents() {
+        // 标记用户首次交互，绕过浏览器自动播放限制
+        function markInteracted() {
+            if (!window.hasUserInteracted) {
+                window.hasUserInteracted = true;
+                try { speechSynthesis.resume(); } catch (_) {}
+            }
+        }
+        ['pointerdown','click','keydown','touchstart'].forEach((evt) => {
+            window.addEventListener(evt, markInteracted, { once: true, capture: true });
+        });
+        if (elements.answerInput) {
+            elements.answerInput.addEventListener('focus', markInteracted, { once: true, capture: true });
+        }
         if (elements.answerForm) {
             elements.answerForm.addEventListener('submit', handleAnswerSubmit);
         }
@@ -1124,11 +1138,46 @@
             console.error('TTS button not found in DOM!');
             console.log('Available elements with id containing "tts":', Array.from(document.querySelectorAll('[id*="tts"]')));
         }
+
+        // WanaKana input conversion for answer input
+        // Use setTimeout to ensure WanaKana is fully loaded
+        setTimeout(() => {
+            if (elements.answerInput && window.wanakana) {
+                console.log('Binding WanaKana to answer input...');
+                window.wanakana.bind(elements.answerInput);
+                console.log('WanaKana bound successfully to answer input');
+            } else {
+                console.warn('WanaKana binding failed:', {
+                    answerInput: !!elements.answerInput,
+                    wanakana: !!window.wanakana
+                });
+                // Retry after a longer delay
+                setTimeout(() => {
+                    if (elements.answerInput && window.wanakana) {
+                        console.log('Retrying WanaKana binding...');
+                        window.wanakana.bind(elements.answerInput);
+                        console.log('WanaKana bound successfully on retry');
+                    } else {
+                        console.error('WanaKana binding failed after retry:', {
+                            answerInput: !!elements.answerInput,
+                            wanakana: !!window.wanakana
+                        });
+                    }
+                }, 1000);
+            }
+        }, 100);
     }
 
     function handleTTSClick() {
         console.log('=== TTS Debug Start ===');
         console.log('TTS button clicked'); // Debug log
+        
+        // Mark user interaction immediately when TTS button is clicked
+        if (!window.hasUserInteracted) {
+            window.hasUserInteracted = true;
+            console.log('User interaction detected via TTS button - TTS now allowed');
+        }
+        
         console.log('speechSynthesis object:', speechSynthesis);
         console.log('speechSynthesis.speaking:', speechSynthesis.speaking);
         console.log('speechSynthesis.pending:', speechSynthesis.pending);
@@ -1137,7 +1186,8 @@
         // 如果正在发音，则暂停或停止
         if (speechSynthesis.speaking) {
             console.log('Speech is currently playing, stopping...');
-            speechSynthesis.cancel();
+            state.userCancelledSpeech = true;
+            try { speechSynthesis.cancel(); } catch (_) {}
             return;
         }
         
@@ -1181,6 +1231,14 @@
         
         if (!speechSynthesis) {
             console.error('speechSynthesis not supported');
+            showAlert('error', 'お使いのブラウザは音声合成をサポートしていません');
+            return;
+        }
+
+        // Check if user has interacted with the page (required for autoplay policy)
+        if (!window.hasUserInteracted) {
+            console.warn('TTS blocked: User has not interacted with the page yet');
+            showAlert('warning', 'ブラウザの自動再生ポリシーにより、最初にページをクリックしてから音声を再生してください');
             return;
         }
 
@@ -1190,14 +1248,17 @@
             speechSynthesis.cancel();
             // Wait for cancel to complete before proceeding
             setTimeout(() => {
-                loadVoicesAndSpeakDouble();
+                if (!state.userCancelledSpeech) {
+                    loadVoicesAndSpeakSingle();
+                }
             }, 100);
         } else {
             // No existing speech, proceed immediately
-            loadVoicesAndSpeakDouble();
+            loadVoicesAndSpeakSingle();
         }
 
-        function loadVoicesAndSpeakDouble() {
+        // 单次播放
+        function loadVoicesAndSpeakSingle() {
             const voices = speechSynthesis.getVoices();
             console.log('All available voices:', voices.map(v => `${v.name} (${v.lang})`));
             
@@ -1234,32 +1295,13 @@
                 console.log('Using fallback voice:', selectedVoice.name);
             }
             
-            // 创建第一次播放（慢速）
-            const firstUtterance = createUtterance(text, selectedVoice, voices, 0.5); // 最慢速度
-            
-            // 创建第二次播放（正常速度）
-            const secondUtterance = createUtterance(text, selectedVoice, voices, state.speechRate || 1.0); // 正常速度
-            
-            console.log('Starting double TTS playback - First: slow (0.5x), Second: normal (' + (state.speechRate || 1.0) + 'x)');
-            
-            // 第一次播放结束后播放第二次
-            firstUtterance.onend = function(event) {
-                console.log('First speech (slow) ended, starting second speech (normal)');
-                setTimeout(() => {
-                    try {
-                        speechSynthesis.speak(secondUtterance);
-                    } catch (error) {
-                        console.error('Error starting second speech:', error);
-                    }
-                }, 200); // 短暂间隔
-            };
-            
-            // 开始第一次播放
-            console.log('Starting first speech (slow)...');
+            // 创建并播放（使用当前设置的速率）
+            const utter = createUtterance(text, selectedVoice, voices, state.speechRate || 1.0);
+            console.log('Starting single speech (rate ' + (state.speechRate || 1.0) + 'x)...');
             try {
-                speechSynthesis.speak(firstUtterance);
+                speechSynthesis.speak(utter);
             } catch (error) {
-                console.error('Error starting first speech:', error);
+                console.error('Error starting speech:', error);
             }
         }
         
@@ -1315,6 +1357,11 @@
                 
                 // Handle specific error types
                 if (event.error === 'canceled' || event.error === 'interrupted') {
+                    if (state.userCancelledSpeech) {
+                        // 用户手动取消，重置标记并且不重试
+                        state.userCancelledSpeech = false;
+                        return;
+                    }
                     console.log('Speech was canceled/interrupted, attempting retry...');
                     // Wait a bit and retry once
                     setTimeout(() => {
@@ -1371,19 +1418,19 @@
             console.log('No voices available yet, waiting for voiceschanged event...');
             speechSynthesis.addEventListener('voiceschanged', function() {
                 console.log('voiceschanged event fired');
-                loadVoicesAndSpeakDouble();
+                loadVoicesAndSpeakSingle();
             }, { once: true });
             
             // Fallback: try again after a short delay
             setTimeout(() => {
                 if (speechSynthesis.getVoices().length === 0) {
                     console.log('Still no voices after timeout, trying anyway...');
-                    loadVoicesAndSpeakDouble();
+                    loadVoicesAndSpeakSingle();
                 }
             }, 1000);
         } else {
             console.log('Voices already available, proceeding...');
-            loadVoicesAndSpeakDouble();
+            loadVoicesAndSpeakSingle();
         }
     }
 
