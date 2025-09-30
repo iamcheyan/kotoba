@@ -67,6 +67,7 @@
         questionMeaning: document.getElementById('question-meaning'),
         questionReading: document.getElementById('question-reading'),
         questionRomaji: document.getElementById('question-romaji'),
+        questionSection: document.getElementById('question'),
         answerForm: document.getElementById('answer-form'),
         answerInput: document.getElementById('answer-input'),
         answerSubmit: document.getElementById('answer-submit'),
@@ -119,6 +120,9 @@
         if (elements.loadingIndicator) {
             elements.loadingIndicator.classList.remove('hidden');
         }
+        if (elements.questionSection) {
+            elements.questionSection.classList.add('hidden');
+        }
         if (elements.loadingText) {
             elements.loadingText.textContent = message || '読み込み中…';
         }
@@ -135,6 +139,9 @@
     function hideLoading() {
         if (elements.loadingIndicator) {
             elements.loadingIndicator.classList.add('hidden');
+        }
+        if (elements.questionSection) {
+            elements.questionSection.classList.remove('hidden');
         }
         if (elements.answerSubmit) {
             elements.answerSubmit.disabled = state.awaitingNext;
@@ -341,9 +348,37 @@
         return state.dictionaries[0].path;
     }
 
+    function getConfigCandidates() {
+        const fallback = ['/config.json', 'config.json', '/static/config.json'];
+        const seen = new Set();
+        const result = [];
+        const pushUnique = (value) => {
+            if (!value) {
+                return;
+            }
+            if (!seen.has(value)) {
+                seen.add(value);
+                result.push(value);
+            }
+        };
+
+        // Try to infer config.json relative to the loaded app.js to avoid guaranteed 404s
+        const script = document.currentScript || document.querySelector('script[src*="app.js"]');
+        if (script && script.src) {
+            try {
+                const scriptUrl = new URL(script.src, window.location.href);
+                pushUnique(new URL('config.json', scriptUrl).href);
+            } catch (error) {
+                console.warn('[Config] failed to derive config path from script src:', error);
+            }
+        }
+
+        fallback.forEach((candidate) => pushUnique(candidate));
+        return result;
+    }
+
     async function loadConfig(params) {
-        // 兼容不同部署路径：优先 /config.json，其次 相对路径 config.json，最后 /static/config.json
-        const candidates = ['/config.json', 'config.json', '/static/config.json'];
+        const candidates = getConfigCandidates();
         let response = null;
         for (const url of candidates) {
             try {
@@ -943,13 +978,6 @@
             console.log('Adding TTS click event listener...');
             ttsButton.addEventListener('click', handleTTSClick);
             console.log('TTS event listener added successfully');
-            
-            // Test click handler immediately
-            console.log('Testing TTS button click handler...');
-            ttsButton.onclick = function(e) {
-                console.log('TTS button onclick fired!', e);
-                handleTTSClick();
-            };
         } else {
             console.error('TTS button not found in DOM!');
             console.log('Available elements with id containing "tts":', Array.from(document.querySelectorAll('[id*="tts"]')));
@@ -1169,7 +1197,7 @@
             console.log('No voices available yet, waiting for voiceschanged event...');
             speechSynthesis.addEventListener('voiceschanged', function() {
                 console.log('voiceschanged event fired');
-                setTimeout(() => loadVoicesAndSpeak(), 50);
+                loadVoicesAndSpeak();
             }, { once: true });
             
             // Fallback: try again after a short delay
@@ -1181,7 +1209,7 @@
             }, 1000);
         } else {
             console.log('Voices already available, proceeding...');
-            setTimeout(() => loadVoicesAndSpeak(), 50);
+            loadVoicesAndSpeak();
         }
     }
 

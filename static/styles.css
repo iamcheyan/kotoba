@@ -164,6 +164,7 @@ a:hover {
     justify-content: center;
     gap: 12px;
     margin-bottom: 12px;
+    height: 100px;
 }
 
 .tts-button {
@@ -255,16 +256,18 @@ ruby rt {
     background: var(--accent-hover);
 }
 
-.skip-button {
-    background: transparent;
-    color: var(--text);
-    border: 1px solid var(--border);
+/* 让跳过按钮使用黄色主题，使用更高特异性覆盖通用按钮样式 */
+.answer-form .skip-button {
+    background: #f59e0b; /* amber-500 */
+    color: #ffffff;
+    border: 1px solid #f59e0b;
     min-width: 72px;
 }
 
-.skip-button:hover,
-.skip-button:focus-visible {
-    background: rgba(79, 70, 229, 0.08);
+.answer-form .skip-button:hover:not(:disabled),
+.answer-form .skip-button:focus-visible:not(:disabled) {
+    background: #d97706; /* amber-600 */
+    border-color: #d97706;
 }
 
 .alerts {
