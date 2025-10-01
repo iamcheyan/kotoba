@@ -2,6 +2,12 @@
 
 [🇯🇵 日本語](#japanese) | [🇺🇸 English](#english) | [🇨🇳 中文](#chinese)
 
+## ⭐ Star History
+
+If you find Kotoba useful, please consider giving it a star! ⭐
+
+[![Star History Chart](https://api.star-history.com/svg?repos=iamcheyan/kotoba&type=Date)](https://star-history.com/#iamcheyan/kotoba&Date)
+
 ---
 
 ## <a id="japanese"></a>🇯🇵 日本語
