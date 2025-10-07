@@ -1,6 +1,10 @@
 {
     "dictionaries": [
         {
+            "path": "dictionaries/beginner.json",
+            "name": "入門（单字/N5）"
+        },
+        {
             "path": "dictionaries/grammar.json",
             "name": "基本文法"
         },
