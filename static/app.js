@@ -507,8 +507,16 @@
             throw new Error('利用可能な辞書が見つかりません');
         }
         const requested = params.get('dict');
+        // 尝试从 localStorage 读取上次选择的词典
+        let lastSelected = null;
+        try {
+            lastSelected = localStorage.getItem('lastSelectedDictionary');
+        } catch (error) {
+            console.warn('Failed to read last selected dictionary from localStorage', error);
+        }
+        // 优先级：URL参数 > 上次选择 > 配置默认值 > 第一个词典
         const defaultId = data.default_dictionary || state.dictionaries[0].path;
-        const initialId = resolveDictionaryId(requested || defaultId);
+        const initialId = resolveDictionaryId(requested || lastSelected || defaultId);
         state.dictionaryId = initialId;
         updateDictionaryLabel();
         populateDictionarySelect();
@@ -1067,6 +1075,12 @@
                 const params = getParams();
                 if (selected) {
                     params.set('dict', selected);
+                    // 保存到 localStorage 以记住用户选择
+                    try {
+                        localStorage.setItem('lastSelectedDictionary', selected);
+                    } catch (error) {
+                        console.warn('Failed to save dictionary selection to localStorage', error);
+                    }
                 } else {
                     params.delete('dict');
                 }
