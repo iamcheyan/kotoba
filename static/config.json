@@ -18,7 +18,27 @@
             "name": "N5-N1単語"
         },
         {
-            "path": "dictionaries/conversation.json", 
+            "path": "dictionaries/jlpt_n5.json",
+            "name": "JLPT N5"
+        },
+        {
+            "path": "dictionaries/jlpt_n4.json",
+            "name": "JLPT N4"
+        },
+        {
+            "path": "dictionaries/jlpt_n3.json",
+            "name": "JLPT N3"
+        },
+        {
+            "path": "dictionaries/jlpt_n2.json",
+            "name": "JLPT N2"
+        },
+        {
+            "path": "dictionaries/jlpt_n1.json",
+            "name": "JLPT N1"
+        },
+        {
+            "path": "dictionaries/conversation.json",
             "name": "会話"
         },
         {
