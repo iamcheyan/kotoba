@@ -73,15 +73,45 @@
             <div class="header-actions">
                 <!-- 用户账户 -->
                 <div class="user-account">
-                    <button id="loginButton" class="login-btn" style="display: none;">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-                            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-                            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-                            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-                        </svg>
-                        <span class="login-text">ログイン</span>
-                    </button>
+                    <!-- 未登录菜单触发器 -->
+                    <div id="guestProfile" class="user-profile" style="display: flex;">
+                        <button class="guest-menu-trigger" aria-label="メニュー">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="12" cy="7" r="4"></circle>
+                            </svg>
+                        </button>
+                        <div id="guestMenu" class="user-menu">
+                            <button id="loginButtonMenu" class="user-menu-item">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                                    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                                    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                                    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                                    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                                </svg>
+                                <span>ログイン</span>
+                            </button>
+                            <div class="user-menu-divider"></div>
+                            <button id="dictionaryButtonMenuGuest" class="user-menu-item">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                                    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                                    <line x1="10" y1="8" x2="16" y2="8"></line>
+                                    <line x1="10" y1="12" x2="16" y2="12"></line>
+                                    <line x1="10" y1="16" x2="14" y2="16"></line>
+                                </svg>
+                                <span>辞書を切り替え</span>
+                            </button>
+                            <button id="settingsButtonMenuGuest" class="user-menu-item">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                    <path d="M12 1v6m0 6v6M5.64 5.64l4.24 4.24m4.24 4.24l4.24 4.24M1 12h6m6 0h6M5.64 18.36l4.24-4.24m4.24-4.24l4.24-4.24"></path>
+                                </svg>
+                                <span>設定</span>
+                            </button>
+                        </div>
+                    </div>
+                    <!-- 已登录用户资料 -->
                     <div id="userProfile" class="user-profile" style="display: none;">
                         <img id="userAvatar" class="user-avatar" src="" alt="User">
                         <div id="userMenu" class="user-menu">
@@ -379,7 +409,11 @@
 
         // UI Elements
         const loginButton = document.getElementById('loginButton');
+        const loginButtonMenu = document.getElementById('loginButtonMenu');
         const userProfile = document.getElementById('userProfile');
+        const guestProfile = document.getElementById('guestProfile');
+        const guestMenuTrigger = document.querySelector('.guest-menu-trigger');
+        const guestMenu = document.getElementById('guestMenu');
         const userAvatar = document.getElementById('userAvatar');
         const userAvatarMenu = document.getElementById('userAvatarMenu');
         const userNameMenu = document.getElementById('userNameMenu');
@@ -388,9 +422,16 @@
         const logoutButton = document.getElementById('logoutButton');
         const syncDataButton = document.getElementById('syncDataButton');
         const switchAccountButton = document.getElementById('switchAccountButton');
+        const dictionaryButtonMenuGuest = document.getElementById('dictionaryButtonMenuGuest');
+        const settingsButtonMenuGuest = document.getElementById('settingsButtonMenuGuest');
 
-        // Show initial UI
-        if (loginButton) loginButton.style.display = 'flex';
+        // Toggle guest menu
+        if (guestMenuTrigger) {
+            guestMenuTrigger.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (guestMenu) guestMenu.classList.toggle('show');
+            });
+        }
 
         // Toggle user menu
         if (userAvatar) {
@@ -403,12 +444,64 @@
         // Close menu when clicking outside
         document.addEventListener('click', () => {
             if (userMenu) userMenu.classList.remove('show');
+            if (guestMenu) guestMenu.classList.remove('show');
         });
 
         // Prevent menu from closing when clicking inside
         if (userMenu) {
             userMenu.addEventListener('click', (e) => {
                 e.stopPropagation();
+            });
+        }
+        
+        if (guestMenu) {
+            guestMenu.addEventListener('click', (e) => {
+                e.stopPropagation();
+            });
+        }
+        
+        // Guest menu actions
+        if (loginButtonMenu) {
+            loginButtonMenu.addEventListener('click', async () => {
+                try {
+                    sessionStorage.removeItem('dataLoaded');
+                    const result = await signInWithPopup(auth, provider);
+                    const user = result.user;
+                    console.log('User signed in:', user.displayName);
+                    showNotification('ログインしました', 'success');
+                    if (guestMenu) guestMenu.classList.remove('show');
+                } catch (error) {
+                    console.error('Login error:', error);
+                    showNotification('ログインエラー: ' + error.message, 'error');
+                }
+            });
+        }
+        
+        if (dictionaryButtonMenuGuest) {
+            dictionaryButtonMenuGuest.addEventListener('click', function() {
+                const dictionaryModal = document.getElementById('dictionary-modal');
+                const backdrop = document.getElementById('modal-backdrop');
+                if (dictionaryModal) {
+                    dictionaryModal.classList.remove('hidden');
+                }
+                if (backdrop) {
+                    backdrop.classList.remove('hidden');
+                }
+                if (guestMenu) guestMenu.classList.remove('show');
+            });
+        }
+        
+        if (settingsButtonMenuGuest) {
+            settingsButtonMenuGuest.addEventListener('click', function() {
+                const settingsModal = document.getElementById('settings-modal');
+                const backdrop = document.getElementById('modal-backdrop');
+                if (settingsModal) {
+                    settingsModal.classList.remove('hidden');
+                }
+                if (backdrop) {
+                    backdrop.classList.remove('hidden');
+                }
+                if (guestMenu) guestMenu.classList.remove('show');
             });
         }
 
@@ -597,27 +690,39 @@
             if (user) {
                 console.log('User is signed in:', user.displayName);
                 
-                // Update UI
-                if (loginButton) loginButton.style.display = 'none';
+                // Update UI - 显示已登录状态
+                if (guestProfile) guestProfile.style.display = 'none';
                 if (userProfile) userProfile.style.display = 'flex';
                 if (userAvatar) userAvatar.src = user.photoURL || '';
                 if (userAvatarMenu) userAvatarMenu.src = user.photoURL || '';
                 if (userNameMenu) userNameMenu.textContent = user.displayName || 'User';
                 if (userEmailMenu) userEmailMenu.textContent = user.email || '';
+                if (guestMenu) guestMenu.classList.remove('show');
 
                 // Load user data
                 const dataLoaded = sessionStorage.getItem('dataLoaded');
                 if (dataLoaded !== 'true') {
                     await loadUserData(user);
                 }
+                
+                // 刷新字典列表以显示错题本
+                if (window.populateDictionarySelect) {
+                    window.populateDictionarySelect();
+                }
             } else {
                 console.log('User is signed out');
                 sessionStorage.removeItem('dataLoaded');
                 
-                // Update UI
-                if (loginButton) loginButton.style.display = 'flex';
+                // Update UI - 显示未登录状态
+                if (guestProfile) guestProfile.style.display = 'flex';
                 if (userProfile) userProfile.style.display = 'none';
                 if (userMenu) userMenu.classList.remove('show');
+                if (guestMenu) guestMenu.classList.remove('show');
+                
+                // 刷新字典列表以隐藏错题本
+                if (window.populateDictionarySelect) {
+                    window.populateDictionarySelect();
+                }
             }
         });
 

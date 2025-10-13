@@ -529,7 +529,16 @@
             return;
         }
         select.innerHTML = '';
+        
+        // 检查用户是否已登录
+        const isLoggedIn = window.firebaseAuth && window.firebaseAuth.currentUser;
+        
         state.dictionaries.forEach((item) => {
+            // 如果是错题本且用户未登录，则跳过
+            if (item.isWrongWords && !isLoggedIn) {
+                return;
+            }
+            
             const option = document.createElement('option');
             option.value = item.path;
             option.textContent = item.name;
@@ -557,6 +566,7 @@
     
     // Make updateScoreboard globally available for Firebase integration
     window.updateScoreboard = updateScoreboard;
+    window.populateDictionarySelect = populateDictionarySelect;
 
     function clearAlerts() {
         if (elements.alerts) {
@@ -1289,15 +1299,14 @@
         // 菜单中的辞書切换按钮
         if (dictionaryButtonMenu) {
             dictionaryButtonMenu.addEventListener('click', function() {
-                const dictionaryButton = document.getElementById('dictionary-button');
-                if (dictionaryButton) {
-                    dictionaryButton.click();
-                } else {
-                    // 如果顶部按钮被移除，直接触发模态框
-                    const dictionaryModal = document.getElementById('dictionary-modal');
-                    if (dictionaryModal) {
-                        dictionaryModal.classList.remove('hidden');
-                    }
+                // 直接触发模态框
+                const dictionaryModal = document.getElementById('dictionary-modal');
+                const backdrop = document.getElementById('modal-backdrop');
+                if (dictionaryModal) {
+                    dictionaryModal.classList.remove('hidden');
+                }
+                if (backdrop) {
+                    backdrop.classList.remove('hidden');
                 }
                 // 关闭用户菜单
                 const userMenu = document.getElementById('userMenu');
@@ -1310,15 +1319,14 @@
         // 菜单中的设定按钮
         if (settingsButtonMenu) {
             settingsButtonMenu.addEventListener('click', function() {
-                const settingsButton = document.getElementById('settings-button');
-                if (settingsButton) {
-                    settingsButton.click();
-                } else {
-                    // 如果顶部按钮被移除，直接触发模态框
-                    const settingsModal = document.getElementById('settings-modal');
-                    if (settingsModal) {
-                        settingsModal.classList.remove('hidden');
-                    }
+                // 直接触发模态框
+                const settingsModal = document.getElementById('settings-modal');
+                const backdrop = document.getElementById('modal-backdrop');
+                if (settingsModal) {
+                    settingsModal.classList.remove('hidden');
+                }
+                if (backdrop) {
+                    backdrop.classList.remove('hidden');
                 }
                 // 关闭用户菜单
                 const userMenu = document.getElementById('userMenu');

@@ -74,6 +74,18 @@ body.theme-sakura .card {
     box-shadow: 0 20px 40px rgba(244, 114, 182, 0.18);
 }
 
+body.theme-sakura #settings-save,
+body.theme-sakura #dictionary-save {
+    background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);
+    box-shadow: 0 2px 8px rgba(236, 72, 153, 0.3);
+}
+
+body.theme-sakura #settings-save:hover,
+body.theme-sakura #dictionary-save:hover {
+    background: linear-gradient(135deg, #db2777 0%, #ec4899 100%);
+    box-shadow: 0 4px 12px rgba(236, 72, 153, 0.4);
+}
+
 * {
     box-sizing: border-box;
 }
@@ -378,15 +390,23 @@ ruby rt {
 .modal-backdrop {
     position: fixed;
     inset: 0;
-    background: rgba(15, 23, 42, 0.35);
+    background: rgba(15, 23, 42, 0.5);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     z-index: 998;
+    transition: opacity 0.2s ease, backdrop-filter 0.2s ease;
+}
+
+.modal-backdrop.hidden {
+    opacity: 0;
+    pointer-events: none;
 }
 
 .modal {
     position: fixed;
     top: 50%;
     left: 50%;
-    transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%) scale(1);
     background: var(--card-bg);
     color: inherit;
     border-radius: 16px;
@@ -395,8 +415,15 @@ ruby rt {
     width: calc(100% - 48px);
     padding: 0;
     border: 1px solid var(--border);
-    box-shadow: 0 20px 40px var(--modal-shadow);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
     z-index: 999;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.modal.hidden {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.95);
+    pointer-events: none;
 }
 
 .modal-header,
@@ -416,7 +443,43 @@ ruby rt {
     border-top: 1px solid var(--border);
     border-bottom: none;
     gap: 12px;
-    padding: 10px;
+    padding: 16px;
+}
+
+/* 模态框确认按钮 */
+#settings-save,
+#dictionary-save {
+    background: linear-gradient(135deg, var(--accent) 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 10px 24px;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+    transition: all 0.2s ease;
+    min-width: 100px;
+}
+
+#settings-save:hover,
+#dictionary-save:hover {
+    background: linear-gradient(135deg, #764ba2 0%, var(--accent) 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+#settings-save:active,
+#dictionary-save:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 4px rgba(102, 126, 234, 0.3);
+}
+
+/* 模态框取消按钮优化 */
+.modal-footer .ghost-button {
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 0.95rem;
 }
 
 .modal-body {
@@ -797,6 +860,33 @@ ruby rt {
 .user-avatar:hover {
     border-color: var(--accent);
     transform: scale(1.05);
+}
+
+/* 未登录菜单触发器 */
+.guest-menu-trigger {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    /* padding: 0 10px;image.png */
+    cursor: pointer;
+    border: 2px solid var(--border);
+    background: var(--card-bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.guest-menu-trigger:hover {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+    transform: scale(1.05);
+}
+
+.guest-menu-trigger svg {
+    color: var(--text);
+    width: 20px;
+    height: 20px;
 }
 
 .user-menu {
@@ -1263,6 +1353,10 @@ ruby rt {
         width: 28px;
         height: 28px;
     }
+    
+  
+    
+ 
     
     .user-menu {
         position: fixed;
