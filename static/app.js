@@ -791,6 +791,20 @@
         return entry;
     }
 
+    // 检查是否应该显示读音（假名）
+    function shouldShowReading(entry) {
+        if (!entry.reading) return false;
+        
+        // 如果reading和kanji完全相同，不显示
+        if (entry.reading === entry.kanji) return false;
+        
+        // 检查是否只包含英文字母、数字、空格和常见符号（纯英文/罗马字）
+        const isOnlyRomanChars = /^[a-zA-Z0-9\s\-._,!?'"()]+$/.test(entry.reading);
+        if (isOnlyRomanChars) return false;
+        
+        return true;
+    }
+
     function renderQuestion() {
         const entry = state.currentEntry;
         if (!entry) {
@@ -812,7 +826,9 @@
         }
         if (elements.questionReading) {
             elements.questionReading.textContent = entry.reading;
-            elements.questionReading.style.display = state.showReading ? 'block' : 'none';
+            // 只有在设置开启且有有效的假名读音时才显示
+            const hasValidReading = shouldShowReading(entry);
+            elements.questionReading.style.display = (state.showReading && hasValidReading) ? 'block' : 'none';
         }
         if (elements.questionRomaji) {
             elements.questionRomaji.textContent = entry.romaji;
@@ -916,11 +932,17 @@
         if (!entry || !entry.kanji) return;
         
         try {
-            const wrongWords = JSON.parse(localStorage.getItem('wrongWords') || '[]');
+            let wrongWords = JSON.parse(localStorage.getItem('wrongWords') || '[]');
             
-            // 检查是否已存在，避免重复添加
-            const exists = wrongWords.some(word => word.kanji === entry.kanji);
-            if (!exists) {
+            // 查找是否已存在相同的单词
+            const existingIndex = wrongWords.findIndex(word => word.kanji === entry.kanji);
+            
+            if (existingIndex !== -1) {
+                // 如果已存在，只更新时间（保持在同一位置）
+                wrongWords[existingIndex].addedAt = new Date().toISOString();
+                console.log('更新错题本时间:', entry.kanji);
+            } else {
+                // 如果不存在，添加新错题
                 wrongWords.push({
                     kanji: entry.kanji,
                     meaning: entry.meaning,
@@ -928,13 +950,14 @@
                     addedAt: new Date().toISOString(),
                     source: state.dictionaryName || '未知词典'
                 });
-                localStorage.setItem('wrongWords', JSON.stringify(wrongWords));
                 console.log('已添加到错题本:', entry.kanji);
-                
-                // 自动同步到云端
-                if (window.autoSyncData) {
-                    window.autoSyncData();
-                }
+            }
+            
+            localStorage.setItem('wrongWords', JSON.stringify(wrongWords));
+            
+            // 自动同步到云端
+            if (window.autoSyncData) {
+                window.autoSyncData();
             }
         } catch (error) {
             console.error('添加到错题本失败:', error);
@@ -946,6 +969,9 @@
         const modal = document.getElementById('wrong-words-modal');
         const backdrop = elements.modalBackdrop;
         const userMenu = document.getElementById('userMenu');
+        
+        // 清理重复数据
+        cleanupDuplicateWrongWords();
         
         // 隐藏用户菜单
         if (userMenu) {
@@ -998,6 +1024,41 @@
         totalItems: 0
     };
 
+    // 清理错题本中的重复数据
+    function cleanupDuplicateWrongWords() {
+        try {
+            const wrongWords = JSON.parse(localStorage.getItem('wrongWords') || '[]');
+            if (wrongWords.length === 0) return;
+            
+            // 去重：保留每个单词的最新记录
+            const uniqueWords = [];
+            const seenKanji = new Set();
+            
+            // 按时间倒序排序，保留最新的记录
+            const sortedByTime = [...wrongWords].sort((a, b) => new Date(b.addedAt) - new Date(a.addedAt));
+            
+            for (const word of sortedByTime) {
+                if (!seenKanji.has(word.kanji)) {
+                    uniqueWords.push(word);
+                    seenKanji.add(word.kanji);
+                }
+            }
+            
+            // 如果有重复，更新 localStorage
+            if (uniqueWords.length < wrongWords.length) {
+                localStorage.setItem('wrongWords', JSON.stringify(uniqueWords));
+                console.log(`清理了 ${wrongWords.length - uniqueWords.length} 个重复的错题`);
+                
+                // 同步到云端
+                if (window.autoSyncData) {
+                    window.autoSyncData();
+                }
+            }
+        } catch (error) {
+            console.error('清理重复错题失败:', error);
+        }
+    }
+
     // 显示错题本列表
     function displayWrongWords(page = 1) {
         const wrongWords = JSON.parse(localStorage.getItem('wrongWords') || '[]');
@@ -1008,9 +1069,23 @@
         
         if (!listContainer) return;
         
-        // 更新统计信息 - 显示正确答题数和错题本中的单词数
+        // 去重：保留每个单词的最新记录
+        const uniqueWords = [];
+        const seenKanji = new Set();
+        
+        // 先按时间倒序排序，这样遇到重复时会保留最新的
+        const sortedByTime = [...wrongWords].sort((a, b) => new Date(b.addedAt) - new Date(a.addedAt));
+        
+        for (const word of sortedByTime) {
+            if (!seenKanji.has(word.kanji)) {
+                uniqueWords.push(word);
+                seenKanji.add(word.kanji);
+            }
+        }
+        
+        // 更新统计信息 - 使用去重后的单词数
         const correct = parseInt(localStorage.getItem('correct') || '0', 10) || 0;
-        const wrongWordsCount = wrongWords.length; // 错题本中的单词数量
+        const wrongWordsCount = uniqueWords.length; // 去重后的单词数量
         
         if (correctElement) correctElement.textContent = correct;
         if (wrongElement) wrongElement.textContent = wrongWordsCount;
@@ -1018,7 +1093,7 @@
         // 清空列表
         listContainer.innerHTML = '';
         
-        if (wrongWords.length === 0) {
+        if (uniqueWords.length === 0) {
             listContainer.innerHTML = `
                 <div class="empty-wrong-words">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -1036,8 +1111,8 @@
             return;
         }
         
-        // 按时间倒序排列
-        const sortedWords = [...wrongWords].sort((a, b) => new Date(b.addedAt) - new Date(a.addedAt));
+        // 使用去重后的数组（已经是按时间倒序）
+        const sortedWords = uniqueWords;
         
         // 计算分页
         wrongWordsPagination.totalItems = sortedWords.length;
