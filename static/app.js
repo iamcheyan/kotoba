@@ -1135,6 +1135,18 @@
         currentPageWords.forEach((word, index) => {
             const wordElement = document.createElement('div');
             wordElement.className = 'wrong-word-item';
+            
+            // 检查是否应该显示读音
+            const showReading = shouldShowReading(word);
+            
+            // 构建读音行HTML（如果需要显示）
+            const readingRowHTML = showReading ? `
+                <div class="wrong-word-row">
+                    <div class="wrong-word-label">読み方:</div>
+                    <div class="wrong-word-value">${escapeHtml(word.reading || '-')}</div>
+                </div>
+            ` : '';
+            
             wordElement.innerHTML = `
                 <div class="wrong-word-header">
                     <div class="wrong-word-kanji">${escapeHtml(word.kanji)}</div>
@@ -1153,10 +1165,7 @@
                         <div class="wrong-word-label">意味:</div>
                         <div class="wrong-word-value">${escapeHtml(word.meaning || '-')}</div>
                     </div>
-                    <div class="wrong-word-row">
-                        <div class="wrong-word-label">読み方:</div>
-                        <div class="wrong-word-value">${escapeHtml(word.reading || '-')}</div>
-                    </div>
+                    ${readingRowHTML}
                 </div>
                 <div class="wrong-word-meta">
                     <div class="wrong-word-time">
