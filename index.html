@@ -67,12 +67,94 @@
                     <span id="dictionary-name" class="dictionary-name"></span>
                 </div>
                 <div class="header-meta">
-                    <div id="score" class="score">正解: 0 | 不正解: 0</div>
+                    <div id="score" class="score">正解: 0</div>
                 </div>
             </div>
             <div class="header-actions">
-                <button id="dictionary-button" type="button" class="ghost-button">📘 辞書</button>
-                <button id="settings-button" type="button" class="ghost-button">⚙️ 設定</button>
+                <!-- 用户账户 -->
+                <div class="user-account">
+                    <button id="loginButton" class="login-btn" style="display: none;">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                        </svg>
+                        <span class="login-text">ログイン</span>
+                    </button>
+                    <div id="userProfile" class="user-profile" style="display: none;">
+                        <img id="userAvatar" class="user-avatar" src="" alt="User">
+                        <div id="userMenu" class="user-menu">
+                            <div class="user-menu-header">
+                                <img id="userAvatarMenu" class="user-avatar-large" src="" alt="User">
+                                <div class="user-info">
+                                    <div id="userNameMenu" class="user-name"></div>
+                                    <div id="userEmailMenu" class="user-email"></div>
+                                </div>
+                            </div>
+                            <div class="user-menu-divider"></div>
+                            <button id="syncDataButton" class="user-menu-item">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="23 4 23 10 17 10"></polyline>
+                                    <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+                                </svg>
+                                <span>データを同期</span>
+                            </button>
+                            <button id="viewWrongWordsButton" class="user-menu-item">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                                </svg>
+                                <span>統計</span>
+                            </button>
+                            <button id="practiceWrongWordsButton" class="user-menu-item">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                                    <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+                                </svg>
+                                <span>錯題を練習</span>
+                            </button>
+                            <div class="user-menu-divider"></div>
+                            <button id="dictionaryButtonMenu" class="user-menu-item">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                                    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                                    <line x1="10" y1="8" x2="16" y2="8"></line>
+                                    <line x1="10" y1="12" x2="16" y2="12"></line>
+                                    <line x1="10" y1="16" x2="14" y2="16"></line>
+                                </svg>
+                                <span>辞書を切り替え</span>
+                            </button>
+                            <button id="settingsButtonMenu" class="user-menu-item">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                    <path d="M12 1v6m0 6v6M5.64 5.64l4.24 4.24m4.24 4.24l4.24 4.24M1 12h6m6 0h6M5.64 18.36l4.24-4.24m4.24-4.24l4.24-4.24"></path>
+                                </svg>
+                                <span>設定</span>
+                            </button>
+                            <div class="user-menu-divider"></div>
+                            <button id="switchAccountButton" class="user-menu-item">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                    <circle cx="9" cy="7" r="4"></circle>
+                                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                                </svg>
+                                <span>アカウントを切り替え</span>
+                            </button>
+                            <button id="logoutButton" class="user-menu-item logout">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                                    <polyline points="16 17 21 12 16 7"></polyline>
+                                    <line x1="21" y1="12" x2="9" y2="12"></line>
+                                </svg>
+                                <span>ログアウト</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </header>
 
@@ -207,5 +289,405 @@
             <button type="button" id="settings-save">確認</button>
         </div>
     </div>
+
+    <!-- 错题本查看面板 -->
+    <div id="wrong-words-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="wrong-words-modal-title">
+        <div class="modal-header">
+            <h2 id="wrong-words-modal-title">統計</h2>
+            <button type="button" class="modal-close" data-close="modal" aria-label="閉じる">×</button>
+        </div>
+        <div class="modal-body wrong-words-body">
+            <div class="wrong-words-stats">
+                <div class="stat-card stat-correct">
+                    <div class="stat-number" id="correct-count">0</div>
+                    <div class="stat-label">正解数</div>
+                </div>
+                <div class="stat-card stat-wrong">
+                    <div class="stat-number" id="wrong-count">0</div>
+                    <div class="stat-label">錯題数</div>
+                </div>
+            </div>
+            <div class="wrong-words-actions">
+                <button type="button" id="practice-wrong-words" class="ghost-button primary-button">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                    </svg>
+                    錯題を練習
+                </button>
+                <button type="button" id="clear-all-wrong-words" class="ghost-button danger-button" title="すべてクリア">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="3 6 5 6 21 6"></polyline>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    </svg>
+                </button>
+            </div>
+            <div id="wrong-words-list" class="wrong-words-list">
+                <!-- 错题列表将在这里显示 -->
+            </div>
+            <div id="wrong-words-pagination" class="pagination hidden">
+                <button id="prev-page" class="pagination-btn" disabled>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="15 18 9 12 15 6"></polyline>
+                    </svg>
+                    前へ
+                </button>
+                <div class="pagination-info">
+                    <span id="current-page">1</span> / <span id="total-pages">1</span>
+                </div>
+                <button id="next-page" class="pagination-btn" disabled>
+                    次へ
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="9 18 15 12 9 6"></polyline>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        // Import Firebase modules
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
+        import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
+
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAOp_lGAlIBxP5pFQID_RPelmLE4NTvZ2s",
+            authDomain: "kotoba-60aeb.firebaseapp.com",
+            projectId: "kotoba-60aeb",
+            storageBucket: "kotoba-60aeb.firebasestorage.app",
+            messagingSenderId: "367445040315",
+            appId: "1:367445040315:web:1b68e59976ac2ab1f91d9e",
+            measurementId: "G-CT0R8S7TQG"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const provider = new GoogleAuthProvider();
+        
+        // 强制显示账户选择界面
+        provider.setCustomParameters({
+            prompt: 'select_account'
+        });
+
+        // Make auth and db available globally
+        window.firebaseAuth = auth;
+        window.firebaseDb = db;
+
+        // UI Elements
+        const loginButton = document.getElementById('loginButton');
+        const userProfile = document.getElementById('userProfile');
+        const userAvatar = document.getElementById('userAvatar');
+        const userAvatarMenu = document.getElementById('userAvatarMenu');
+        const userNameMenu = document.getElementById('userNameMenu');
+        const userEmailMenu = document.getElementById('userEmailMenu');
+        const userMenu = document.getElementById('userMenu');
+        const logoutButton = document.getElementById('logoutButton');
+        const syncDataButton = document.getElementById('syncDataButton');
+        const switchAccountButton = document.getElementById('switchAccountButton');
+
+        // Show initial UI
+        if (loginButton) loginButton.style.display = 'flex';
+
+        // Toggle user menu
+        if (userAvatar) {
+            userAvatar.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (userMenu) userMenu.classList.toggle('show');
+            });
+        }
+
+        // Close menu when clicking outside
+        document.addEventListener('click', () => {
+            if (userMenu) userMenu.classList.remove('show');
+        });
+
+        // Prevent menu from closing when clicking inside
+        if (userMenu) {
+            userMenu.addEventListener('click', (e) => {
+                e.stopPropagation();
+            });
+        }
+
+        // Login with Google
+        if (loginButton) {
+            loginButton.addEventListener('click', async () => {
+                try {
+                    sessionStorage.removeItem('dataLoaded');
+                    const result = await signInWithPopup(auth, provider);
+                    const user = result.user;
+                    console.log('User signed in:', user.displayName);
+                    showNotification('ログインしました', 'success');
+                } catch (error) {
+                    console.error('Login error:', error);
+                    showNotification('ログインエラー: ' + error.message, 'error');
+                }
+            });
+        }
+
+        // Logout
+        if (logoutButton) {
+            logoutButton.addEventListener('click', async () => {
+                try {
+                    await signOut(auth);
+                    console.log('User signed out');
+                    showNotification('ログアウトしました', 'success');
+                } catch (error) {
+                    console.error('Logout error:', error);
+                    showNotification('ログアウトエラー: ' + error.message, 'error');
+                }
+            });
+        }
+
+        // Switch account
+        if (switchAccountButton) {
+            switchAccountButton.addEventListener('click', async () => {
+                try {
+                    sessionStorage.removeItem('dataLoaded');
+                    await signOut(auth);
+                    setTimeout(async () => {
+                        try {
+                            const result = await signInWithPopup(auth, provider);
+                            console.log('Switched to account:', result.user.displayName);
+                            showNotification('アカウントを切り替えました', 'success');
+                        } catch (error) {
+                            console.error('Switch account error:', error);
+                            showNotification('切り替えエラー: ' + error.message, 'error');
+                        }
+                    }, 100);
+                } catch (error) {
+                    console.error('Logout error during switch:', error);
+                }
+            });
+        }
+
+        // Sync data to Firestore
+        async function syncUserData(user) {
+            if (!user) return;
+
+            try {
+                const userRef = doc(db, 'users', user.uid);
+                
+                const localData = {
+                    // 学习进度
+                    correct: parseInt(localStorage.getItem('correct') || '0', 10),
+                    wrong: parseInt(localStorage.getItem('wrong') || '0', 10),
+                    
+                    // 错题本
+                    wrongWords: JSON.parse(localStorage.getItem('wrongWords') || '[]'),
+                    
+                    // 用户偏好
+                    lastSelectedDictionary: localStorage.getItem('lastSelectedDictionary'),
+                    selectedVoice: localStorage.getItem('selectedVoice'),
+                    speechRate: localStorage.getItem('speechRate'),
+                    theme: localStorage.getItem('kotoba.theme'),
+                    
+                    // 同步时间
+                    lastSync: new Date().toISOString(),
+                    
+                    // 用户信息
+                    email: user.email,
+                    displayName: user.displayName,
+                    photoURL: user.photoURL
+                };
+
+                await setDoc(userRef, localData, { merge: true });
+                console.log('✅ 数据已同步到云端');
+            } catch (error) {
+                console.error('❌ 同步数据失败:', error);
+                throw error;
+            }
+        }
+
+        // Load user data from Firestore
+        async function loadUserData(user, options = {}) {
+            if (!user) return;
+            
+            const { silent = false } = options;
+
+            try {
+                const userRef = doc(db, 'users', user.uid);
+                const userDoc = await getDoc(userRef);
+
+                if (userDoc.exists()) {
+                    const cloudData = userDoc.data();
+                    console.log('📥 正在从云端加载数据...');
+                    
+                    // 同步学习进度
+                    if (cloudData.correct !== undefined) {
+                        localStorage.setItem('correct', String(cloudData.correct));
+                    }
+                    if (cloudData.wrong !== undefined) {
+                        localStorage.setItem('wrong', String(cloudData.wrong));
+                    }
+                    
+                    // 同步错题本 - 合并去重
+                    if (cloudData.wrongWords && Array.isArray(cloudData.wrongWords)) {
+                        const localWrongWords = JSON.parse(localStorage.getItem('wrongWords') || '[]');
+                        const mergedWrongWords = [...new Set([...cloudData.wrongWords, ...localWrongWords])];
+                        localStorage.setItem('wrongWords', JSON.stringify(mergedWrongWords));
+                        console.log('✅ 错题本已同步:', mergedWrongWords.length, '个单词');
+                    }
+                    
+                    // 同步用户偏好
+                    if (cloudData.lastSelectedDictionary) {
+                        localStorage.setItem('lastSelectedDictionary', cloudData.lastSelectedDictionary);
+                    }
+                    if (cloudData.selectedVoice) {
+                        localStorage.setItem('selectedVoice', cloudData.selectedVoice);
+                    }
+                    if (cloudData.speechRate) {
+                        localStorage.setItem('speechRate', cloudData.speechRate);
+                    }
+                    if (cloudData.theme) {
+                        localStorage.setItem('kotoba.theme', cloudData.theme);
+                    }
+
+                    console.log('🎉 数据加载完成！');
+                    sessionStorage.setItem('dataLoaded', 'true');
+                    
+                    if (!silent) {
+                        showNotification('データを読み込みました', 'success');
+                    }
+                    
+                    // 刷新界面
+                    if (window.updateScoreboard) {
+                        window.updateScoreboard();
+                    }
+                } else {
+                    // 首次登录，上传本地数据
+                    console.log('📤 首次登录，正在上传本地数据...');
+                    await syncUserData(user);
+                    sessionStorage.setItem('dataLoaded', 'true');
+                }
+            } catch (error) {
+                console.error('❌ 加载数据失败:', error);
+            }
+        }
+
+        // Sync data button
+        if (syncDataButton) {
+            syncDataButton.addEventListener('click', async () => {
+                const user = auth.currentUser;
+                if (user) {
+                    try {
+                        console.log('🔄 开始同步...');
+                        await loadUserData(user, { silent: true });
+                        await syncUserData(user);
+                        showNotification('データを同期しました', 'success');
+                        
+                        // 刷新界面
+                        if (window.updateScoreboard) {
+                            window.updateScoreboard();
+                        }
+                        console.log('✅ 同步完成');
+                    } catch (error) {
+                        console.error('Sync error:', error);
+                        showNotification('同期エラー: ' + error.message, 'error');
+                    }
+                }
+            });
+        }
+
+        // Auth state observer
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                console.log('User is signed in:', user.displayName);
+                
+                // Update UI
+                if (loginButton) loginButton.style.display = 'none';
+                if (userProfile) userProfile.style.display = 'flex';
+                if (userAvatar) userAvatar.src = user.photoURL || '';
+                if (userAvatarMenu) userAvatarMenu.src = user.photoURL || '';
+                if (userNameMenu) userNameMenu.textContent = user.displayName || 'User';
+                if (userEmailMenu) userEmailMenu.textContent = user.email || '';
+
+                // Load user data
+                const dataLoaded = sessionStorage.getItem('dataLoaded');
+                if (dataLoaded !== 'true') {
+                    await loadUserData(user);
+                }
+            } else {
+                console.log('User is signed out');
+                sessionStorage.removeItem('dataLoaded');
+                
+                // Update UI
+                if (loginButton) loginButton.style.display = 'flex';
+                if (userProfile) userProfile.style.display = 'none';
+                if (userMenu) userMenu.classList.remove('show');
+            }
+        });
+
+        // Make functions available globally
+        window.syncUserData = syncUserData;
+        window.loadUserData = loadUserData;
+        
+        // Auto-sync on data changes
+        let autoSyncTimer = null;
+        window.autoSyncData = function() {
+            if (!window.firebaseAuth || !window.syncUserData) return;
+            
+            const user = window.firebaseAuth.currentUser;
+            if (!user) return;
+            
+            if (autoSyncTimer) clearTimeout(autoSyncTimer);
+            
+            autoSyncTimer = setTimeout(async () => {
+                try {
+                    console.log('🔄 自动同步...');
+                    await window.syncUserData(user);
+                } catch (error) {
+                    console.error('❌ 自动同步失败:', error);
+                }
+            }, 1000);
+        };
+        
+        // Sync before page unload
+        window.addEventListener('beforeunload', async () => {
+            const user = auth.currentUser;
+            if (user) {
+                try {
+                    await syncUserData(user);
+                } catch (error) {
+                    console.error('Error syncing on page unload:', error);
+                }
+            }
+        });
+        
+        // Simple notification function
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `notification notification-${type}`;
+            notification.textContent = message;
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 12px 20px;
+                background: ${type === 'success' ? '#16a34a' : type === 'error' ? '#dc2626' : '#4f46e5'};
+                color: white;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                z-index: 10000;
+                font-size: 14px;
+                max-width: 320px;
+            `;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                notification.style.transition = 'opacity 0.3s ease';
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.parentNode.removeChild(notification);
+                    }
+                }, 300);
+            }, 3000);
+        }
+    </script>
 </body>
 </html>

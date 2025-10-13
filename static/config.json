@@ -1,6 +1,11 @@
 {
     "dictionaries": [
         {
+            "path": "wrong-words",
+            "name": "錯題本",
+            "isWrongWords": true
+        },
+        {
             "path": "dictionaries/beginner.json",
             "name": "入門（单字/N5）"
         },
@@ -15,6 +20,10 @@
         {
             "path": "dictionaries/conversation.json", 
             "name": "会話"
+        },
+        {
+            "path": "dictionaries/computer.json",
+            "name": "计算机用语"
         },
         {
             "path": "dictionaries/katakana.json",

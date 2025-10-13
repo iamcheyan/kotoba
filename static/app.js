@@ -502,6 +502,7 @@
             id: item.id || item.path || item.name,
             path: item.path || item.id,
             name: item.name || item.id || item.path,
+            isWrongWords: item.isWrongWords || false,
         }));
         if (!state.dictionaries.length) {
             throw new Error('利用可能な辞書が見つかりません');
@@ -549,11 +550,13 @@
 
     function updateScoreboard() {
         const correct = parseInt(localStorage.getItem('correct') || '0', 10) || 0;
-        const wrong = parseInt(localStorage.getItem('wrong') || '0', 10) || 0;
         if (elements.score) {
-            elements.score.textContent = `正解: ${correct} | 不正解: ${wrong} | 総単語: ${state.totalWords}`;
+            elements.score.textContent = `正解: ${correct}`;
         }
     }
+    
+    // Make updateScoreboard globally available for Firebase integration
+    window.updateScoreboard = updateScoreboard;
 
     function clearAlerts() {
         if (elements.alerts) {
@@ -838,15 +841,57 @@
     function incrementCounter(key) {
         const value = parseInt(localStorage.getItem(key) || '0', 10) || 0;
         localStorage.setItem(key, String(value + 1));
+        
+        // 自动同步到云端
+        if (window.autoSyncData) {
+            window.autoSyncData();
+        }
+    }
+
+    async function loadWrongWordsDict() {
+        try {
+            const wrongWords = JSON.parse(localStorage.getItem('wrongWords') || '[]');
+            
+            if (wrongWords.length === 0) {
+                throw new Error('錯題本に単語がありません。まず問題を解いてみましょう！');
+            }
+            
+            // 将错题本转换为标准词典格式
+            const entries = wrongWords.map(word => ({
+                kanji: word.kanji,
+                meaning: word.meaning || '',
+                reading: word.reading || '',
+                __computed: false
+            }));
+            
+            console.log(`错题本已加载: ${entries.length} 个单词`);
+            return { entries };
+        } catch (error) {
+            console.error('加载错题本失败:', error);
+            throw error;
+        }
     }
 
     async function loadRandomEntry() {
         if (!state.dictionaryId) {
             throw new Error('辞書が選択されていません');
         }
-        const dictionary = await ensureDictionaryLoaded(state.dictionaryId);
+        
+        let dictionary;
+        
+        // 检查是否选择了错题本
+        if (state.dictionaryId === 'wrong-words') {
+            dictionary = await loadWrongWordsDict();
+        } else {
+            dictionary = await ensureDictionaryLoaded(state.dictionaryId);
+        }
+        
         if (!dictionary.entries.length) {
-            throw new Error('辞書に単語が登録されていません');
+            if (state.dictionaryId === 'wrong-words') {
+                throw new Error('錯題本に単語がありません。まず問題を解いてみましょう！');
+            } else {
+                throw new Error('辞書に単語が登録されていません');
+            }
         }
         state.totalWords = dictionary.entries.length;
         const randomIndex = Math.floor(Math.random() * dictionary.entries.length);
@@ -856,6 +901,433 @@
         updateScoreboard();
         renderQuestion();
     }
+
+    function addToWrongWords(entry) {
+        if (!entry || !entry.kanji) return;
+        
+        try {
+            const wrongWords = JSON.parse(localStorage.getItem('wrongWords') || '[]');
+            
+            // 检查是否已存在，避免重复添加
+            const exists = wrongWords.some(word => word.kanji === entry.kanji);
+            if (!exists) {
+                wrongWords.push({
+                    kanji: entry.kanji,
+                    meaning: entry.meaning,
+                    reading: entry.reading,
+                    addedAt: new Date().toISOString(),
+                    source: state.dictionaryName || '未知词典'
+                });
+                localStorage.setItem('wrongWords', JSON.stringify(wrongWords));
+                console.log('已添加到错题本:', entry.kanji);
+                
+                // 自动同步到云端
+                if (window.autoSyncData) {
+                    window.autoSyncData();
+                }
+            }
+        } catch (error) {
+            console.error('添加到错题本失败:', error);
+        }
+    }
+
+    // 显示错题本面板
+    function showWrongWordsModal() {
+        const modal = document.getElementById('wrong-words-modal');
+        const backdrop = elements.modalBackdrop;
+        const userMenu = document.getElementById('userMenu');
+        
+        // 隐藏用户菜单
+        if (userMenu) {
+            userMenu.classList.remove('show');
+        }
+        
+        if (modal && backdrop) {
+            modal.classList.remove('hidden');
+            backdrop.classList.remove('hidden');
+            
+            // 重置到第一页
+            wrongWordsPagination.currentPage = 1;
+            displayWrongWords(1);
+            
+            // 添加ESC键和背景点击关闭支持
+            document.addEventListener('keydown', handleWrongWordsEscape);
+            backdrop.addEventListener('click', handleBackdropClick);
+        }
+    }
+    
+    // 处理ESC键关闭错题本
+    function handleWrongWordsEscape(e) {
+        if (e.key === 'Escape') {
+            const modal = document.getElementById('wrong-words-modal');
+            if (modal && !modal.classList.contains('hidden')) {
+                hideWrongWordsModal();
+            }
+        }
+    }
+    
+    // 隐藏错题本面板
+    function hideWrongWordsModal() {
+        const modal = document.getElementById('wrong-words-modal');
+        const backdrop = elements.modalBackdrop;
+        
+        if (modal) modal.classList.add('hidden');
+        if (backdrop) backdrop.classList.add('hidden');
+        
+        // 移除ESC键和背景点击监听
+        document.removeEventListener('keydown', handleWrongWordsEscape);
+        if (backdrop) {
+            backdrop.removeEventListener('click', handleBackdropClick);
+        }
+    }
+
+    // 错题本分页状态
+    const wrongWordsPagination = {
+        currentPage: 1,
+        itemsPerPage: 10,
+        totalItems: 0
+    };
+
+    // 显示错题本列表
+    function displayWrongWords(page = 1) {
+        const wrongWords = JSON.parse(localStorage.getItem('wrongWords') || '[]');
+        const listContainer = document.getElementById('wrong-words-list');
+        const correctElement = document.getElementById('correct-count');
+        const wrongElement = document.getElementById('wrong-count');
+        const paginationElement = document.getElementById('wrong-words-pagination');
+        
+        if (!listContainer) return;
+        
+        // 更新统计信息 - 显示正确答题数和错题本中的单词数
+        const correct = parseInt(localStorage.getItem('correct') || '0', 10) || 0;
+        const wrongWordsCount = wrongWords.length; // 错题本中的单词数量
+        
+        if (correctElement) correctElement.textContent = correct;
+        if (wrongElement) wrongElement.textContent = wrongWordsCount;
+        
+        // 清空列表
+        listContainer.innerHTML = '';
+        
+        if (wrongWords.length === 0) {
+            listContainer.innerHTML = `
+                <div class="empty-wrong-words">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                        <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+                    </svg>
+                    <div class="empty-wrong-words-title">錯題本は空です</div>
+                    <div class="empty-wrong-words-desc">間違えた単語がここに記録されます</div>
+                </div>
+            `;
+            // 隐藏分页
+            if (paginationElement) {
+                paginationElement.classList.add('hidden');
+            }
+            return;
+        }
+        
+        // 按时间倒序排列
+        const sortedWords = [...wrongWords].sort((a, b) => new Date(b.addedAt) - new Date(a.addedAt));
+        
+        // 计算分页
+        wrongWordsPagination.totalItems = sortedWords.length;
+        wrongWordsPagination.currentPage = page;
+        const totalPages = Math.ceil(sortedWords.length / wrongWordsPagination.itemsPerPage);
+        const startIndex = (page - 1) * wrongWordsPagination.itemsPerPage;
+        const endIndex = Math.min(startIndex + wrongWordsPagination.itemsPerPage, sortedWords.length);
+        const currentPageWords = sortedWords.slice(startIndex, endIndex);
+        
+        // 显示或隐藏分页控件
+        if (paginationElement) {
+            if (totalPages > 1) {
+                paginationElement.classList.remove('hidden');
+                updatePaginationControls(page, totalPages);
+            } else {
+                paginationElement.classList.add('hidden');
+            }
+        }
+        
+        currentPageWords.forEach((word, index) => {
+            const wordElement = document.createElement('div');
+            wordElement.className = 'wrong-word-item';
+            wordElement.innerHTML = `
+                <div class="wrong-word-header">
+                    <div class="wrong-word-kanji">${escapeHtml(word.kanji)}</div>
+                    <div class="wrong-word-actions">
+                        <button class="wrong-word-btn delete-btn" data-kanji="${escapeHtml(word.kanji)}" title="削除">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="3 6 5 6 21 6"></polyline>
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                            </svg>
+                            削除
+                        </button>
+                    </div>
+                </div>
+                <div class="wrong-word-info">
+                    <div class="wrong-word-row">
+                        <div class="wrong-word-label">意味:</div>
+                        <div class="wrong-word-value">${escapeHtml(word.meaning || '-')}</div>
+                    </div>
+                    <div class="wrong-word-row">
+                        <div class="wrong-word-label">読み方:</div>
+                        <div class="wrong-word-value">${escapeHtml(word.reading || '-')}</div>
+                    </div>
+                </div>
+                <div class="wrong-word-meta">
+                    <div class="wrong-word-time">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <polyline points="12 6 12 12 16 14"></polyline>
+                        </svg>
+                        ${formatWrongWordTime(word.addedAt)}
+                    </div>
+                    <div class="wrong-word-source">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                            <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+                        </svg>
+                        ${escapeHtml(word.source || '未知词典')}
+                    </div>
+                </div>
+            `;
+            
+            listContainer.appendChild(wordElement);
+        });
+        
+        // 添加事件监听
+        listContainer.querySelectorAll('.delete-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const kanji = this.getAttribute('data-kanji');
+                deleteWrongWord(kanji);
+            });
+        });
+    }
+    
+    // 更新分页控件
+    function updatePaginationControls(currentPage, totalPages) {
+        const prevBtn = document.getElementById('prev-page');
+        const nextBtn = document.getElementById('next-page');
+        const currentPageEl = document.getElementById('current-page');
+        const totalPagesEl = document.getElementById('total-pages');
+        
+        if (currentPageEl) currentPageEl.textContent = currentPage;
+        if (totalPagesEl) totalPagesEl.textContent = totalPages;
+        
+        if (prevBtn) {
+            prevBtn.disabled = currentPage <= 1;
+        }
+        
+        if (nextBtn) {
+            nextBtn.disabled = currentPage >= totalPages;
+        }
+    }
+
+    // 格式化错题时间
+    function formatWrongWordTime(timestamp) {
+        const date = new Date(timestamp);
+        const now = new Date();
+        const diffMs = now - date;
+        const diffMins = Math.floor(diffMs / 60000);
+        const diffHours = Math.floor(diffMs / 3600000);
+        const diffDays = Math.floor(diffMs / 86400000);
+        
+        if (diffMins < 1) return 'たった今';
+        if (diffMins < 60) return `${diffMins}分前`;
+        if (diffHours < 24) return `${diffHours}時間前`;
+        if (diffDays < 7) return `${diffDays}日前`;
+        
+        return date.toLocaleDateString('ja-JP', { 
+            year: 'numeric', 
+            month: 'short', 
+            day: 'numeric' 
+        });
+    }
+
+    // 删除单个错题
+    function deleteWrongWord(kanji) {
+        if (!confirm(`「${kanji}」を錯題本から削除しますか？`)) return;
+        
+        try {
+            const wrongWords = JSON.parse(localStorage.getItem('wrongWords') || '[]');
+            const filtered = wrongWords.filter(word => word.kanji !== kanji);
+            localStorage.setItem('wrongWords', JSON.stringify(filtered));
+            
+            console.log('已从错题本删除:', kanji);
+            
+            // 检查当前页是否还有数据，如果没有则回到上一页
+            const currentPage = wrongWordsPagination.currentPage;
+            const totalPages = Math.ceil(filtered.length / wrongWordsPagination.itemsPerPage);
+            const newPage = currentPage > totalPages ? Math.max(1, totalPages) : currentPage;
+            
+            displayWrongWords(newPage);
+            
+            // 自动同步到云端
+            if (window.autoSyncData) {
+                window.autoSyncData();
+            }
+        } catch (error) {
+            console.error('删除错题失败:', error);
+        }
+    }
+
+    // 清空所有错题
+    function clearAllWrongWords() {
+        const wrongWords = JSON.parse(localStorage.getItem('wrongWords') || '[]');
+        if (wrongWords.length === 0) return;
+        
+        if (!confirm(`すべての錯題（${wrongWords.length}件）を削除しますか？この操作は取り消せません。`)) return;
+        
+        try {
+            localStorage.setItem('wrongWords', '[]');
+            console.log('已清空错题本');
+            displayWrongWords();
+            
+            // 自动同步到云端
+            if (window.autoSyncData) {
+                window.autoSyncData();
+            }
+        } catch (error) {
+            console.error('清空错题本失败:', error);
+        }
+    }
+
+    // 处理点击背景关闭错题本
+    function handleBackdropClick(e) {
+        const modal = document.getElementById('wrong-words-modal');
+        if (modal && !modal.classList.contains('hidden')) {
+            // 确保点击的是backdrop本身，而不是modal内容
+            if (e.target === elements.modalBackdrop) {
+                hideWrongWordsModal();
+            }
+        }
+    }
+
+    // 开始练习错题本
+    function startPracticeWrongWords() {
+        const wrongWords = JSON.parse(localStorage.getItem('wrongWords') || '[]');
+        
+        if (wrongWords.length === 0) {
+            alert('錯題本に単語がありません。まず問題を解いてみましょう！');
+            return;
+        }
+        
+        // 隐藏用户菜单
+        const userMenu = document.getElementById('userMenu');
+        if (userMenu) {
+            userMenu.classList.remove('show');
+        }
+        
+        // 切换到错题本词典
+        const params = new URLSearchParams(window.location.search);
+        params.set('dict', 'wrong-words');
+        window.history.replaceState({}, '', `${window.location.pathname}?${params}`);
+        
+        // 重新加载
+        window.location.reload();
+    }
+
+    // 初始化错题本按钮事件
+    document.addEventListener('DOMContentLoaded', function() {
+        const viewWrongWordsButton = document.getElementById('viewWrongWordsButton');
+        const practiceButton = document.getElementById('practice-wrong-words');
+        const practiceWrongWordsButton = document.getElementById('practiceWrongWordsButton');
+        const clearAllButton = document.getElementById('clear-all-wrong-words');
+        const wrongWordsModal = document.getElementById('wrong-words-modal');
+        const prevPageBtn = document.getElementById('prev-page');
+        const nextPageBtn = document.getElementById('next-page');
+        const dictionaryButtonMenu = document.getElementById('dictionaryButtonMenu');
+        const settingsButtonMenu = document.getElementById('settingsButtonMenu');
+        
+        if (viewWrongWordsButton) {
+            viewWrongWordsButton.addEventListener('click', function() {
+                showWrongWordsModal();
+            });
+        }
+        
+        if (practiceButton) {
+            practiceButton.addEventListener('click', function() {
+                startPracticeWrongWords();
+            });
+        }
+        
+        if (practiceWrongWordsButton) {
+            practiceWrongWordsButton.addEventListener('click', function() {
+                startPracticeWrongWords();
+            });
+        }
+        
+        if (clearAllButton) {
+            clearAllButton.addEventListener('click', clearAllWrongWords);
+        }
+        
+        // 错题本面板的关闭按钮
+        if (wrongWordsModal) {
+            const closeBtn = wrongWordsModal.querySelector('.modal-close');
+            if (closeBtn) {
+                closeBtn.addEventListener('click', hideWrongWordsModal);
+            }
+        }
+        
+        // 分页按钮
+        if (prevPageBtn) {
+            prevPageBtn.addEventListener('click', function() {
+                if (wrongWordsPagination.currentPage > 1) {
+                    displayWrongWords(wrongWordsPagination.currentPage - 1);
+                }
+            });
+        }
+        
+        if (nextPageBtn) {
+            nextPageBtn.addEventListener('click', function() {
+                const totalPages = Math.ceil(wrongWordsPagination.totalItems / wrongWordsPagination.itemsPerPage);
+                if (wrongWordsPagination.currentPage < totalPages) {
+                    displayWrongWords(wrongWordsPagination.currentPage + 1);
+                }
+            });
+        }
+        
+        // 菜单中的辞書切换按钮
+        if (dictionaryButtonMenu) {
+            dictionaryButtonMenu.addEventListener('click', function() {
+                const dictionaryButton = document.getElementById('dictionary-button');
+                if (dictionaryButton) {
+                    dictionaryButton.click();
+                } else {
+                    // 如果顶部按钮被移除，直接触发模态框
+                    const dictionaryModal = document.getElementById('dictionary-modal');
+                    if (dictionaryModal) {
+                        dictionaryModal.classList.remove('hidden');
+                    }
+                }
+                // 关闭用户菜单
+                const userMenu = document.getElementById('userMenu');
+                if (userMenu) {
+                    userMenu.classList.remove('show');
+                }
+            });
+        }
+        
+        // 菜单中的设定按钮
+        if (settingsButtonMenu) {
+            settingsButtonMenu.addEventListener('click', function() {
+                const settingsButton = document.getElementById('settings-button');
+                if (settingsButton) {
+                    settingsButton.click();
+                } else {
+                    // 如果顶部按钮被移除，直接触发模态框
+                    const settingsModal = document.getElementById('settings-modal');
+                    if (settingsModal) {
+                        settingsModal.classList.remove('hidden');
+                    }
+                }
+                // 关闭用户菜单
+                const userMenu = document.getElementById('userMenu');
+                if (userMenu) {
+                    userMenu.classList.remove('show');
+                }
+            });
+        }
+    });
 
     async function evaluateAnswer(answer) {
         const entry = state.currentEntry;
@@ -896,6 +1368,10 @@
         if (normalizedReading === entry.normalizedReading) {
             return { correct: true, match: 'reading', userRomaji: normalizedRomaji };
         }
+        
+        // 答错时添加到错题本
+        addToWrongWords(entry);
+        
         return { correct: false, match: null, userRomaji: normalizedRomaji };
     }
 
@@ -1075,9 +1551,14 @@
                 const params = getParams();
                 if (selected) {
                     params.set('dict', selected);
-                    // 保存到 localStorage 以记住用户选择
+                        // 保存到 localStorage 以记住用户选择
                     try {
                         localStorage.setItem('lastSelectedDictionary', selected);
+                        
+                        // 自动同步到云端
+                        if (window.autoSyncData) {
+                            window.autoSyncData();
+                        }
                     } catch (error) {
                         console.warn('Failed to save dictionary selection to localStorage', error);
                     }
@@ -1114,6 +1595,11 @@
                 hideModals();
                 parseSettingsFromParams();
                 renderQuestion();
+                
+                // 自动同步设置到云端
+                if (window.autoSyncData) {
+                    window.autoSyncData();
+                }
             });
         }
         if (elements.modalBackdrop) {
@@ -1609,6 +2095,10 @@
                 if (state.previewPlaying) {
                     startVoicePreview();
                 }
+                // 自动同步到云端
+                if (window.autoSyncData) {
+                    window.autoSyncData();
+                }
             });
         }
 
@@ -1620,6 +2110,10 @@
                     elements.rateValue.textContent = `${state.speechRate.toFixed(1)}x`;
                 }
                 localStorage.setItem('speechRate', String(state.speechRate));
+                // 自动同步到云端
+                if (window.autoSyncData) {
+                    window.autoSyncData();
+                }
             });
         }
     }
