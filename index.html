@@ -4,7 +4,22 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>言葉 | Kotoba Vocabulary Trainer</title>
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json">
+    
+    <!-- Icons -->
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg?v=1">
+    <link rel="apple-touch-icon" href="/static/icon-192.png">
+    
+    <!-- iOS Meta Tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="言葉">
+    
+    <!-- Theme Color -->
+    <meta name="theme-color" content="#667eea">
+    
     <link rel="stylesheet" href="/static/styles.css">
     <script>
         (function () {
@@ -109,6 +124,15 @@
                                 </svg>
                                 <span>設定</span>
                             </button>
+                            <div class="user-menu-divider"></div>
+                            <button id="installPWAGuest" class="user-menu-item" style="display: none;">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                    <polyline points="7 10 12 15 17 10"></polyline>
+                                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                                </svg>
+                                <span>アプリをインストール</span>
+                            </button>
                         </div>
                     </div>
                     <!-- 已登录用户资料 -->
@@ -165,6 +189,14 @@
                                 <span>設定</span>
                             </button>
                             <div class="user-menu-divider"></div>
+                            <button id="installPWAUser" class="user-menu-item" style="display: none;">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                    <polyline points="7 10 12 15 17 10"></polyline>
+                                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                                </svg>
+                                <span>アプリをインストール</span>
+                            </button>
                             <button id="switchAccountButton" class="user-menu-item">
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
@@ -370,6 +402,50 @@
                         <polyline points="9 18 15 12 9 6"></polyline>
                     </svg>
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PWA Install Progress Modal -->
+    <div id="pwa-install-modal" class="modal hidden" role="dialog" aria-modal="true">
+        <div class="modal-header">
+            <h2>アプリをインストール</h2>
+            <button type="button" class="modal-close" data-close="pwa-modal" aria-label="閉じる">×</button>
+        </div>
+        <div class="modal-body">
+            <div id="pwa-install-content">
+                <div class="pwa-step" id="pwa-step-1">
+                    <div class="pwa-icon">📱</div>
+                    <h3>キャッシュをクリア中...</h3>
+                    <div class="pwa-progress">
+                        <div class="pwa-progress-bar" id="pwa-progress-1" style="width: 0%"></div>
+                    </div>
+                    <p class="pwa-progress-text" id="pwa-progress-text-1">準備中...</p>
+                </div>
+                <div class="pwa-step hidden" id="pwa-step-2">
+                    <div class="pwa-icon">⬇️</div>
+                    <h3>リソースをダウンロード中...</h3>
+                    <div class="pwa-progress">
+                        <div class="pwa-progress-bar" id="pwa-progress-2" style="width: 0%"></div>
+                    </div>
+                    <p class="pwa-progress-text" id="pwa-progress-text-2">0 / 0 ファイル</p>
+                </div>
+                <div class="pwa-step hidden" id="pwa-step-3">
+                    <div class="pwa-icon">✅</div>
+                    <h3>インストール完了！</h3>
+                    <p>アプリをホーム画面に追加できます</p>
+                    <button type="button" id="pwa-add-to-home" class="primary-button" style="max-width: 100%; margin-top: 16px;">
+                        ホーム画面に追加
+                    </button>
+                </div>
+                <div class="pwa-step hidden" id="pwa-step-error">
+                    <div class="pwa-icon">❌</div>
+                    <h3>インストールに失敗しました</h3>
+                    <p id="pwa-error-message"></p>
+                    <button type="button" class="ghost-button" data-close="pwa-modal" style="margin-top: 16px;">
+                        閉じる
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -793,6 +869,220 @@
                 }, 300);
             }, 3000);
         }
+    </script>
+
+    <!-- PWA Installation Script -->
+    <script>
+        let deferredPrompt;
+        const installPWAGuest = document.getElementById('installPWAGuest');
+        const installPWAUser = document.getElementById('installPWAUser');
+        const pwaModal = document.getElementById('pwa-install-modal');
+        const pwaBackdrop = document.getElementById('modal-backdrop');
+        const pwaAddToHomeBtn = document.getElementById('pwa-add-to-home');
+
+        // Listen for beforeinstallprompt event
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            
+            // Show install buttons
+            if (installPWAGuest) installPWAGuest.style.display = 'flex';
+            if (installPWAUser) installPWAUser.style.display = 'flex';
+            
+            console.log('[PWA] Install prompt captured');
+        });
+
+        // Handle PWA installation
+        async function installPWA() {
+            if (!deferredPrompt) {
+                // iOS or already installed
+                showIOSInstallInstructions();
+                return;
+            }
+
+            try {
+                // Show modal
+                if (pwaModal) pwaModal.classList.remove('hidden');
+                if (pwaBackdrop) pwaBackdrop.classList.remove('hidden');
+                
+                // Close menus
+                document.getElementById('guestMenu')?.classList.remove('show');
+                document.getElementById('userMenu')?.classList.remove('show');
+
+                // Step 1: Clear cache
+                await showStep('pwa-step-1');
+                await clearAllCaches();
+                
+                // Step 2: Download resources
+                await showStep('pwa-step-2');
+                await downloadResources();
+                
+                // Step 3: Show install prompt
+                await showStep('pwa-step-3');
+                
+            } catch (error) {
+                console.error('[PWA] Installation error:', error);
+                showError(error.message);
+            }
+        }
+
+        async function clearAllCaches() {
+            const progressBar = document.getElementById('pwa-progress-1');
+            const progressText = document.getElementById('pwa-progress-text-1');
+            
+            try {
+                progressText.textContent = 'キャッシュを削除中...';
+                progressBar.style.width = '30%';
+                
+                // Clear all caches
+                const cacheNames = await caches.keys();
+                await Promise.all(cacheNames.map(name => caches.delete(name)));
+                
+                progressBar.style.width = '100%';
+                progressText.textContent = '完了';
+                
+                await new Promise(resolve => setTimeout(resolve, 500));
+            } catch (error) {
+                console.error('[PWA] Cache clear error:', error);
+            }
+        }
+
+        async function downloadResources() {
+            const progressBar = document.getElementById('pwa-progress-2');
+            const progressText = document.getElementById('pwa-progress-text-2');
+            
+            const resources = [
+                '/',
+                '/index.html',
+                '/static/app.js',
+                '/static/styles.css',
+                '/static/config.json',
+                '/manifest.json'
+            ];
+            
+            let completed = 0;
+            progressText.textContent = `${completed} / ${resources.length} ファイル`;
+            
+            for (const url of resources) {
+                try {
+                    await fetch(url, { cache: 'reload' });
+                    completed++;
+                    const percent = (completed / resources.length) * 100;
+                    progressBar.style.width = `${percent}%`;
+                    progressText.textContent = `${completed} / ${resources.length} ファイル`;
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                } catch (error) {
+                    console.error(`[PWA] Failed to download ${url}:`, error);
+                }
+            }
+        }
+
+        function showStep(stepId) {
+            return new Promise(resolve => {
+                document.querySelectorAll('.pwa-step').forEach(step => {
+                    step.classList.add('hidden');
+                });
+                const step = document.getElementById(stepId);
+                if (step) {
+                    step.classList.remove('hidden');
+                }
+                setTimeout(resolve, 300);
+            });
+        }
+
+        function showError(message) {
+            showStep('pwa-step-error');
+            const errorMsg = document.getElementById('pwa-error-message');
+            if (errorMsg) errorMsg.textContent = message;
+        }
+
+        function showIOSInstallInstructions() {
+            // Show iOS install instructions
+            if (pwaModal) pwaModal.classList.remove('hidden');
+            if (pwaBackdrop) pwaBackdrop.classList.remove('hidden');
+            
+            document.querySelectorAll('.pwa-step').forEach(step => step.classList.add('hidden'));
+            
+            const iosStep = document.createElement('div');
+            iosStep.className = 'pwa-step';
+            iosStep.innerHTML = `
+                <div class="pwa-icon">📱</div>
+                <h3>ホーム画面に追加</h3>
+                <p style="text-align: left; margin: 16px 0;">
+                    <strong>iOS の場合:</strong><br>
+                    1. 共有ボタン <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="vertical-align: middle;"><path d="M16 5l-1.42 1.42-1.59-1.59V16h-1.98V4.83L9.42 6.42 8 5l4-4 4 4zm4 5v11c0 1.1-.9 2-2 2H6c-1.11 0-2-.9-2-2V10c0-1.11.89-2 2-2h3v2H6v11h12V10h-3V8h3c1.1 0 2 .89 2 2z"/></svg> をタップ<br>
+                    2. 「ホーム画面に追加」を選択<br>
+                    3. 「追加」をタップ
+                </p>
+                <button type="button" class="ghost-button" data-close="pwa-modal" style="margin-top: 16px;">閉じる</button>
+            `;
+            
+            const content = document.getElementById('pwa-install-content');
+            if (content) {
+                content.appendChild(iosStep);
+            }
+        }
+
+        // Add to home screen button
+        if (pwaAddToHomeBtn) {
+            pwaAddToHomeBtn.addEventListener('click', async () => {
+                if (!deferredPrompt) return;
+                
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                
+                console.log(`[PWA] User response: ${outcome}`);
+                
+                if (outcome === 'accepted') {
+                    console.log('[PWA] PWA installed');
+                }
+                
+                deferredPrompt = null;
+                if (installPWAGuest) installPWAGuest.style.display = 'none';
+                if (installPWAUser) installPWAUser.style.display = 'none';
+                
+                // Close modal
+                if (pwaModal) pwaModal.classList.add('hidden');
+                if (pwaBackdrop) pwaBackdrop.classList.add('hidden');
+            });
+        }
+
+        // Install button click handlers
+        if (installPWAGuest) {
+            installPWAGuest.addEventListener('click', installPWA);
+        }
+        if (installPWAUser) {
+            installPWAUser.addEventListener('click', installPWA);
+        }
+
+        // Close PWA modal
+        document.querySelectorAll('[data-close="pwa-modal"]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                if (pwaModal) pwaModal.classList.add('hidden');
+                if (pwaBackdrop) pwaBackdrop.classList.add('hidden');
+            });
+        });
+
+        // Register Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(registration => {
+                        console.log('[PWA] Service Worker registered:', registration.scope);
+                    })
+                    .catch(error => {
+                        console.error('[PWA] Service Worker registration failed:', error);
+                    });
+            });
+        }
+
+        // Listen for app installed event
+        window.addEventListener('appinstalled', () => {
+            console.log('[PWA] App installed');
+            deferredPrompt = null;
+            if (installPWAGuest) installPWAGuest.style.display = 'none';
+            if (installPWAUser) installPWAUser.style.display = 'none';
+        });
     </script>
 </body>
 </html>
