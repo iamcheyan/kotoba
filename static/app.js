@@ -108,6 +108,28 @@
         const japaneseRegex = /[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FFF]/;
         return japaneseRegex.test(text);
     }
+    
+    function convertToNipponRomaji(romaji) {
+        if (!romaji) return romaji;
+        // 将 Hepburn 式的长音符号转换为日本式的重复元音
+        return romaji
+            .replace(/ā/g, 'aa')
+            .replace(/ī/g, 'ii')
+            .replace(/ū/g, 'uu')
+            .replace(/ē/g, 'ei')
+            .replace(/ō/g, 'ou')
+            .replace(/Ā/g, 'Aa')
+            .replace(/Ī/g, 'Ii')
+            .replace(/Ū/g, 'Uu')
+            .replace(/Ē/g, 'Ei')
+            .replace(/Ō/g, 'Ou');
+    }
+    
+    function removePunctuation(text) {
+        if (!text) return text;
+        // 移除所有标点符号（日语和英语）
+        return text.replace(/[、。，！？：；「」『』（）【】〈〉《》〔〕,.!?:;'"(){}\[\]<>]/g, '');
+    }
 
     function isKatakana(char) {
         if (!char) {
@@ -1173,24 +1195,22 @@
         };
         document.addEventListener('keydown', escapeHandler);
         
-        // 点击外部关闭（仅错误消息）
+        // 点击外部关闭
         const outsideClickHandler = (e) => {
             if (!div.contains(e.target)) {
                 dismissAlert();
             }
         };
         
-        // 成功消息自动消失
-        if (type === 'success') {
-            setTimeout(() => {
-                dismissAlert();
-            }, 600);
-        } else if (type === 'error') {
-            // 错误消息：点击外部时消失
-            setTimeout(() => {
-                document.addEventListener('click', outsideClickHandler);
-            }, 100);
-        }
+        // 延迟添加点击外部监听器，避免立即触发
+        setTimeout(() => {
+            document.addEventListener('click', outsideClickHandler);
+        }, 100);
+        
+        // 所有消息3秒后自动消失
+        setTimeout(() => {
+            dismissAlert();
+        }, 3000);
         
         if (isCelebration) {
             // 添加庆祝效果
@@ -1373,7 +1393,7 @@
         if (kuroshiro) {
             try {
                 reading = await kuroshiro.convert(entry.kanji, { to: 'hiragana', mode: 'normal' });
-                romaji = await kuroshiro.convert(entry.kanji, { to: 'romaji', romajiSystem: 'nippon' });
+                romaji = await kuroshiro.convert(entry.kanji, { to: 'romaji', romajiSystem: 'passport' });
                 furigana = await kuroshiro.convert(entry.kanji, { to: 'hiragana', mode: 'furigana' });
             } catch (error) {
                 console.warn('Kuroshiro conversion failed, fallback to Wanakana', error);
@@ -1385,15 +1405,18 @@
         if (!romaji) {
             romaji = fallbackRomaji(reading || entry.kanji);
         }
+        // 转换为日本式罗马音
+        romaji = convertToNipponRomaji(romaji);
+        
         if (!furigana) {
             furigana = entry.kanji;
         }
         entry.reading = reading || entry.kanji;
         entry.romaji = romaji || entry.kanji;
         entry.furigana = furigana;
-        entry.normalizedKanji = entry.kanji.replace(/\s+/g, '').toLowerCase();
-        entry.normalizedReading = (reading || '').replace(/\s+/g, '').toLowerCase();
-        entry.normalizedRomaji = (romaji || '').replace(/\s+/g, '').toLowerCase();
+        entry.normalizedKanji = removePunctuation(entry.kanji.replace(/\s+/g, '')).toLowerCase();
+        entry.normalizedReading = removePunctuation((reading || '').replace(/\s+/g, '')).toLowerCase();
+        entry.normalizedRomaji = removePunctuation((romaji || '').replace(/\s+/g, '')).toLowerCase();
         entry.segments = parseRubySegments(furigana, entry.kanji);
         entry.__computed = true;
         return entry;
@@ -2078,7 +2101,7 @@
         if (!entry) {
             throw new Error('問題が読み込まれていません');
         }
-        const trimmed = (answer || '').replace(/\s+/g, '').trim();
+        const trimmed = removePunctuation((answer || '').replace(/\s+/g, '')).trim();
         if (!trimmed) {
             return { correct: false, match: null, userRomaji: '' };
         }
@@ -2089,7 +2112,7 @@
         let romajiInput = '';
         try {
             if (state.kuroshiroReady) {
-                romajiInput = await state.kuroshiro.convert(answer, { to: 'romaji', romajiSystem: 'nippon' });
+                romajiInput = await state.kuroshiro.convert(answer, { to: 'romaji', romajiSystem: 'passport' });
             }
         } catch (error) {
             if (window.wanakana) {
@@ -2104,13 +2127,15 @@
         if (!romajiInput) {
             romajiInput = trimmed;
         }
-        const normalizedRomaji = (romajiInput || '').replace(/\s+/g, '').toLowerCase();
+        // 转换为日本式罗马音
+        romajiInput = convertToNipponRomaji(romajiInput);
+        const normalizedRomaji = removePunctuation((romajiInput || '').replace(/\s+/g, '')).toLowerCase();
         
         if (normalizedRomaji === entry.normalizedRomaji) {
             return { correct: true, match: 'romaji', userRomaji: normalizedRomaji };
         }
         const hiraganaInput = window.wanakana ? window.wanakana.toHiragana(answer) : answer;
-        const normalizedReading = (hiraganaInput || '').replace(/\s+/g, '').toLowerCase();
+        const normalizedReading = removePunctuation((hiraganaInput || '').replace(/\s+/g, '')).toLowerCase();
         
         if (normalizedReading === entry.normalizedReading) {
             return { correct: true, match: 'reading', userRomaji: normalizedRomaji };
