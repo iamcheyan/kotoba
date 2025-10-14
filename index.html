@@ -140,6 +140,14 @@
                                 </svg>
                                 <span>設定</span>
                             </button>
+                            <button id="downloadOfflineGuest" class="user-menu-item">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                    <polyline points="7 10 12 15 17 10"></polyline>
+                                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                                </svg>
+                                <span>オフライン用にダウンロード</span>
+                            </button>
                             <div class="user-menu-divider"></div>
                             <button id="installPWAGuest" class="user-menu-item" style="display: none;">
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -203,6 +211,14 @@
                                     <path d="M12 1v6m0 6v6M5.64 5.64l4.24 4.24m4.24 4.24l4.24 4.24M1 12h6m6 0h6M5.64 18.36l4.24-4.24m4.24-4.24l4.24-4.24"></path>
                                 </svg>
                                 <span>設定</span>
+                            </button>
+                            <button id="downloadOfflineUser" class="user-menu-item">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                    <polyline points="7 10 12 15 17 10"></polyline>
+                                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                                </svg>
+                                <span>オフライン用にダウンロード</span>
                             </button>
                             <div class="user-menu-divider"></div>
                             <button id="installPWAUser" class="user-menu-item" style="display: none;">
@@ -447,23 +463,6 @@
                     </span>
                 </label>
             </fieldset>
-            <div class="pwa-download-section" style="margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--border-color, #e2e8f0);">
-                <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 12px;">オフライン使用</h3>
-                <p style="font-size: 14px; color: var(--text-secondary, #64748b); margin-bottom: 16px;">
-                    すべてのリソースをダウンロードして、完全にオフラインで使用できるようにします。
-                </p>
-                <button type="button" id="download-for-offline" class="ghost-button" style="width: 100%;">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 8px;">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                        <polyline points="7 10 12 15 17 10"></polyline>
-                        <line x1="12" y1="15" x2="12" y2="3"></line>
-                    </svg>
-                    オフライン用にダウンロード
-                </button>
-                <div id="offline-status" style="margin-top: 12px; font-size: 13px; color: var(--text-secondary, #64748b); text-align: center;">
-                    <!-- Status will be shown here -->
-                </div>
-            </div>
         </div>
         <div class="modal-footer">
             <button type="button" class="ghost-button" data-close="modal">キャンセル</button>
@@ -522,6 +521,30 @@
                     </svg>
                 </button>
             </div>
+        </div>
+    </div>
+
+    <!-- Offline Download Modal -->
+    <div id="offline-download-modal" class="modal hidden" role="dialog" aria-modal="true">
+        <div class="modal-header">
+            <h2>オフライン使用</h2>
+            <button type="button" class="modal-close" data-close="offline-modal" aria-label="閉じる">×</button>
+        </div>
+        <div class="modal-body">
+            <p style="font-size: 14px; color: var(--text-secondary, #64748b); margin-bottom: 16px;">
+                すべてのリソースをダウンロードして、完全にオフラインで使用できるようにします。
+            </p>
+            <div id="offline-status" style="margin: 16px 0; font-size: 14px; text-align: center; min-height: 24px;">
+                <!-- Status will be shown here -->
+            </div>
+            <button type="button" id="download-for-offline" class="ghost-button" style="width: 100%; margin-top: 8px;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 8px;">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="7 10 12 15 17 10"></polyline>
+                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+                オフライン用にダウンロード
+            </button>
         </div>
     </div>
 
@@ -1410,21 +1433,38 @@
                 downloadBtn.addEventListener('click', downloadForOffline);
             }
             
-            // 当设置模态框打开时检查缓存状态
-            const settingsButtonMenuGuest = document.getElementById('settingsButtonMenuGuest');
-            const settingsButtonMenu = document.getElementById('settingsButtonMenu');
+            // 离线下载模态框控制
+            const offlineModal = document.getElementById('offline-download-modal');
+            const backdrop = document.getElementById('modal-backdrop');
+            const downloadOfflineGuest = document.getElementById('downloadOfflineGuest');
+            const downloadOfflineUser = document.getElementById('downloadOfflineUser');
+            const guestMenu = document.getElementById('guestMenu');
+            const userMenu = document.getElementById('userMenu');
             
-            if (settingsButtonMenuGuest) {
-                settingsButtonMenuGuest.addEventListener('click', () => {
-                    setTimeout(checkOfflineStatus, 100);
-                });
+            // 打开离线下载模态框
+            function openOfflineModal() {
+                if (offlineModal) offlineModal.classList.remove('hidden');
+                if (backdrop) backdrop.classList.remove('hidden');
+                setTimeout(checkOfflineStatus, 100);
+                if (guestMenu) guestMenu.classList.remove('show');
+                if (userMenu) userMenu.classList.remove('show');
             }
             
-            if (settingsButtonMenu) {
-                settingsButtonMenu.addEventListener('click', () => {
-                    setTimeout(checkOfflineStatus, 100);
-                });
+            if (downloadOfflineGuest) {
+                downloadOfflineGuest.addEventListener('click', openOfflineModal);
             }
+            
+            if (downloadOfflineUser) {
+                downloadOfflineUser.addEventListener('click', openOfflineModal);
+            }
+            
+            // 关闭离线下载模态框
+            document.querySelectorAll('[data-close="offline-modal"]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    if (offlineModal) offlineModal.classList.add('hidden');
+                    if (backdrop) backdrop.classList.add('hidden');
+                });
+            });
         });
 
         // Listen for app installed event

@@ -1393,7 +1393,7 @@
         if (kuroshiro) {
             try {
                 reading = await kuroshiro.convert(entry.kanji, { to: 'hiragana', mode: 'normal' });
-                romaji = await kuroshiro.convert(entry.kanji, { to: 'romaji', romajiSystem: 'passport' });
+                romaji = await kuroshiro.convert(entry.kanji, { to: 'romaji', romajiSystem: 'hepburn' });
                 furigana = await kuroshiro.convert(entry.kanji, { to: 'hiragana', mode: 'furigana' });
             } catch (error) {
                 console.warn('Kuroshiro conversion failed, fallback to Wanakana', error);
@@ -1405,8 +1405,6 @@
         if (!romaji) {
             romaji = fallbackRomaji(reading || entry.kanji);
         }
-        // 转换为日本式罗马音
-        romaji = convertToNipponRomaji(romaji);
         
         if (!furigana) {
             furigana = entry.kanji;
@@ -2112,7 +2110,7 @@
         let romajiInput = '';
         try {
             if (state.kuroshiroReady) {
-                romajiInput = await state.kuroshiro.convert(answer, { to: 'romaji', romajiSystem: 'passport' });
+                romajiInput = await state.kuroshiro.convert(answer, { to: 'romaji', romajiSystem: 'hepburn' });
             }
         } catch (error) {
             if (window.wanakana) {
@@ -2127,8 +2125,6 @@
         if (!romajiInput) {
             romajiInput = trimmed;
         }
-        // 转换为日本式罗马音
-        romajiInput = convertToNipponRomaji(romajiInput);
         const normalizedRomaji = removePunctuation((romajiInput || '').replace(/\s+/g, '')).toLowerCase();
         
         if (normalizedRomaji === entry.normalizedRomaji) {
@@ -2237,7 +2233,8 @@
     }
 
     function hideModals() {
-        [elements.dictionaryModal, elements.settingsModal].forEach((modal) => {
+        const offlineModal = document.getElementById('offline-download-modal');
+        [elements.dictionaryModal, elements.settingsModal, offlineModal].forEach((modal) => {
             if (modal) {
                 modal.classList.add('hidden');
             }
