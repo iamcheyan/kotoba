@@ -1,5 +1,5 @@
 // Service Worker for Kotoba PWA
-const CACHE_NAME = 'kotoba-v1.0.2';
+const CACHE_NAME = 'kotoba-v1.0.3';
 
 // 核心资源 - 优先缓存
 const CORE_RESOURCES = [
@@ -125,14 +125,17 @@ self.addEventListener('fetch', (event) => {
                             return response;
                         }
 
-                        // 克隆响应
-                        const responseToCache = response.clone();
+                        // 只缓存 GET 请求（Cache API 不支持 POST 等其他方法）
+                        if (event.request.method === 'GET') {
+                            // 克隆响应
+                            const responseToCache = response.clone();
 
-                        // 将新资源添加到缓存
-                        caches.open(CACHE_NAME)
-                            .then((cache) => {
-                                cache.put(event.request, responseToCache);
-                            });
+                            // 将新资源添加到缓存
+                            caches.open(CACHE_NAME)
+                                .then((cache) => {
+                                    cache.put(event.request, responseToCache);
+                                });
+                        }
 
                         return response;
                     })

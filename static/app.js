@@ -2726,8 +2726,7 @@
 
         // Check if user has interacted with the page (required for autoplay policy)
         if (!window.hasUserInteracted) {
-            console.warn('TTS blocked: User has not interacted with the page yet');
-            // showAlert('warning', 'ブラウザの自動再生ポリシーにより、最初にページをクリックしてから音声を再生してください');
+            // 静默处理：浏览器的自动播放策略阻止了自动发音
             return;
         }
 
