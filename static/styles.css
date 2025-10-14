@@ -191,6 +191,69 @@ a:hover {
     padding: 4px;
     box-shadow: 0 0 20px rgba(79, 70, 229, 0.4);
     animation: pulse-ring 2s ease-in-out infinite;
+    transition: background 0.5s ease, box-shadow 0.5s ease;
+}
+
+/* 等级1-5: 浅银色 */
+.avatar-ring.level-1,
+.avatar-ring.level-2,
+.avatar-ring.level-3,
+.avatar-ring.level-4,
+.avatar-ring.level-5 {
+    background: linear-gradient(135deg, #d1d5db 0%, #9ca3af 100%);
+    box-shadow: 0 0 20px rgba(156, 163, 175, 0.4);
+}
+
+/* 等级6-10: 黄色 */
+.avatar-ring.level-6,
+.avatar-ring.level-7,
+.avatar-ring.level-8,
+.avatar-ring.level-9,
+.avatar-ring.level-10 {
+    background: linear-gradient(135deg, #fde047 0%, #facc15 100%);
+    box-shadow: 0 0 20px rgba(250, 204, 21, 0.5);
+}
+
+/* 等级11-15: 橙金色 */
+.avatar-ring.level-11,
+.avatar-ring.level-12,
+.avatar-ring.level-13,
+.avatar-ring.level-14,
+.avatar-ring.level-15 {
+    background: linear-gradient(135deg, #fdba74 0%, #fb923c 100%);
+    box-shadow: 0 0 25px rgba(251, 146, 60, 0.6);
+}
+
+/* 等级16-20: 金色 */
+.avatar-ring.level-16,
+.avatar-ring.level-17,
+.avatar-ring.level-18,
+.avatar-ring.level-19,
+.avatar-ring.level-20 {
+    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+    box-shadow: 0 0 30px rgba(245, 158, 11, 0.7);
+}
+
+/* 等级21-30: 深金色 */
+.avatar-ring.level-21,
+.avatar-ring.level-22,
+.avatar-ring.level-23,
+.avatar-ring.level-24,
+.avatar-ring.level-25,
+.avatar-ring.level-26,
+.avatar-ring.level-27,
+.avatar-ring.level-28,
+.avatar-ring.level-29,
+.avatar-ring.level-30 {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    box-shadow: 0 0 35px rgba(217, 119, 6, 0.8);
+}
+
+/* 等级31+: 紫金色（最高等级）*/
+.avatar-ring.level-max {
+    background: linear-gradient(135deg, #ea580c 0%, #dc2626 50%, #9333ea 100%);
+    box-shadow: 0 0 40px rgba(234, 88, 12, 0.9),
+                0 0 60px rgba(147, 51, 234, 0.5);
 }
 
 @keyframes pulse-ring {
@@ -289,10 +352,8 @@ a:hover {
 
 .progress-reset-btn {
     background: transparent;
-    border: 1px solid var(--border);
     color: var(--muted);
-    padding: 4px 8px;
-    border-radius: 8px;
+    border: none;
     cursor: pointer;
     transition: all 0.2s ease;
     display: flex;
@@ -301,8 +362,6 @@ a:hover {
 }
 
 .progress-reset-btn:hover {
-    background: var(--accent-soft);
-    border-color: var(--accent);
     color: var(--accent);
     transform: rotate(-90deg);
 }
@@ -727,15 +786,15 @@ a:hover {
     background: var(--card-bg);
     border: 1px solid var(--border);
     border-radius: 999px;
-    padding: 4px;
+    padding: 0;
 }
 
 .mode-btn {
     background: transparent;
     border: none;
     border-radius: 999px;
-    width: 36px;
-    height: 36px;
+    width: 30px;
+    height: 30px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1093,6 +1152,7 @@ ruby rt {
 
 .alert {
     padding: 12px 24px;
+    padding-right: 48px;
     border-radius: 12px;
     border: 1px solid transparent;
     font-size: 1rem;
@@ -1102,6 +1162,11 @@ ruby rt {
     backdrop-filter: blur(8px);
     animation: toastSlideIn 0.3s ease-out;
     pointer-events: auto;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
     transition: opacity 0.3s ease, transform 0.3s ease;
 }
 
@@ -1132,6 +1197,43 @@ ruby rt {
 .alert-error:hover {
     background: rgba(220, 38, 38, 1);
     transform: scale(1.02);
+}
+
+.alert-message {
+    flex: 1;
+}
+
+.alert-close {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    color: inherit;
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 1;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    opacity: 0.7;
+    transition: all 0.2s ease;
+    border-radius: 4px;
+    padding: 0;
+}
+
+.alert-close:hover {
+    opacity: 1;
+    background: rgba(255, 255, 255, 0.15);
+    transform: translateY(-50%) scale(1.1);
+}
+
+.alert-close:active {
+    transform: translateY(-50%) scale(0.95);
 }
 
 .footer {
@@ -2336,7 +2438,193 @@ ruby rt {
     
     .alert {
         padding: 10px 18px;
+        padding-right: 44px;
         font-size: 0.9rem;
+    }
+    
+    .alert-close {
+        right: 8px;
+        width: 24px;
+        height: 24px;
+        font-size: 20px;
+    }
+    
+    /* 移动端连击动画 */
+    .combo-text {
+        font-size: 2.5rem !important;
+    }
+    
+    .combo-notification.combo-10 .combo-text {
+        font-size: 3rem !important;
+    }
+    
+    .combo-notification.combo-20 .combo-text {
+        font-size: 3.5rem !important;
+    }
+    
+    .combo-notification.combo-30 .combo-text {
+        font-size: 4rem !important;
+    }
+    
+    .combo-notification.combo-50 .combo-text {
+        font-size: 4.5rem !important;
+    }
+}
+
+/* Combo Animation Styles */
+.combo-notification {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 9999;
+    pointer-events: none;
+    animation: comboAppear 1.2s ease-out forwards;
+}
+
+.combo-text {
+    font-size: 4rem;
+    font-weight: 900;
+    text-shadow: 0 0 20px currentColor, 0 0 40px currentColor;
+    letter-spacing: 0.1em;
+    animation: comboFloat 1.2s ease-out;
+}
+
+/* 不同等级的连击颜色 */
+.combo-notification.combo-3 .combo-text {
+    color: #3b82f6;
+    text-shadow: 0 0 20px #3b82f6, 0 0 40px #3b82f6, 0 0 60px #3b82f6;
+}
+
+.combo-notification.combo-5 .combo-text {
+    color: #10b981;
+    text-shadow: 0 0 20px #10b981, 0 0 40px #10b981, 0 0 60px #10b981;
+}
+
+.combo-notification.combo-10 .combo-text {
+    color: #f59e0b;
+    font-size: 5rem;
+    text-shadow: 0 0 30px #f59e0b, 0 0 60px #f59e0b, 0 0 90px #f59e0b;
+}
+
+.combo-notification.combo-20 .combo-text {
+    color: #ef4444;
+    font-size: 5.5rem;
+    text-shadow: 0 0 30px #ef4444, 0 0 60px #ef4444, 0 0 90px #ef4444;
+    animation: comboFloat 1.2s ease-out, comboShake 0.5s ease-in-out;
+}
+
+.combo-notification.combo-30 .combo-text {
+    color: #a855f7;
+    font-size: 6rem;
+    text-shadow: 0 0 40px #a855f7, 0 0 80px #a855f7, 0 0 120px #a855f7;
+    animation: comboFloat 1.2s ease-out, comboPulse 0.6s ease-in-out infinite;
+}
+
+.combo-notification.combo-50 .combo-text {
+    font-size: 6.5rem;
+    background: linear-gradient(45deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #9400d3);
+    background-size: 200% 200%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: comboFloat 1.2s ease-out, comboRainbow 2s linear infinite, comboMegaPulse 0.4s ease-in-out infinite;
+    text-shadow: none;
+}
+
+.combo-number {
+    display: block;
+    font-size: 1.2em;
+    margin-top: 10px;
+    animation: comboNumberPop 0.8s ease-out;
+}
+
+/* 连击粒子效果 */
+.combo-particle {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    background: currentColor;
+    border-radius: 50%;
+    pointer-events: none;
+    animation: particleFloat 1.5s ease-out forwards;
+}
+
+@keyframes comboAppear {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.5);
+    }
+    10% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1.2);
+    }
+    90% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+    }
+    100% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.8);
+    }
+}
+
+@keyframes comboFloat {
+    0% {
+        transform: translateY(0) scale(0.5) rotate(-5deg);
+    }
+    50% {
+        transform: translateY(-30px) scale(1.1) rotate(5deg);
+    }
+    100% {
+        transform: translateY(-60px) scale(1) rotate(0deg);
+    }
+}
+
+@keyframes comboShake {
+    0%, 100% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-10px); }
+    20%, 40%, 60%, 80% { transform: translateX(10px); }
+}
+
+@keyframes comboPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}
+
+@keyframes comboMegaPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.15); }
+}
+
+@keyframes comboRainbow {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+@keyframes comboNumberPop {
+    0% {
+        transform: scale(0);
+        opacity: 0;
+    }
+    50% {
+        transform: scale(1.3);
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes particleFloat {
+    0% {
+        opacity: 1;
+        transform: translate(0, 0) scale(1);
+    }
+    100% {
+        opacity: 0;
+        transform: translate(var(--tx), var(--ty)) scale(0);
     }
 }
 

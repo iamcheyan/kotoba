@@ -115,6 +115,17 @@
         return [...text].some(isKatakana);
     }
 
+    function isKanaString(text) {
+        if (!text) {
+            return false;
+        }
+        const cleaned = text.replace(/\s+/g, '');
+        if (!cleaned) {
+            return false;
+        }
+        return /^[\u3040-\u309F\u30A0-\u30FFー・゛゜]+$/.test(cleaned);
+    }
+
     const elements = {
         dictionaryName: document.getElementById('dictionary-name'),
         score: document.getElementById('score'),
@@ -614,6 +625,25 @@
         return correct % 100;
     }
     
+    function updateAvatarRingColor(level) {
+        const avatarRing = document.querySelector('.avatar-ring');
+        if (!avatarRing) return;
+        
+        // 移除所有等级类
+        avatarRing.classList.forEach(className => {
+            if (className.startsWith('level-')) {
+                avatarRing.classList.remove(className);
+            }
+        });
+        
+        // 添加新的等级类
+        if (level > 30) {
+            avatarRing.classList.add('level-max');
+        } else {
+            avatarRing.classList.add(`level-${level}`);
+        }
+    }
+    
     function triggerLevelUpAnimation(newLevel) {
         // 创建升级动画容器
         const levelUpOverlay = document.createElement('div');
@@ -621,7 +651,7 @@
         levelUpOverlay.innerHTML = `
             <div class="level-up-content">
                 <div class="level-up-glow"></div>
-                <div class="level-up-text">LEVEL UP!</div>
+                <div class="level-up-text">レベルアップ！</div>
                 <div class="level-up-number">Lv.${newLevel}</div>
                 <div class="level-up-stars">
                     <span class="star">✦</span>
@@ -704,6 +734,9 @@
             elements.levelBadge.textContent = `Lv.${level}`;
         }
         
+        // 更新头像边框颜色
+        updateAvatarRingColor(level);
+        
         // 更新经验条
         const expInLevel = calculateExpInLevel(correct);
         const expPercent = expInLevel; // 0-100
@@ -746,6 +779,90 @@
                     comboItem.classList.remove('active');
                 }, 600);
             }
+        }
+        
+        // 触发连击里程碑动画
+        triggerComboAnimation(currentCombo);
+    }
+    
+    function triggerComboAnimation(combo) {
+        // 连击里程碑：3, 5, 10, 20, 30, 50
+        const milestones = [
+            { count: 3, text: 'コンボ', class: 'combo-3' },
+            { count: 5, text: 'すごい', class: 'combo-5' },
+            { count: 10, text: '素晴らしい', class: 'combo-10' },
+            { count: 20, text: '驚異', class: 'combo-20' },
+            { count: 30, text: '幻想的', class: 'combo-30' },
+            { count: 50, text: '伝説', class: 'combo-50' }
+        ];
+        
+        // 检查是否达到里程碑
+        const milestone = milestones.find(m => m.count === combo);
+        if (!milestone) {
+            // 对于50+的连击，每10次显示一次
+            if (combo > 50 && combo % 10 === 0) {
+                showComboNotification('伝説', combo, 'combo-50');
+            }
+            return;
+        }
+        
+        showComboNotification(milestone.text, combo, milestone.class);
+    }
+    
+    function showComboNotification(text, combo, comboClass) {
+        // 创建连击通知容器
+        const notification = document.createElement('div');
+        notification.className = `combo-notification ${comboClass}`;
+        
+        const comboText = document.createElement('div');
+        comboText.className = 'combo-text';
+        comboText.innerHTML = `
+            ${text}
+            <span class="combo-number">×${combo}</span>
+        `;
+        
+        notification.appendChild(comboText);
+        
+        // 添加粒子效果
+        if (combo >= 10) {
+            const particleCount = Math.min(combo, 30);
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'combo-particle';
+                const angle = (Math.PI * 2 * i) / particleCount;
+                const distance = 100 + Math.random() * 100;
+                const tx = Math.cos(angle) * distance;
+                const ty = Math.sin(angle) * distance;
+                particle.style.setProperty('--tx', `${tx}px`);
+                particle.style.setProperty('--ty', `${ty}px`);
+                particle.style.left = '50%';
+                particle.style.top = '50%';
+                notification.appendChild(particle);
+            }
+        }
+        
+        document.body.appendChild(notification);
+        
+        // 播放音效（如果有）
+        playComboSound(combo);
+        
+        // 自动移除
+        setTimeout(() => {
+            notification.remove();
+        }, 1200);
+    }
+    
+    function playComboSound(combo) {
+        // 可以根据连击数播放不同音效
+        // 这里先保留接口，以后可以添加音效
+        if (combo >= 50) {
+            // 传说连击音效
+        } else if (combo >= 30) {
+            // 梦幻连击音效
+        } else if (combo >= 20) {
+            // 惊人连击音效
+        } else if (combo >= 10) {
+            // 优秀连击音效
         }
     }
     
@@ -1002,32 +1119,66 @@
         if (isCelebration) {
             div.classList.add('alert-celebration');
         }
-        div.textContent = message;
+        
+        // 创建消息文本容器
+        const messageSpan = document.createElement('span');
+        messageSpan.className = 'alert-message';
+        messageSpan.textContent = message;
+        
+        // 创建关闭按钮
+        const closeBtn = document.createElement('button');
+        closeBtn.className = 'alert-close';
+        closeBtn.innerHTML = '×';
+        closeBtn.setAttribute('aria-label', '閉じる');
+        closeBtn.type = 'button';
+        
+        div.appendChild(messageSpan);
+        div.appendChild(closeBtn);
         elements.alerts.appendChild(div);
+        
+        // 关闭alert的函数
+        const dismissAlert = () => {
+            div.style.opacity = '0';
+            div.style.transform = 'translateY(-20px)';
+            setTimeout(() => {
+                if (div.parentNode) {
+                    div.remove();
+                }
+                document.removeEventListener('click', outsideClickHandler);
+                document.removeEventListener('keydown', escapeHandler);
+            }, 300);
+        };
+        
+        // 关闭按钮点击事件
+        closeBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            dismissAlert();
+        });
+        
+        // ESC键监听器
+        const escapeHandler = (e) => {
+            if (e.key === 'Escape') {
+                dismissAlert();
+            }
+        };
+        document.addEventListener('keydown', escapeHandler);
+        
+        // 点击外部关闭（仅错误消息）
+        const outsideClickHandler = (e) => {
+            if (!div.contains(e.target)) {
+                dismissAlert();
+            }
+        };
         
         // 成功消息自动消失
         if (type === 'success') {
             setTimeout(() => {
-                div.style.opacity = '0';
-                div.style.transform = 'translateY(-20px)';
-                setTimeout(() => {
-                    div.remove();
-                }, 300);
+                dismissAlert();
             }, 600);
         } else if (type === 'error') {
-            // 错误消息：点击任何地方时消失
-            const dismissAlert = () => {
-                div.style.opacity = '0';
-                div.style.transform = 'translateY(-20px)';
-                setTimeout(() => {
-                    div.remove();
-                    document.removeEventListener('click', dismissAlert);
-                }, 300);
-            };
-            
-            // 延迟添加监听器，避免立即触发
+            // 错误消息：点击外部时消失
             setTimeout(() => {
-                document.addEventListener('click', dismissAlert, { once: true });
+                document.addEventListener('click', outsideClickHandler);
             }, 100);
         }
         

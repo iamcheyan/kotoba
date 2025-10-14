@@ -21,6 +21,12 @@
     <meta name="theme-color" content="#667eea">
     
     <link rel="stylesheet" href="/static/styles.css">
+    <style>
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+    </style>
     <script>
         (function () {
             function prepareModuleEnv() {
@@ -277,10 +283,10 @@
             <section id="alerts" class="alerts" aria-live="polite"></section>
             
             <!-- 游戏化进度面板 -->
-            <section class="game-progress-panel" aria-label="学習進捗">
+            <section class="game-progress-panel" aria-label="学習進捗" style="display: none;">
                 <div class="player-stats">
                     <div class="player-avatar">
-                        <div class="avatar-ring">
+                        <div class="avatar-ring level-1">
                             <div class="avatar-icon" id="game-avatar-container">
                                 <img id="gameUserAvatar" class="game-user-avatar hidden" src="" alt="User">
                                 <span id="gameDefaultAvatar" class="game-default-avatar">⚔️</span>
@@ -441,6 +447,23 @@
                     </span>
                 </label>
             </fieldset>
+            <div class="pwa-download-section" style="margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--border-color, #e2e8f0);">
+                <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 12px;">オフライン使用</h3>
+                <p style="font-size: 14px; color: var(--text-secondary, #64748b); margin-bottom: 16px;">
+                    すべてのリソースをダウンロードして、完全にオフラインで使用できるようにします。
+                </p>
+                <button type="button" id="download-for-offline" class="ghost-button" style="width: 100%;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 8px;">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                    オフライン用にダウンロード
+                </button>
+                <div id="offline-status" style="margin-top: 12px; font-size: 13px; color: var(--text-secondary, #64748b); text-align: center;">
+                    <!-- Status will be shown here -->
+                </div>
+            </div>
         </div>
         <div class="modal-footer">
             <button type="button" class="ghost-button" data-close="modal">キャンセル</button>
@@ -930,6 +953,13 @@
                 if (window.populateDictionarySelect) {
                     window.populateDictionarySelect();
                 }
+                
+                // 显示进度条和游戏面板
+                const progressTextInfo = document.getElementById('progress-text-info');
+                if (progressTextInfo) progressTextInfo.style.display = 'flex';
+                
+                const gameProgressPanel = document.querySelector('.game-progress-panel');
+                if (gameProgressPanel) gameProgressPanel.style.display = 'block';
             } else {
                 console.log('User is signed out');
                 sessionStorage.removeItem('dataLoaded');
@@ -953,6 +983,13 @@
                 if (window.populateDictionarySelect) {
                     window.populateDictionarySelect();
                 }
+                
+                // 隐藏进度条和游戏面板
+                const progressTextInfo = document.getElementById('progress-text-info');
+                if (progressTextInfo) progressTextInfo.style.display = 'none';
+                
+                const gameProgressPanel = document.querySelector('.game-progress-panel');
+                if (gameProgressPanel) gameProgressPanel.style.display = 'none';
             }
         });
 
@@ -1218,17 +1255,177 @@
         });
 
         // Register Service Worker
+        let swRegistration = null;
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js')
+                navigator.serviceWorker.register('/service-worker.js')
                     .then(registration => {
+                        swRegistration = registration;
                         console.log('[PWA] Service Worker registered:', registration.scope);
+                        
+                        // 检查缓存状态
+                        checkOfflineStatus();
+                        
+                        // 检查更新
+                        registration.addEventListener('updatefound', () => {
+                            const newWorker = registration.installing;
+                            newWorker.addEventListener('statechange', () => {
+                                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                    console.log('[PWA] 新版本可用');
+                                }
+                            });
+                        });
                     })
                     .catch(error => {
                         console.error('[PWA] Service Worker registration failed:', error);
                     });
             });
         }
+        
+        // 检查离线缓存状态
+        async function checkOfflineStatus() {
+            if (!navigator.serviceWorker || !navigator.serviceWorker.controller) {
+                return;
+            }
+            
+            const statusDiv = document.getElementById('offline-status');
+            if (!statusDiv) return;
+            
+            // 设置消息监听器
+            navigator.serviceWorker.addEventListener('message', (event) => {
+                if (event.data.type === 'CACHE_STATUS') {
+                    const { cached, total, percentage } = event.data;
+                    if (percentage === 100) {
+                        statusDiv.innerHTML = `✅ すべてのリソースがキャッシュ済み (${cached}/${total})`;
+                        statusDiv.style.color = '#16a34a';
+                    } else if (cached > 0) {
+                        statusDiv.innerHTML = `⚠️ 一部のリソースがキャッシュ済み (${cached}/${total} - ${percentage}%)`;
+                        statusDiv.style.color = '#f59e0b';
+                    } else {
+                        statusDiv.innerHTML = `📥 まだダウンロードされていません`;
+                        statusDiv.style.color = '#64748b';
+                    }
+                }
+            });
+            
+            // 请求缓存状态
+            navigator.serviceWorker.controller.postMessage({
+                type: 'CHECK_CACHE'
+            });
+        }
+        
+        // 下载离线资源
+        async function downloadForOffline() {
+            const downloadBtn = document.getElementById('download-for-offline');
+            const statusDiv = document.getElementById('offline-status');
+            
+            if (!navigator.serviceWorker || !navigator.serviceWorker.controller) {
+                statusDiv.innerHTML = '❌ Service Worker が利用できません';
+                statusDiv.style.color = '#dc2626';
+                return;
+            }
+            
+            // 禁用按钮
+            downloadBtn.disabled = true;
+            downloadBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 8px; animation: spin 1s linear infinite;"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></svg>ダウンロード中...';
+            
+            // 设置进度监听器
+            const messageHandler = (event) => {
+                if (event.data.type === 'DOWNLOAD_PROGRESS') {
+                    const { completed, total, percentage, failed, status } = event.data;
+                    
+                    if (status === 'started') {
+                        statusDiv.innerHTML = '📥 ダウンロード開始...';
+                        statusDiv.style.color = '#4f46e5';
+                    } else if (status === 'downloading') {
+                        statusDiv.innerHTML = `📥 ダウンロード中... ${completed}/${total} (${percentage}%)`;
+                        if (failed > 0) {
+                            statusDiv.innerHTML += ` - ${failed}件失敗`;
+                        }
+                        statusDiv.style.color = '#4f46e5';
+                    } else if (status === 'completed') {
+                        navigator.serviceWorker.removeEventListener('message', messageHandler);
+                        
+                        if (failed === 0) {
+                            statusDiv.innerHTML = `✅ ダウンロード完了！ (${completed}/${total})`;
+                            statusDiv.style.color = '#16a34a';
+                            
+                            // 显示iOS添加到主屏的提示
+                            showAddToHomeScreenPrompt();
+                        } else {
+                            statusDiv.innerHTML = `⚠️ ダウンロード完了 (${completed}/${total} - ${failed}件失敗)`;
+                            statusDiv.style.color = '#f59e0b';
+                        }
+                        
+                        downloadBtn.disabled = false;
+                        downloadBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 8px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>オフライン用にダウンロード';
+                    }
+                }
+            };
+            
+            navigator.serviceWorker.addEventListener('message', messageHandler);
+            
+            // 发送下载请求
+            navigator.serviceWorker.controller.postMessage({
+                type: 'DOWNLOAD_ALL'
+            });
+        }
+        
+        // 显示添加到主屏的提示
+        function showAddToHomeScreenPrompt() {
+            // 检测是否是iOS
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+            const isInStandaloneMode = ('standalone' in window.navigator) && (window.navigator.standalone);
+            
+            if (isIOS && !isInStandaloneMode) {
+                // 显示iOS添加提示
+                const statusDiv = document.getElementById('offline-status');
+                statusDiv.innerHTML = `
+                    <div style="margin-top: 16px; padding: 12px; background: #f0f9ff; border: 1px solid #0ea5e9; border-radius: 8px; text-align: left;">
+                        <strong style="color: #0369a1;">📱 ホーム画面に追加:</strong><br>
+                        <span style="font-size: 12px; color: #0c4a6e;">
+                            1. 共有ボタン <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="vertical-align: middle;"><path d="M16 5l-1.42 1.42-1.59-1.59V16h-1.98V4.83L9.42 6.42 8 5l4-4 4 4zm4 5v11c0 1.1-.9 2-2 2H6c-1.11 0-2-.9-2-2V10c0-1.11.89-2 2-2h3v2H6v11h12V10h-3V8h3c1.1 0 2 .89 2 2z"/></svg> をタップ<br>
+                            2. 「ホーム画面に追加」を選択<br>
+                            3. 「追加」をタップ
+                        </span>
+                    </div>
+                `;
+            } else if (!isIOS && deferredPrompt) {
+                // 对于Android等平台，显示安装提示
+                const statusDiv = document.getElementById('offline-status');
+                statusDiv.innerHTML = `
+                    <div style="margin-top: 16px;">
+                        <button onclick="installPWA()" style="width: 100%; padding: 10px; background: #4f46e5; color: white; border: none; border-radius: 6px; cursor: pointer;">
+                            📱 アプリをインストール
+                        </button>
+                    </div>
+                `;
+            }
+        }
+        
+        // 添加下载按钮的事件监听
+        document.addEventListener('DOMContentLoaded', () => {
+            const downloadBtn = document.getElementById('download-for-offline');
+            if (downloadBtn) {
+                downloadBtn.addEventListener('click', downloadForOffline);
+            }
+            
+            // 当设置模态框打开时检查缓存状态
+            const settingsButtonMenuGuest = document.getElementById('settingsButtonMenuGuest');
+            const settingsButtonMenu = document.getElementById('settingsButtonMenu');
+            
+            if (settingsButtonMenuGuest) {
+                settingsButtonMenuGuest.addEventListener('click', () => {
+                    setTimeout(checkOfflineStatus, 100);
+                });
+            }
+            
+            if (settingsButtonMenu) {
+                settingsButtonMenu.addEventListener('click', () => {
+                    setTimeout(checkOfflineStatus, 100);
+                });
+            }
+        });
 
         // Listen for app installed event
         window.addEventListener('appinstalled', () => {
