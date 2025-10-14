@@ -152,6 +152,17 @@
         progressFill: document.getElementById('progress-fill'),
         progressText: document.getElementById('progress-text'),
         progressReset: document.getElementById('progress-reset'),
+        // 游戏化元素
+        levelBadge: document.getElementById('level-badge'),
+        expBar: document.getElementById('exp-bar'),
+        expFill: document.getElementById('exp-fill'),
+        expText: document.getElementById('exp-text'),
+        correctStat: document.getElementById('correct-stat'),
+        wrongStat: document.getElementById('wrong-stat'),
+        comboStat: document.getElementById('combo-stat'),
+        totalStat: document.getElementById('total-stat'),
+        progressFraction: document.getElementById('progress-fraction'),
+        progressPercentage: document.getElementById('progress-percentage'),
     };
 
     function isSupportedTheme(theme) {
@@ -580,10 +591,79 @@
         }
     }
 
+    // 游戏化系统：等级和连击
+    let currentCombo = 0;
+    
+    function calculateLevel(correct) {
+        // 每100个正确答案升一级
+        return Math.floor(correct / 100) + 1;
+    }
+    
+    function calculateExpInLevel(correct) {
+        // 当前等级内的经验值
+        return correct % 100;
+    }
+    
     function updateScoreboard() {
         const correct = parseInt(localStorage.getItem('correct') || '0', 10) || 0;
+        const wrong = parseInt(localStorage.getItem('wrong') || '0', 10) || 0;
+        const total = correct + wrong;
+        
+        // 更新等级徽章
+        const level = calculateLevel(correct);
+        if (elements.levelBadge) {
+            elements.levelBadge.textContent = `Lv.${level}`;
+        }
+        
+        // 更新经验条
+        const expInLevel = calculateExpInLevel(correct);
+        const expPercent = expInLevel; // 0-100
+        if (elements.expFill) {
+            elements.expFill.style.width = `${expPercent}%`;
+        }
+        if (elements.expText) {
+            elements.expText.textContent = `${expInLevel} / 100`;
+        }
+        
+        // 更新统计数据
+        if (elements.correctStat) {
+            elements.correctStat.textContent = correct;
+        }
+        if (elements.wrongStat) {
+            elements.wrongStat.textContent = wrong;
+        }
+        if (elements.comboStat) {
+            elements.comboStat.textContent = currentCombo;
+        }
+        if (elements.totalStat) {
+            elements.totalStat.textContent = total;
+        }
+        
+        // 保持旧的score元素更新（如果存在）
         if (elements.score) {
             elements.score.textContent = `正解: ${correct}`;
+        }
+    }
+    
+    function incrementCombo() {
+        currentCombo++;
+        if (elements.comboStat) {
+            elements.comboStat.textContent = currentCombo;
+            // 触发连击动画
+            const comboItem = elements.comboStat.closest('.stat-item');
+            if (comboItem) {
+                comboItem.classList.add('active');
+                setTimeout(() => {
+                    comboItem.classList.remove('active');
+                }, 600);
+            }
+        }
+    }
+    
+    function resetCombo() {
+        currentCombo = 0;
+        if (elements.comboStat) {
+            elements.comboStat.textContent = '0';
         }
     }
 
@@ -689,38 +769,56 @@
     }
 
     function updateProgressUI() {
-        const container = elements.progressContainer;
-        if (!container) {
-            return;
-        }
         const isWrongWords = state.dictionaryId === 'wrong-words';
         const total = state.totalWords || 0;
-        if (!state.dictionaryId || isWrongWords || total === 0) {
-            container.classList.add('hidden');
-            if (elements.progressReset) {
-                elements.progressReset.classList.add('hidden');
-            }
-            return;
-        }
-        container.classList.remove('hidden');
-        if (elements.progressReset) {
-            elements.progressReset.classList.remove('hidden');
-            elements.progressReset.disabled = total === 0;
-        }
         const mastered = state.masteredEntries ? state.masteredEntries.size : 0;
         const percent = total ? Math.round((mastered / total) * 100) : 0;
-        if (elements.progressFill) {
-            elements.progressFill.style.width = `${Math.min(100, percent)}%`;
+        
+        // 更新进度文本信息
+        if (elements.progressFraction) {
+            if (!state.dictionaryId || isWrongWords || total === 0) {
+                elements.progressFraction.textContent = '0 / 0';
+            } else {
+                elements.progressFraction.textContent = `${mastered} / ${total}`;
+            }
         }
-        if (elements.progressBar) {
-            elements.progressBar.setAttribute('aria-valuemin', '0');
-            elements.progressBar.setAttribute('aria-valuemax', String(total));
-            elements.progressBar.setAttribute('aria-valuenow', String(mastered));
+        
+        if (elements.progressPercentage) {
+            if (!state.dictionaryId || isWrongWords || total === 0) {
+                elements.progressPercentage.textContent = '0%';
+            } else {
+                elements.progressPercentage.textContent = `${percent}%`;
+            }
         }
-        if (elements.progressText) {
-            elements.progressText.textContent = `${mastered} / ${total}（${percent}%）`;
+        
+        // 保持旧的进度容器兼容（如果存在）
+        const container = elements.progressContainer;
+        if (container) {
+            if (!state.dictionaryId || isWrongWords || total === 0) {
+                container.classList.add('hidden');
+                if (elements.progressReset) {
+                    elements.progressReset.classList.add('hidden');
+                }
+            } else {
+                container.classList.remove('hidden');
+                if (elements.progressReset) {
+                    elements.progressReset.classList.remove('hidden');
+                    elements.progressReset.disabled = total === 0;
+                }
+                if (elements.progressFill) {
+                    elements.progressFill.style.width = `${Math.min(100, percent)}%`;
+                }
+                if (elements.progressBar) {
+                    elements.progressBar.setAttribute('aria-valuemin', '0');
+                    elements.progressBar.setAttribute('aria-valuemax', String(total));
+                    elements.progressBar.setAttribute('aria-valuenow', String(mastered));
+                }
+                if (elements.progressText) {
+                    elements.progressText.textContent = `${mastered} / ${total}（${percent}%）`;
+                }
+                container.classList.toggle('is-complete', total > 0 && mastered >= total);
+            }
         }
-        container.classList.toggle('is-complete', total > 0 && mastered >= total);
     }
 
     function clearProgressForCurrentDictionary() {
