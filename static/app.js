@@ -37,6 +37,8 @@
         progressDictionaryId: null,
         dictionaryCompleted: false,
         completionCelebrated: false,
+        answerMode: 'input', // 'input' or 'puzzle'
+        puzzleAnswer: [], // 拼词模式下用户选择的字符序列
     };
 
     const CHAR_RANGE = {
@@ -163,6 +165,13 @@
         totalStat: document.getElementById('total-stat'),
         progressFraction: document.getElementById('progress-fraction'),
         progressPercentage: document.getElementById('progress-percentage'),
+        // 模式切换元素
+        modeInputBtn: document.getElementById('mode-input'),
+        modePuzzleBtn: document.getElementById('mode-puzzle'),
+        inputModeContainer: document.getElementById('input-mode-container'),
+        puzzleModeContainer: document.getElementById('puzzle-mode-container'),
+        puzzleAnswerArea: document.getElementById('puzzle-answer-area'),
+        puzzleOptionsArea: document.getElementById('puzzle-options-area'),
     };
 
     function isSupportedTheme(theme) {
@@ -976,6 +985,32 @@
         div.textContent = message;
         elements.alerts.appendChild(div);
         
+        // 成功消息自动消失
+        if (type === 'success') {
+            setTimeout(() => {
+                div.style.opacity = '0';
+                div.style.transform = 'translateY(-20px)';
+                setTimeout(() => {
+                    div.remove();
+                }, 300);
+            }, 600);
+        } else if (type === 'error') {
+            // 错误消息：点击任何地方时消失
+            const dismissAlert = () => {
+                div.style.opacity = '0';
+                div.style.transform = 'translateY(-20px)';
+                setTimeout(() => {
+                    div.remove();
+                    document.removeEventListener('click', dismissAlert);
+                }, 300);
+            };
+            
+            // 延迟添加监听器，避免立即触发
+            setTimeout(() => {
+                document.addEventListener('click', dismissAlert, { once: true });
+            }, 100);
+        }
+        
         if (isCelebration) {
             // 添加庆祝效果
             triggerCelebration();
@@ -1227,12 +1262,20 @@
             elements.questionRomaji.textContent = entry.romaji;
             elements.questionRomaji.style.display = state.showRomaji ? 'block' : 'none';
         }
-        if (elements.answerInput) {
-            elements.answerInput.placeholder = state.showPlaceholder ? entry.reading : '';
-            elements.answerInput.value = '';
-            elements.answerInput.readOnly = false;
-            elements.answerInput.focus({ preventScroll: true });
+        // 清空用户答案
+        clearUserAnswer();
+        
+        // 根据模式渲染不同的答题界面
+        if (state.answerMode === 'puzzle') {
+            renderPuzzleMode();
+        } else {
+            if (elements.answerInput) {
+                elements.answerInput.placeholder = state.showPlaceholder ? entry.reading : '';
+                elements.answerInput.readOnly = false;
+                elements.answerInput.focus({ preventScroll: true });
+            }
         }
+        
         if (elements.skipButton) {
             elements.skipButton.disabled = false;
         }
@@ -1855,6 +1898,7 @@
         if (!trimmed) {
             return { correct: false, match: null, userRomaji: '' };
         }
+        
         if (trimmed.toLowerCase() === entry.normalizedKanji) {
             return { correct: true, match: 'kanji', userRomaji: entry.normalizedRomaji };
         }
@@ -1877,11 +1921,13 @@
             romajiInput = trimmed;
         }
         const normalizedRomaji = (romajiInput || '').replace(/\s+/g, '').toLowerCase();
+        
         if (normalizedRomaji === entry.normalizedRomaji) {
             return { correct: true, match: 'romaji', userRomaji: normalizedRomaji };
         }
         const hiraganaInput = window.wanakana ? window.wanakana.toHiragana(answer) : answer;
         const normalizedReading = (hiraganaInput || '').replace(/\s+/g, '').toLowerCase();
+        
         if (normalizedReading === entry.normalizedReading) {
             return { correct: true, match: 'reading', userRomaji: normalizedRomaji };
         }
@@ -1894,6 +1940,7 @@
 
     async function handleAnswerSubmit(event) {
         event.preventDefault();
+        event.stopPropagation();
 
         if (state.awaitingNext) {
             setButtonToAnswer();
@@ -1908,8 +1955,16 @@
             return;
         }
 
-        const value = elements.answerInput ? elements.answerInput.value : '';
-        if (!value.trim()) {
+        const value = getUserAnswer();
+        
+        if (!value || !value.trim()) {
+            // 拼词模式下如果没有选择任何字符，提示用户
+            if (state.answerMode === 'puzzle') {
+                showAlert('error', '文字を選択してください');
+                setLoading(false);
+                return;
+            }
+            // 输入模式下如果为空，跳到下一题
             try {
                 await loadRandomEntry();
             } catch (error) {
@@ -1924,32 +1979,23 @@
             if (result.correct) {
                 markEntryMastered(state.currentEntry);
                 incrementCounter('correct');
+                incrementCombo(); // 增加连击
                 updateScoreboard();
                 
-                // 根据连续正确次数显示不同的庆祝消息
-                const correctCount = parseInt(localStorage.getItem('correct') || '0', 10);
-                let celebrationMessage = '👏 正解です！';
+                // 只触发彩带动画，不显示toast
+                triggerCelebration();
                 
-                if (correctCount % 10 === 0 && correctCount > 0) {
-                    celebrationMessage = '🎉 すごい！10問連続正解！';
-                } else if (correctCount % 5 === 0 && correctCount > 0) {
-                    celebrationMessage = '✨ 素晴らしい！5問連続正解！';
-                } else if (correctCount === 1) {
-                    celebrationMessage = '🎯 初回正解！おめでとう！';
-                }
-                
-                showAlert('success', celebrationMessage, true); // 第三个参数启用庆祝效果
-                
-                // 延迟加载下一个问题，让用户有时间享受庆祝效果
+                // 快速加载下一题
                 setTimeout(async () => {
                     try {
                         await loadRandomEntry();
                     } catch (error) {
                         showAlert('error', error.message || String(error));
                     }
-                }, 1500);
+                }, 800);
             } else {
                 incrementCounter('wrong');
+                resetCombo(); // 重置连击
                 updateScoreboard();
                 showIncorrectFeedback(value, state.currentEntry);
                 setButtonToNext();
@@ -2207,6 +2253,193 @@
                 }, 1000);
             }
         }, 100);
+        
+        // 模式切换事件
+        if (elements.modeInputBtn) {
+            elements.modeInputBtn.addEventListener('click', () => {
+                switchToMode('input');
+            });
+        }
+        if (elements.modePuzzleBtn) {
+            elements.modePuzzleBtn.addEventListener('click', () => {
+                switchToMode('puzzle');
+            });
+        }
+    }
+    
+    // 切换答题模式
+    function switchToMode(mode) {
+        state.answerMode = mode;
+        
+        // 更新按钮状态
+        if (elements.modeInputBtn && elements.modePuzzleBtn) {
+            if (mode === 'input') {
+                elements.modeInputBtn.classList.add('active');
+                elements.modePuzzleBtn.classList.remove('active');
+            } else {
+                elements.modePuzzleBtn.classList.add('active');
+                elements.modeInputBtn.classList.remove('active');
+            }
+        }
+        
+        // 切换容器显示
+        if (elements.inputModeContainer && elements.puzzleModeContainer) {
+            if (mode === 'input') {
+                elements.inputModeContainer.classList.remove('hidden');
+                elements.puzzleModeContainer.classList.add('hidden');
+            } else {
+                elements.inputModeContainer.classList.add('hidden');
+                elements.puzzleModeContainer.classList.remove('hidden');
+            }
+        }
+        
+        // 如果切换到拼词模式，重新渲染拼词界面
+        if (mode === 'puzzle' && state.currentEntry) {
+            renderPuzzleMode();
+        }
+    }
+    
+    // 渲染拼词模式界面
+    function renderPuzzleMode() {
+        if (!state.currentEntry || !elements.puzzleAnswerArea || !elements.puzzleOptionsArea) {
+            return;
+        }
+        
+        // 清空之前的内容
+        elements.puzzleAnswerArea.innerHTML = '';
+        elements.puzzleOptionsArea.innerHTML = '';
+        state.puzzleAnswer = [];
+        
+        // 获取正确答案（假名）
+        const correctAnswer = state.currentEntry.reading || state.currentEntry.kanji;
+        
+        // 将答案拆分成字符
+        const chars = [...correctAnswer];
+        
+        // 打乱顺序
+        const shuffled = [...chars].sort(() => Math.random() - 0.5);
+        
+        // 创建选项按钮
+        shuffled.forEach((char, index) => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'puzzle-char';
+            btn.textContent = char;
+            btn.dataset.char = char;
+            btn.dataset.originalIndex = index;
+            
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                handlePuzzleCharClick(btn);
+            });
+            
+            elements.puzzleOptionsArea.appendChild(btn);
+        });
+    }
+    
+    // 处理拼词字符点击
+    function handlePuzzleCharClick(btn) {
+        const char = btn.dataset.char;
+        const isInAnswer = btn.classList.contains('in-answer');
+        
+        if (isInAnswer) {
+            // 从答案中移除
+            const index = state.puzzleAnswer.findIndex(item => item.btn === btn);
+            if (index > -1) {
+                state.puzzleAnswer.splice(index, 1);
+            }
+            btn.classList.remove('in-answer');
+            btn.classList.remove('used'); // 移除禁用状态
+            
+            // 从答案区域移除
+            const answerBtn = elements.puzzleAnswerArea.querySelector(`[data-original-btn="${btn.dataset.originalIndex}"]`);
+            if (answerBtn) {
+                // 添加消失动画
+                answerBtn.style.transition = 'all 0.2s ease';
+                answerBtn.style.opacity = '0';
+                answerBtn.style.transform = 'scale(0.5)';
+                setTimeout(() => {
+                    answerBtn.remove();
+                }, 200);
+            }
+        } else {
+            // 如果已经被使用，不允许再次点击
+            if (btn.classList.contains('used')) {
+                return;
+            }
+            
+            // 添加到答案
+            state.puzzleAnswer.push({ char, btn });
+            btn.classList.add('in-answer');
+            btn.classList.add('used'); // 添加禁用状态，但不隐藏
+            
+            // 在答案区域显示
+            const answerBtn = document.createElement('button');
+            answerBtn.type = 'button';
+            answerBtn.className = 'puzzle-char';
+            answerBtn.textContent = char;
+            answerBtn.dataset.originalBtn = btn.dataset.originalIndex;
+            
+            // 初始状态：缩小透明
+            answerBtn.style.opacity = '0';
+            answerBtn.style.transform = 'scale(0.5)';
+            
+            answerBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                btn.click(); // 触发原始按钮的点击，从答案中移除
+            });
+            
+            elements.puzzleAnswerArea.appendChild(answerBtn);
+            
+            // 出现动画
+            setTimeout(() => {
+                answerBtn.style.transition = 'all 0.3s ease';
+                answerBtn.style.opacity = '1';
+                answerBtn.style.transform = 'scale(1)';
+            }, 10);
+        }
+        
+        // 更新答案区域样式
+        if (state.puzzleAnswer.length > 0) {
+            elements.puzzleAnswerArea.classList.add('has-items');
+        } else {
+            elements.puzzleAnswerArea.classList.remove('has-items');
+        }
+    }
+    
+    // 获取用户答案（支持两种模式）
+    function getUserAnswer() {
+        if (state.answerMode === 'puzzle') {
+            // 拼词模式：拼接选择的字符
+            return state.puzzleAnswer.map(item => item.char).join('');
+        } else {
+            // 输入模式：获取输入框内容
+            return (elements.answerInput ? elements.answerInput.value.trim() : '');
+        }
+    }
+    
+    // 清空用户答案
+    function clearUserAnswer() {
+        if (state.answerMode === 'puzzle') {
+            // 拼词模式：清空所有选择
+            state.puzzleAnswer = [];
+            if (elements.puzzleAnswerArea) {
+                elements.puzzleAnswerArea.innerHTML = '';
+                elements.puzzleAnswerArea.classList.remove('has-items');
+            }
+            const puzzleChars = elements.puzzleOptionsArea?.querySelectorAll('.puzzle-char');
+            if (puzzleChars) {
+                puzzleChars.forEach(btn => {
+                    btn.classList.remove('in-answer');
+                    btn.classList.remove('used'); // 移除禁用状态
+                });
+            }
+        } else {
+            // 输入模式：清空输入框
+            if (elements.answerInput) {
+                elements.answerInput.value = '';
+            }
+        }
     }
 
     function handleTTSClick() {
@@ -2700,6 +2933,12 @@
         // 初始化当前等级，避免刷新页面时触发升级动画
         const correct = parseInt(localStorage.getItem('correct') || '0', 10) || 0;
         previousLevel = calculateLevel(correct);
+        
+        // 确保默认模式设置正确（输入模式不需要 required 限制）
+        state.answerMode = 'input';
+        if (elements.answerInput) {
+            elements.answerInput.required = false;
+        }
         
         initTheme();
         console.log('Theme initialized');

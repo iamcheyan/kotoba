@@ -102,7 +102,7 @@ a:hover {
 .app {
     max-width: 720px;
     margin: 0 auto;
-    padding: 24px 20px 64px;
+    padding: 10px 20px;
 }
 
 .app-header {
@@ -716,7 +716,47 @@ a:hover {
 .header-actions {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
+    gap: 12px;
+    align-items: center;
+}
+
+/* 模式切换器 */
+.mode-switcher {
+    display: flex;
+    gap: 4px;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 4px;
+}
+
+.mode-btn {
+    background: transparent;
+    border: none;
+    border-radius: 999px;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--muted);
+    transition: all 0.2s ease;
+}
+
+.mode-btn:hover {
+    background: var(--accent-soft);
+    color: var(--accent);
+}
+
+.mode-btn.active {
+    background: var(--accent);
+    color: #ffffff;
+    box-shadow: 0 2px 8px rgba(79, 70, 229, 0.3);
+}
+
+.mode-btn svg {
+    flex-shrink: 0;
 }
 
 .ghost-button {
@@ -796,7 +836,7 @@ a:hover {
     align-items: center;
     justify-content: center;
     gap: 12px;
-    margin-bottom: 12px;
+    /* margin-bottom: 12px; */
     height: 100px;
 }
 
@@ -865,6 +905,14 @@ ruby rt {
     gap: 12px;
 }
 
+.mode-container {
+    display: block;
+}
+
+.mode-container.hidden {
+    display: none;
+}
+
 .answer-form input {
     padding: 10px 14px;
     font-size: 1rem;
@@ -872,11 +920,123 @@ ruby rt {
     border: 1px solid var(--border);
     background: transparent;
     color: inherit;
+    width: 100%;
 }
 
 .answer-form input:focus {
     outline: 2px solid var(--accent-ring);
     outline-offset: 2px;
+}
+
+/* 拼词模式样式 */
+.puzzle-answer-area {
+    min-height: 60px;
+    padding: 12px;
+    border: 2px dashed var(--border);
+    border-radius: 12px;
+    background: var(--accent-soft);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 16px;
+    transition: all 0.3s ease;
+}
+
+.puzzle-answer-area.has-items {
+    border-style: solid;
+    border-color: var(--accent);
+    background: rgba(79, 70, 229, 0.08);
+}
+
+.puzzle-answer-area:empty::before {
+    content: 'ここに文字を並べてください';
+    color: var(--muted);
+    font-size: 0.9rem;
+}
+
+.puzzle-options-area {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    padding: 12px;
+    background: var(--card-bg);
+    border-radius: 12px;
+    border: 1px solid var(--border);
+}
+
+.puzzle-char {
+    min-width: 48px;
+    height: 48px;
+    padding: 0 12px;
+    background: linear-gradient(135deg, var(--accent) 0%, #8b5cf6 100%);
+    color: #ffffff;
+    border: none;
+    border-radius: 10px;
+    font-size: 1.3rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: 0 2px 8px rgba(79, 70, 229, 0.3);
+    position: relative;
+    overflow: hidden;
+}
+
+.puzzle-char::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    transition: left 0.5s ease;
+}
+
+.puzzle-char:hover {
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 0 4px 16px rgba(79, 70, 229, 0.5);
+}
+
+.puzzle-char:hover::before {
+    left: 100%;
+}
+
+.puzzle-char:active {
+    transform: translateY(-1px) scale(0.98);
+}
+
+/* 答案区域中的字符样式（绿色） */
+.puzzle-answer-area .puzzle-char {
+    background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+}
+
+.puzzle-answer-area .puzzle-char:hover {
+    background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+    box-shadow: 0 4px 16px rgba(16, 185, 129, 0.5);
+}
+
+/* 已使用的字符样式（灰色禁用状态） */
+.puzzle-char.used {
+    background: linear-gradient(135deg, #9ca3af 0%, #d1d5db 100%);
+    box-shadow: 0 2px 8px rgba(156, 163, 175, 0.2);
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.puzzle-char.used:hover {
+    transform: none;
+    box-shadow: 0 2px 8px rgba(156, 163, 175, 0.2);
+}
+
+.puzzle-char.used::before {
+    display: none;
 }
 
 .answer-form .actions {
@@ -920,29 +1080,58 @@ ruby rt {
 }
 
 .alerts {
-    display: grid;
+    position: fixed;
+    top: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
     gap: 8px;
-    /* min-height: 40px; */
+    pointer-events: none;
 }
 
 .alert {
-    padding: 10px 14px;
-    border-radius: 10px;
+    padding: 12px 24px;
+    border-radius: 12px;
     border: 1px solid transparent;
-    font-size: 0.95rem;
+    font-size: 1rem;
+    font-weight: 600;
     text-align: center;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    backdrop-filter: blur(8px);
+    animation: toastSlideIn 0.3s ease-out;
+    pointer-events: auto;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+@keyframes toastSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .alert-success {
-    border-color: rgba(22, 163, 74, 0.25);
-    background: rgba(22, 163, 74, 0.08);
-    color: var(--success);
+    border-color: rgba(22, 163, 74, 0.3);
+    background: rgba(22, 163, 74, 0.95);
+    color: white;
 }
 
 .alert-error {
-    border-color: rgba(220, 38, 38, 0.25);
-    background: rgba(220, 38, 38, 0.08);
-    color: var(--error);
+    border-color: rgba(220, 38, 38, 0.3);
+    background: rgba(220, 38, 38, 0.95);
+    color: white;
+    cursor: pointer;
+}
+
+.alert-error:hover {
+    background: rgba(220, 38, 38, 1);
+    transform: scale(1.02);
 }
 
 .footer {
@@ -2103,6 +2292,51 @@ ruby rt {
     .level-up-glow {
         width: 200px;
         height: 200px;
+    }
+    
+    /* 移动端模式切换器优化 */
+    .mode-switcher {
+        padding: 3px;
+    }
+    
+    .mode-btn {
+        width: 32px;
+        height: 32px;
+    }
+    
+    .mode-btn svg {
+        width: 16px;
+        height: 16px;
+    }
+    
+    /* 移动端拼词模式优化 */
+    .puzzle-char {
+        min-width: 42px;
+        height: 42px;
+        padding: 0 10px;
+        font-size: 1.1rem;
+    }
+    
+    .puzzle-answer-area {
+        min-height: 50px;
+        padding: 10px;
+    }
+    
+    .puzzle-options-area {
+        padding: 10px;
+    }
+    
+    .alerts {
+        top: 60px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: calc(100% - 32px);
+        max-width: 400px;
+    }
+    
+    .alert {
+        padding: 10px 18px;
+        font-size: 0.9rem;
     }
 }
 
