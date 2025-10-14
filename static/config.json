@@ -6,6 +6,10 @@
             "isWrongWords": true
         },
         {
+            "path": "dictionaries/confusing.json",
+            "name": "易混淆假名"
+        },
+        {
             "path": "dictionaries/beginner.json",
             "name": "入門（单字/N5）"
         },

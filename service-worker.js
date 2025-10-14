@@ -1,5 +1,5 @@
 // Service Worker for Kotoba PWA
-const CACHE_NAME = 'kotoba-v1.0.1';
+const CACHE_NAME = 'kotoba-v1.0.2';
 
 // 核心资源 - 优先缓存
 const CORE_RESOURCES = [
@@ -17,6 +17,7 @@ const CORE_RESOURCES = [
 const DICTIONARY_RESOURCES = [
     '/static/dictionaries/base.json',
     '/static/dictionaries/beginner.json',
+    '/static/dictionaries/confusing.json',
     '/static/dictionaries/grammar.json',
     '/static/dictionaries/jlpt_n5.json',
     '/static/dictionaries/jlpt_n4.json',
