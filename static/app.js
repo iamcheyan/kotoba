@@ -593,6 +593,7 @@
 
     // 游戏化系统：等级和连击
     let currentCombo = 0;
+    let previousLevel = 1;
     
     function calculateLevel(correct) {
         // 每100个正确答案升一级
@@ -604,6 +605,78 @@
         return correct % 100;
     }
     
+    function triggerLevelUpAnimation(newLevel) {
+        // 创建升级动画容器
+        const levelUpOverlay = document.createElement('div');
+        levelUpOverlay.className = 'level-up-overlay';
+        levelUpOverlay.innerHTML = `
+            <div class="level-up-content">
+                <div class="level-up-glow"></div>
+                <div class="level-up-text">LEVEL UP!</div>
+                <div class="level-up-number">Lv.${newLevel}</div>
+                <div class="level-up-stars">
+                    <span class="star">✦</span>
+                    <span class="star">✦</span>
+                    <span class="star">✦</span>
+                    <span class="star">✦</span>
+                    <span class="star">✦</span>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(levelUpOverlay);
+        
+        // 头像爆炸特效
+        const avatarRing = document.querySelector('.avatar-ring');
+        if (avatarRing) {
+            avatarRing.classList.add('level-up-burst');
+        }
+        
+        // 等级徽章弹跳
+        if (elements.levelBadge) {
+            elements.levelBadge.classList.add('level-up-bounce');
+        }
+        
+        // 播放升级音效（可选）
+        try {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.setValueAtTime(523.25, audioContext.currentTime); // C5
+            oscillator.frequency.setValueAtTime(659.25, audioContext.currentTime + 0.1); // E5
+            oscillator.frequency.setValueAtTime(783.99, audioContext.currentTime + 0.2); // G5
+            
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.5);
+        } catch (e) {
+            console.log('Audio not supported');
+        }
+        
+        // 3秒后移除动画
+        setTimeout(() => {
+            levelUpOverlay.classList.add('fade-out');
+            setTimeout(() => {
+                document.body.removeChild(levelUpOverlay);
+            }, 500);
+        }, 2500);
+        
+        // 移除头像特效
+        setTimeout(() => {
+            if (avatarRing) {
+                avatarRing.classList.remove('level-up-burst');
+            }
+            if (elements.levelBadge) {
+                elements.levelBadge.classList.remove('level-up-bounce');
+            }
+        }, 1500);
+    }
+    
     function updateScoreboard() {
         const correct = parseInt(localStorage.getItem('correct') || '0', 10) || 0;
         const wrong = parseInt(localStorage.getItem('wrong') || '0', 10) || 0;
@@ -611,6 +684,13 @@
         
         // 更新等级徽章
         const level = calculateLevel(correct);
+        
+        // 检测升级
+        if (level > previousLevel) {
+            triggerLevelUpAnimation(level);
+            previousLevel = level;
+        }
+        
         if (elements.levelBadge) {
             elements.levelBadge.textContent = `Lv.${level}`;
         }
@@ -2616,6 +2696,11 @@
     async function init() {
         console.log('=== Application Initialization ===');
         console.log('Starting app initialization...');
+        
+        // 初始化当前等级，避免刷新页面时触发升级动画
+        const correct = parseInt(localStorage.getItem('correct') || '0', 10) || 0;
+        previousLevel = calculateLevel(correct);
+        
         initTheme();
         console.log('Theme initialized');
         bindEvents();
