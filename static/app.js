@@ -965,9 +965,29 @@
         }
     }
     
+    // 自动同步到 Firebase（静默同步，不阻塞 UI）
+    function syncToFirebase() {
+        // 检查是否登录和是否有同步函数
+        if (!window.firebaseAuth || !window.syncUserData) {
+            return;
+        }
+        
+        const user = window.firebaseAuth.currentUser;
+        if (!user) {
+            return;
+        }
+        
+        // 后台静默同步，不等待完成
+        window.syncUserData(user).catch(error => {
+            console.error('后台同步失败:', error);
+            // 静默失败，不打断用户体验
+        });
+    }
+    
     // Make updateScoreboard globally available for Firebase integration
     window.updateScoreboard = updateScoreboard;
     window.populateDictionarySelect = populateDictionarySelect;
+    window.syncToFirebase = syncToFirebase;
 
     function clearAlerts() {
         if (elements.alerts) {
@@ -1985,6 +2005,9 @@
                 // 只触发彩带动画，不显示toast
                 triggerCelebration();
                 
+                // 自动同步数据到 Firebase
+                syncToFirebase();
+                
                 // 快速加载下一题
                 setTimeout(async () => {
                     try {
@@ -1999,6 +2022,9 @@
                 updateScoreboard();
                 showIncorrectFeedback(value, state.currentEntry);
                 setButtonToNext();
+                
+                // 自动同步数据到 Firebase
+                syncToFirebase();
             }
         } catch (error) {
             showAlert('error', error.message || String(error));
@@ -2270,6 +2296,9 @@
     // 切换答题模式
     function switchToMode(mode) {
         state.answerMode = mode;
+        
+        // 保存模式到localStorage
+        localStorage.setItem('answerMode', mode);
         
         // 更新按钮状态
         if (elements.modeInputBtn && elements.modePuzzleBtn) {
@@ -2934,8 +2963,9 @@
         const correct = parseInt(localStorage.getItem('correct') || '0', 10) || 0;
         previousLevel = calculateLevel(correct);
         
-        // 确保默认模式设置正确（输入模式不需要 required 限制）
-        state.answerMode = 'input';
+        // 恢复保存的答题模式（默认为输入模式）
+        const savedMode = localStorage.getItem('answerMode') || 'input';
+        state.answerMode = savedMode;
         if (elements.answerInput) {
             elements.answerInput.required = false;
         }
@@ -2959,6 +2989,9 @@
             await loadConfig(params);
             updateScoreboard();
             await loadRandomEntry();
+            
+            // 恢复UI状态到保存的模式
+            switchToMode(savedMode);
         } catch (error) {
             showAlert('error', error.message || String(error));
         } finally {

@@ -741,6 +741,13 @@
                     correct: parseInt(localStorage.getItem('correct') || '0', 10),
                     wrong: parseInt(localStorage.getItem('wrong') || '0', 10),
                     
+                    // 游戏化数据
+                    combo: parseInt(localStorage.getItem('combo') || '0', 10),
+                    total: parseInt(localStorage.getItem('total') || '0', 10),
+                    
+                    // 已掌握的词汇
+                    masteredEntries: JSON.parse(localStorage.getItem('masteredEntries') || '{}'),
+                    
                     // 错题本
                     wrongWords: JSON.parse(localStorage.getItem('wrongWords') || '[]'),
                     
@@ -749,6 +756,7 @@
                     selectedVoice: localStorage.getItem('selectedVoice'),
                     speechRate: localStorage.getItem('speechRate'),
                     theme: localStorage.getItem('kotoba.theme'),
+                    answerMode: localStorage.getItem('answerMode') || 'input',
                     
                     // 同步时间
                     lastSync: new Date().toISOString(),
@@ -761,6 +769,14 @@
 
                 await setDoc(userRef, localData, { merge: true });
                 console.log('✅ 数据已同步到云端');
+                console.log('📊 同步的数据:', {
+                    正确: localData.correct,
+                    错误: localData.wrong,
+                    连击: localData.combo,
+                    总题数: localData.total,
+                    已掌握: Object.keys(localData.masteredEntries).length,
+                    错题本: localData.wrongWords.length
+                });
             } catch (error) {
                 console.error('❌ 同步数据失败:', error);
                 throw error;
@@ -789,6 +805,19 @@
                         localStorage.setItem('wrong', String(cloudData.wrong));
                     }
                     
+                    // 同步游戏化数据
+                    if (cloudData.combo !== undefined) {
+                        localStorage.setItem('combo', String(cloudData.combo));
+                    }
+                    if (cloudData.total !== undefined) {
+                        localStorage.setItem('total', String(cloudData.total));
+                    }
+                    
+                    // 同步已掌握的词汇
+                    if (cloudData.masteredEntries) {
+                        localStorage.setItem('masteredEntries', JSON.stringify(cloudData.masteredEntries));
+                    }
+                    
                     // 同步错题本 - 合并去重
                     if (cloudData.wrongWords && Array.isArray(cloudData.wrongWords)) {
                         const localWrongWords = JSON.parse(localStorage.getItem('wrongWords') || '[]');
@@ -810,8 +839,19 @@
                     if (cloudData.theme) {
                         localStorage.setItem('kotoba.theme', cloudData.theme);
                     }
+                    if (cloudData.answerMode) {
+                        localStorage.setItem('answerMode', cloudData.answerMode);
+                    }
 
                     console.log('🎉 数据加载完成！');
+                    console.log('📊 加载的数据:', {
+                        正确: cloudData.correct,
+                        错误: cloudData.wrong,
+                        连击: cloudData.combo,
+                        总题数: cloudData.total,
+                        已掌握: cloudData.masteredEntries ? Object.keys(cloudData.masteredEntries).length : 0,
+                        错题本: cloudData.wrongWords ? cloudData.wrongWords.length : 0
+                    });
                     sessionStorage.setItem('dataLoaded', 'true');
                     
                     if (!silent) {
