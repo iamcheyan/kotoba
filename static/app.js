@@ -9,6 +9,8 @@
     };
     const THEME_STORAGE_KEY = 'kotoba.theme';
 
+    const PROGRESS_STORAGE_PREFIX = 'kotoba.progress.';
+
     const state = {
         kuroshiro: null,
         kuroshiroReady: false,
@@ -31,6 +33,10 @@
         pendingTheme: DEFAULT_THEME,
         previewPlaying: false,
         userCancelledSpeech: false,
+        masteredEntries: new Set(),
+        progressDictionaryId: null,
+        dictionaryCompleted: false,
+        completionCelebrated: false,
     };
 
     const CHAR_RANGE = {
@@ -141,6 +147,11 @@
         settingsSave: document.getElementById('settings-save'),
         loadingIndicator: document.getElementById('loading-indicator'),
         loadingText: document.querySelector('#loading-indicator .loading-text'),
+        progressContainer: document.getElementById('progress-container'),
+        progressBar: document.getElementById('progress-bar'),
+        progressFill: document.getElementById('progress-fill'),
+        progressText: document.getElementById('progress-text'),
+        progressReset: document.getElementById('progress-reset'),
     };
 
     function isSupportedTheme(theme) {
@@ -249,6 +260,18 @@
         }
         if (elements.answerInput) {
             elements.answerInput.readOnly = state.awaitingNext;
+        }
+        if (state.dictionaryCompleted) {
+            if (elements.answerSubmit) {
+                elements.answerSubmit.disabled = true;
+                elements.answerSubmit.textContent = '完了';
+            }
+            if (elements.answerInput) {
+                elements.answerInput.readOnly = true;
+            }
+            if (elements.skipButton) {
+                elements.skipButton.disabled = true;
+            }
         }
     }
 
@@ -563,6 +586,197 @@
             elements.score.textContent = `正解: ${correct}`;
         }
     }
+
+    function getProgressStorageKey(dictPath) {
+        return `${PROGRESS_STORAGE_PREFIX}${dictPath}`;
+    }
+
+    function getEntryKey(entry) {
+        if (!entry || !entry.kanji) {
+            return '';
+        }
+        return entry.kanji.trim();
+    }
+
+    function loadProgressForDictionary(dictPath, dictionary) {
+        state.progressDictionaryId = dictPath;
+        if (dictPath === 'wrong-words') {
+            state.masteredEntries = new Set();
+            state.dictionaryCompleted = false;
+            updateProgressUI();
+            return;
+        }
+        let stored = null;
+        try {
+            stored = JSON.parse(localStorage.getItem(getProgressStorageKey(dictPath)) || 'null');
+        } catch (error) {
+            console.warn('[Progress] Failed to parse progress data', error);
+        }
+        let masteredList = [];
+        if (Array.isArray(stored)) {
+            masteredList = stored;
+        } else if (stored && Array.isArray(stored.mastered)) {
+            masteredList = stored.mastered;
+        }
+        const validKeys = new Set(dictionary.entries.map(getEntryKey));
+        const sanitized = masteredList.filter((key) => validKeys.has(key));
+        state.masteredEntries = new Set(sanitized);
+        state.dictionaryCompleted = validKeys.size > 0 && state.masteredEntries.size >= validKeys.size;
+        if (sanitized.length !== masteredList.length) {
+            saveProgress(dictPath);
+        } else {
+            updateProgressUI();
+        }
+    }
+
+    function saveProgress(dictPath) {
+        if (!dictPath || dictPath === 'wrong-words') {
+            updateProgressUI();
+            return;
+        }
+        const payload = { mastered: Array.from(state.masteredEntries) };
+        try {
+            localStorage.setItem(getProgressStorageKey(dictPath), JSON.stringify(payload));
+            if (window.autoSyncData) {
+                window.autoSyncData();
+            }
+        } catch (error) {
+            console.warn('[Progress] Failed to save progress', error);
+        }
+        updateProgressUI();
+    }
+
+    function isEntryMastered(entry) {
+        if (!state.masteredEntries || !state.masteredEntries.size) {
+            return false;
+        }
+        const key = getEntryKey(entry);
+        return key ? state.masteredEntries.has(key) : false;
+    }
+
+    function removeFromWrongWords(entry) {
+        if (!entry || !entry.kanji) {
+            return;
+        }
+        try {
+            const wrongWords = JSON.parse(localStorage.getItem('wrongWords') || '[]');
+            const filtered = wrongWords.filter((item) => item.kanji !== entry.kanji);
+            if (filtered.length !== wrongWords.length) {
+                localStorage.setItem('wrongWords', JSON.stringify(filtered));
+                if (window.autoSyncData) {
+                    window.autoSyncData();
+                }
+            }
+        } catch (error) {
+            console.warn('[Progress] Failed to update wrong words list', error);
+        }
+    }
+
+    function markEntryMastered(entry) {
+        if (!entry) {
+            return;
+        }
+        removeFromWrongWords(entry);
+        if (state.dictionaryId === 'wrong-words') {
+            return;
+        }
+        const key = getEntryKey(entry);
+        if (!key || state.masteredEntries.has(key)) {
+            return;
+        }
+        state.masteredEntries.add(key);
+        saveProgress(state.dictionaryId);
+    }
+
+    function updateProgressUI() {
+        const container = elements.progressContainer;
+        if (!container) {
+            return;
+        }
+        const isWrongWords = state.dictionaryId === 'wrong-words';
+        const total = state.totalWords || 0;
+        if (!state.dictionaryId || isWrongWords || total === 0) {
+            container.classList.add('hidden');
+            if (elements.progressReset) {
+                elements.progressReset.classList.add('hidden');
+            }
+            return;
+        }
+        container.classList.remove('hidden');
+        if (elements.progressReset) {
+            elements.progressReset.classList.remove('hidden');
+            elements.progressReset.disabled = total === 0;
+        }
+        const mastered = state.masteredEntries ? state.masteredEntries.size : 0;
+        const percent = total ? Math.round((mastered / total) * 100) : 0;
+        if (elements.progressFill) {
+            elements.progressFill.style.width = `${Math.min(100, percent)}%`;
+        }
+        if (elements.progressBar) {
+            elements.progressBar.setAttribute('aria-valuemin', '0');
+            elements.progressBar.setAttribute('aria-valuemax', String(total));
+            elements.progressBar.setAttribute('aria-valuenow', String(mastered));
+        }
+        if (elements.progressText) {
+            elements.progressText.textContent = `${mastered} / ${total}（${percent}%）`;
+        }
+        container.classList.toggle('is-complete', total > 0 && mastered >= total);
+    }
+
+    function clearProgressForCurrentDictionary() {
+        if (!state.dictionaryId || state.dictionaryId === 'wrong-words') {
+            return false;
+        }
+        try {
+            localStorage.removeItem(getProgressStorageKey(state.dictionaryId));
+            if (window.autoSyncData) {
+                window.autoSyncData();
+            }
+        } catch (error) {
+            console.warn('[Progress] Failed to clear progress', error);
+        }
+        state.masteredEntries = new Set();
+        state.dictionaryCompleted = false;
+        state.completionCelebrated = false;
+        updateProgressUI();
+        return true;
+    }
+
+    function showDictionaryCompletedState() {
+        state.dictionaryCompleted = true;
+        state.awaitingNext = false;
+        if (elements.questionWord) {
+            elements.questionWord.innerHTML = '<span class="completion-badge">🎉</span>';
+            elements.questionWord.removeAttribute('data-tts');
+        }
+        if (elements.questionMeaning) {
+            const dictLabel = state.dictionaryName || 'この辞書';
+            elements.questionMeaning.textContent = `${dictLabel} をコンプリートしました！`;
+        }
+        if (elements.questionReading) {
+            elements.questionReading.style.display = 'none';
+        }
+        if (elements.questionRomaji) {
+            elements.questionRomaji.style.display = 'none';
+        }
+        if (elements.answerInput) {
+            elements.answerInput.value = '';
+            elements.answerInput.placeholder = '';
+            elements.answerInput.readOnly = true;
+        }
+        if (elements.answerSubmit) {
+            elements.answerSubmit.disabled = true;
+            elements.answerSubmit.textContent = '完了';
+        }
+        if (elements.skipButton) {
+            elements.skipButton.disabled = true;
+        }
+        updateProgressUI();
+        if (!state.completionCelebrated) {
+            showAlert('success', '🎉 コンプリート！おめでとうございます！', true);
+            state.completionCelebrated = true;
+        }
+    }
     
     // Make updateScoreboard globally available for Firebase integration
     window.updateScoreboard = updateScoreboard;
@@ -810,6 +1024,7 @@
         if (!entry) {
             return;
         }
+        state.dictionaryCompleted = false;
         if (elements.questionWord) {
             const markup = state.showFurigana
                 ? createRubyMarkup(entry.segments)
@@ -839,6 +1054,9 @@
             elements.answerInput.value = '';
             elements.answerInput.readOnly = false;
             elements.answerInput.focus({ preventScroll: true });
+        }
+        if (elements.skipButton) {
+            elements.skipButton.disabled = false;
         }
         setButtonToAnswer();
         
@@ -920,11 +1138,40 @@
             }
         }
         state.totalWords = dictionary.entries.length;
-        const randomIndex = Math.floor(Math.random() * dictionary.entries.length);
-        const entry = dictionary.entries[randomIndex];
+        const isNewDictionary = state.progressDictionaryId !== state.dictionaryId;
+        if (state.dictionaryId === 'wrong-words') {
+            if (isNewDictionary) {
+                state.completionCelebrated = false;
+            }
+            state.masteredEntries = new Set();
+            state.dictionaryCompleted = false;
+            state.progressDictionaryId = state.dictionaryId;
+            updateProgressUI();
+        } else {
+            if (isNewDictionary) {
+                state.completionCelebrated = false;
+            }
+            loadProgressForDictionary(state.dictionaryId, dictionary);
+        }
+
+        let pool = dictionary.entries;
+        if (state.dictionaryId !== 'wrong-words') {
+            pool = dictionary.entries.filter((entry) => !isEntryMastered(entry));
+        }
+
+        if (!pool.length) {
+            state.currentEntry = null;
+            showDictionaryCompletedState();
+            return;
+        }
+
+        state.dictionaryCompleted = false;
+        const randomIndex = Math.floor(Math.random() * pool.length);
+        const entry = pool[randomIndex];
         await computeEntry(entry);
         state.currentEntry = entry;
         updateScoreboard();
+        updateProgressUI();
         renderQuestion();
     }
 
@@ -1497,6 +1744,7 @@
         try {
             const result = await evaluateAnswer(value);
             if (result.correct) {
+                markEntryMastered(state.currentEntry);
                 incrementCounter('correct');
                 updateScoreboard();
                 
@@ -1664,6 +1912,29 @@
                 populateDictionarySelect();
                 try {
                     showLoading('新しい辞書を読み込んでいます…');
+                    await loadRandomEntry();
+                } catch (error) {
+                    showAlert('error', error.message || String(error));
+                } finally {
+                    hideLoading();
+                }
+            });
+        }
+        if (elements.progressReset) {
+            elements.progressReset.addEventListener('click', async () => {
+                if (!state.dictionaryId || state.dictionaryId === 'wrong-words' || !state.totalWords) {
+                    return;
+                }
+                const confirmed = window.confirm('現在の辞書の進捗をリセットしますか？');
+                if (!confirmed) {
+                    return;
+                }
+                const cleared = clearProgressForCurrentDictionary();
+                if (!cleared) {
+                    return;
+                }
+                showLoading('進捗をリセットしています…');
+                try {
                     await loadRandomEntry();
                 } catch (error) {
                     showAlert('error', error.message || String(error));

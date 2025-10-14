@@ -83,6 +83,16 @@
                 </div>
                 <div class="header-meta">
                     <div id="score" class="score">正解: 0</div>
+                    <div id="progress-container" class="progress-container hidden">
+                        <div class="progress-header">
+                            <span class="progress-title">進捗</span>
+                            <button id="progress-reset" class="progress-reset" type="button">リセット</button>
+                        </div>
+                        <div id="progress-bar" class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="0" aria-valuenow="0">
+                            <div id="progress-fill" class="progress-bar-fill"></div>
+                        </div>
+                        <div id="progress-text" class="progress-text">0 / 0（0%）</div>
+                    </div>
                 </div>
             </div>
             <div class="header-actions">

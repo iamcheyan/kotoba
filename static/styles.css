@@ -115,8 +115,9 @@ a:hover {
 
 .header-left {
     display: flex;
-    align-items: center;
-    gap: 16px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
 }
 
 .branding {
@@ -142,10 +143,117 @@ a:hover {
 
 .header-meta {
     display: flex;
-    flex-direction: column;
-    gap: 4px;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
     font-size: 0.9rem;
     color: var(--muted);
+}
+
+.score {
+    font-weight: 600;
+    color: var(--text);
+}
+
+.progress-container {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    width: min(260px, 100%);
+    padding: 10px 12px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: var(--card-bg);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.progress-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.72rem;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.progress-bar {
+    position: relative;
+    width: 100%;
+    height: 8px;
+    border-radius: 999px;
+    background: rgba(79, 70, 229, 0.14);
+    overflow: hidden;
+}
+
+.progress-bar-fill {
+    position: absolute;
+    inset: 0;
+    width: 0%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, var(--accent) 0%, #60a5fa 100%);
+    transition: width 0.4s ease;
+}
+
+.progress-text {
+    font-size: 0.75rem;
+    color: var(--muted);
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+.progress-reset {
+    background: transparent;
+    border: none;
+    color: var(--accent);
+    font-size: 0.65rem;
+    font-weight: 600;
+    padding: 4px 8px;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: background 0.2s ease, color 0.2s ease;
+    letter-spacing: 0.08em;
+}
+
+.progress-reset:hover,
+.progress-reset:focus-visible {
+    background: var(--accent-soft);
+    color: var(--accent-hover);
+    outline: none;
+}
+
+.progress-reset.hidden {
+    display: none !important;
+}
+
+.progress-container.is-complete {
+    border-color: rgba(22, 163, 74, 0.4);
+    box-shadow: 0 0 0 1px rgba(22, 163, 74, 0.2), 0 10px 24px rgba(22, 163, 74, 0.14);
+}
+
+.progress-container.is-complete .progress-header,
+.progress-container.is-complete .progress-text {
+    color: #16a34a;
+}
+
+.progress-container.is-complete .progress-bar {
+    background: rgba(22, 163, 74, 0.12);
+}
+
+.progress-container.is-complete .progress-bar-fill {
+    background: linear-gradient(90deg, #16a34a 0%, #4ade80 100%);
+}
+
+.progress-title {
+    font-weight: 600;
+}
+
+.completion-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.4rem;
 }
 
 .header-actions {
