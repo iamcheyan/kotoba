@@ -98,6 +98,16 @@
         const code = char.codePointAt(0);
         return code >= CHAR_RANGE.kanji[0] && code <= CHAR_RANGE.kanji[1];
     }
+    
+    function hasJapaneseChars(text) {
+        if (!text) return false;
+        // 检查是否包含日语字符（平假名、片假名、汉字）
+        // 平假名：U+3040 - U+309F
+        // 片假名：U+30A0 - U+30FF
+        // 汉字：U+4E00 - U+9FFF
+        const japaneseRegex = /[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FFF]/;
+        return japaneseRegex.test(text);
+    }
 
     function isKatakana(char) {
         if (!char) {
@@ -1363,7 +1373,7 @@
         if (kuroshiro) {
             try {
                 reading = await kuroshiro.convert(entry.kanji, { to: 'hiragana', mode: 'normal' });
-                romaji = await kuroshiro.convert(entry.kanji, { to: 'romaji', romajiSystem: 'hepburn' });
+                romaji = await kuroshiro.convert(entry.kanji, { to: 'romaji', romajiSystem: 'nippon' });
                 furigana = await kuroshiro.convert(entry.kanji, { to: 'hiragana', mode: 'furigana' });
             } catch (error) {
                 console.warn('Kuroshiro conversion failed, fallback to Wanakana', error);
@@ -1550,6 +1560,9 @@
         if (state.dictionaryId !== 'wrong-words') {
             pool = dictionary.entries.filter((entry) => !isEntryMastered(entry));
         }
+        
+        // 过滤掉不包含日语字符的词条（如纯英文单词）
+        pool = pool.filter((entry) => hasJapaneseChars(entry.kanji));
 
         if (!pool.length) {
             state.currentEntry = null;
@@ -2076,7 +2089,7 @@
         let romajiInput = '';
         try {
             if (state.kuroshiroReady) {
-                romajiInput = await state.kuroshiro.convert(answer, { to: 'romaji', romajiSystem: 'hepburn' });
+                romajiInput = await state.kuroshiro.convert(answer, { to: 'romaji', romajiSystem: 'nippon' });
             }
         } catch (error) {
             if (window.wanakana) {
@@ -2692,7 +2705,7 @@
         // Check if user has interacted with the page (required for autoplay policy)
         if (!window.hasUserInteracted) {
             console.warn('TTS blocked: User has not interacted with the page yet');
-            showAlert('warning', 'ブラウザの自動再生ポリシーにより、最初にページをクリックしてから音声を再生してください');
+            // showAlert('warning', 'ブラウザの自動再生ポリシーにより、最初にページをクリックしてから音声を再生してください');
             return;
         }
 
