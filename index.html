@@ -1372,7 +1372,7 @@
                 const leaderboardQuery = query(
                     collection(db, 'leaderboard'),
                     orderBy('score', 'desc'),
-                    limit(10) // 仅前10名
+                    limit(100) // 先取更多，避免同一用户占满
                 );
                 
                 const snapshot = await getDocs(leaderboardQuery);
@@ -1395,7 +1395,8 @@
                 });
                 
                 leaderboardData = Array.from(userScores.values())
-                    .sort((a, b) => b.score - a.score);
+                    .sort((a, b) => b.score - a.score)
+                    .slice(0, 10); // 只展示前10位唯一用户
 
                 // 更新统计信息
                 updateLeaderboardStats();
