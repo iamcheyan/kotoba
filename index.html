@@ -1248,6 +1248,12 @@
                 if (userNameMenu) userNameMenu.textContent = user.displayName || 'User';
                 if (userEmailMenu) userEmailMenu.textContent = user.email || '';
                 if (guestMenu) guestMenu.classList.remove('show');
+
+                // 显示排行榜统计与操作区域（仅登录时）
+                const leaderboardStats = document.querySelector('.leaderboard-stats');
+                const leaderboardActions = document.querySelector('.leaderboard-actions');
+                if (leaderboardStats) leaderboardStats.style.display = 'grid';
+                if (leaderboardActions) leaderboardActions.style.display = 'flex';
                 
                 // 更新游戏面板头像
                 const gameUserAvatar = document.getElementById('gameUserAvatar');
@@ -1284,6 +1290,12 @@
                 if (userProfile) userProfile.style.display = 'none';
                 if (userMenu) userMenu.classList.remove('show');
                 if (guestMenu) guestMenu.classList.remove('show');
+
+                // 隐藏排行榜统计与操作区域（未登录）
+                const leaderboardStats = document.querySelector('.leaderboard-stats');
+                const leaderboardActions = document.querySelector('.leaderboard-actions');
+                if (leaderboardStats) leaderboardStats.style.display = 'none';
+                if (leaderboardActions) leaderboardActions.style.display = 'none';
                 
                 // 恢复游戏面板默认头像
                 const gameUserAvatar = document.getElementById('gameUserAvatar');
