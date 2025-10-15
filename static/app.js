@@ -1399,15 +1399,15 @@
                 elements.expText.textContent = `${mastered} / ${total}`;
             }
             
-            // 错题本鼓励消息
+            // 錯題本の応援メッセージ
             if (wrongWordsPercent === 100 && total > 0) {
-                showEncouragement('🎉 错题本完成！太棒了！', 'success');
+                showEncouragement('🎉 錯題本が完了しました！素晴らしい！', 'success');
             } else if (wrongWordsPercent >= 80) {
-                showEncouragement('💪 错题本快完成了！继续加油！', 'info');
+                showEncouragement('💪 もう少しで完成！この調子！', 'info');
             } else if (wrongWordsPercent >= 50) {
-                showEncouragement('🌟 错题本进度过半！做得很好！', 'info');
+                showEncouragement('🌟 進捗は半分を超えました！いい感じ！', 'info');
             } else if (wrongWordsPercent >= 25) {
-                showEncouragement('📚 错题本练习中，保持节奏！', 'info');
+                showEncouragement('📚 練習中…リズムを保ちましょう！', 'info');
             }
         }
         
