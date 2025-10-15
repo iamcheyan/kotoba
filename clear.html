@@ -3,6 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg?v=1">
     <title>環境クリア | Kotoba</title>
     <style>
         :root { color-scheme: light dark; }
@@ -46,6 +47,25 @@
         const logEl = document.getElementById('log');
         const runBtn = document.getElementById('run');
         const homeBtn = document.getElementById('home');
+
+        const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+        const withTimeout = (promise, ms = 800) => {
+            let timer;
+            return Promise.race([
+                promise.finally(() => clearTimeout(timer)),
+                new Promise(res => { timer = setTimeout(res, ms); })
+            ]);
+        };
+        function deleteDatabaseSafe(name, timeoutMs = 800) {
+            return withTimeout(new Promise((res) => {
+                try {
+                    const req = indexedDB.deleteDatabase(name);
+                    req.onsuccess = req.onerror = req.onblocked = () => res();
+                } catch {
+                    res();
+                }
+            }), timeoutMs);
+        }
 
         function log(msg, cls) {
             const ts = new Date().toLocaleTimeString();
@@ -119,16 +139,21 @@
                 log('Web Storage クリア失敗: ' + (e?.message || e), 'err');
             }
 
+            // 各メッセージの表示間隔
+            await sleep(500);
+
             // IndexedDB 全削除
             try {
                 const dbs = (indexedDB.databases ? await indexedDB.databases() : []) || [];
                 if (dbs.length) {
-                    await Promise.allSettled(dbs.map(db => db && db.name ? new Promise((res) => { const req = indexedDB.deleteDatabase(db.name); req.onsuccess = req.onerror = req.onblocked = () => res(); }) : Promise.resolve()));
+                    await Promise.allSettled(
+                        dbs.map(db => db && db.name ? deleteDatabaseSafe(db.name) : Promise.resolve())
+                    );
                     log(`IndexedDB: 既知DB削除 (${dbs.length})`, 'ok');
                 }
                 // 一部ブラウザでは databases() が無いので、代表的な DB 名を手動削除
                 const known = ['firebase-installations-database', 'firebaseLocalStorageDb', 'keyval-store', 'workbox-precache-v2'];
-                await Promise.allSettled(known.map(name => new Promise((res) => { const req = indexedDB.deleteDatabase(name); req.onsuccess = req.onerror = req.onblocked = () => res(); })));
+                await Promise.allSettled(known.map(name => deleteDatabaseSafe(name)));
             } catch (e) {
                 log('IndexedDB 削除に失敗: ' + (e?.message || e), 'err');
             }
@@ -137,17 +162,22 @@
         async function runAll() {
             runBtn.disabled = true;
             log('処理を開始します…');
+            await sleep(500);
             await logoutFirebase();
+            await sleep(500);
             await unregisterServiceWorkers();
+            await sleep(500);
             await clearCaches();
+            await sleep(500);
             await clearStorage();
             try {
                 if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
                     navigator.serviceWorker.controller.postMessage({ type: 'SKIP_WAITING_AND_CLAIM' });
                 }
             } catch {}
-            log('完了しました。数秒後にトップへ遷移します。', 'ok');
-            setTimeout(() => { window.location.href = '/'; }, 1200);
+            log('完了しました。トップへ遷移します。', 'ok');
+            await sleep(500);
+            window.location.href = '/index.html';
         }
 
         runBtn.addEventListener('click', runAll);

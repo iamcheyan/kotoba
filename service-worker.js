@@ -108,46 +108,46 @@ self.addEventListener('activate', (event) => {
 
 // 拦截网络请求
 self.addEventListener('fetch', (event) => {
+    const req = event.request;
+    const url = new URL(req.url);
+
+    // 仅处理 http/https，忽略如 chrome-extension:// 等协议
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+        return; // 让浏览器默认处理
+    }
+
     event.respondWith(
-        caches.match(event.request)
+        caches.match(req)
             .then((response) => {
-                // 缓存命中，返回缓存
                 if (response) {
-                    console.log('[Service Worker] 从缓存返回:', event.request.url);
+                    console.log('[Service Worker] 从缓存返回:', req.url);
                     return response;
                 }
 
-                // 没有缓存，发起网络请求
-                return fetch(event.request)
-                    .then((response) => {
-                        // 检查是否是有效的响应
-                        if (!response || response.status !== 200 || response.type === 'error') {
-                            return response;
+                return fetch(req)
+                    .then((networkResp) => {
+                        if (!networkResp || networkResp.status !== 200 || networkResp.type === 'error') {
+                            return networkResp;
                         }
 
-                        // 只缓存 GET 请求（Cache API 不支持 POST 等其他方法）
-                        if (event.request.method === 'GET') {
-                            // 克隆响应
-                            const responseToCache = response.clone();
-
-                            // 将新资源添加到缓存
+                        // 仅缓存 GET 的 http/https 响应
+                        if (req.method === 'GET') {
+                            const responseToCache = networkResp.clone();
                             caches.open(CACHE_NAME)
                                 .then((cache) => {
-                                    cache.put(event.request, responseToCache);
+                                    // try/catch 保护，避免偶发 put 异常影响主流程
+                                    try { cache.put(req, responseToCache); } catch (e) { console.warn('[SW] cache.put 跳过:', req.url, e); }
                                 });
                         }
 
-                        return response;
+                        return networkResp;
                     })
                     .catch((error) => {
                         console.error('[Service Worker] 请求失败:', error);
-                        // 可以返回一个离线页面
                         return new Response('オフラインです', {
                             status: 503,
                             statusText: 'Service Unavailable',
-                            headers: new Headers({
-                                'Content-Type': 'text/plain'
-                            })
+                            headers: new Headers({ 'Content-Type': 'text/plain' })
                         });
                     });
             })
