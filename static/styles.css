@@ -1897,7 +1897,7 @@ ruby rt {
     color: inherit;
     border-radius: 16px;
     min-width: 280px;
-    max-width: 360px;
+    max-width: 460px;
     width: calc(100% - 48px);
     padding: 0;
     border: 1px solid var(--border);
@@ -1971,7 +1971,7 @@ ruby rt {
 .modal-body {
     padding: 20px;
     display: grid;
-    gap: 12px;
+    /* gap: 12px; */
     font-size: 0.95rem;
 }
 
@@ -2303,7 +2303,7 @@ ruby rt {
 .leaderboard-item {
     display: flex;
     align-items: center;
-    padding: 12px 16px;
+    padding: 20px 10px;
     border: 1px solid var(--border-color, #e2e8f0);
     border-radius: 8px;
     margin-bottom: 8px;
@@ -2329,7 +2329,6 @@ ruby rt {
     font-weight: bold;
     width: 40px;
     text-align: center;
-    margin-right: 16px;
 }
 
 .leaderboard-rank.top-3 { color: #f59e0b; }
@@ -2338,7 +2337,7 @@ ruby rt {
 .leaderboard-rank.rank-3 { color: #cd7c2f; }
 
 .leaderboard-user { flex: 1; display: flex; align-items: center; gap: 12px; }
-.leaderboard-avatar { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 2px solid var(--border-color, #e2e8f0); }
+.leaderboard-avatar { width: 46px; height: 46px; border-radius: 50%; object-fit: cover; border: 2px solid var(--border-color, #e2e8f0); }
 .leaderboard-user-info { flex: 1; }
 .leaderboard-username { font-weight: 600; font-size: 14px; margin-bottom: 2px; }
 .leaderboard-user-stats { font-size: 12px; color: var(--text-secondary, #64748b); }

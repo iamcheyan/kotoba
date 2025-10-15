@@ -616,22 +616,22 @@
     <!-- Leaderboard Modal -->
     <div id="leaderboard-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="leaderboard-modal-title">
         <div class="modal-header">
-            <h2 id="leaderboard-modal-title">排行榜</h2>
+            <h2 id="leaderboard-modal-title">ランキング</h2>
             <button type="button" class="modal-close" data-close="modal" aria-label="閉じる">×</button>
         </div>
         <div class="modal-body leaderboard-body">
             <div class="leaderboard-stats">
                 <div class="leaderboard-stat-card">
                     <div class="stat-number" id="my-rank">-</div>
-                    <div class="stat-label">我的排名</div>
+                    <div class="stat-label">自分の順位</div>
                 </div>
                 <div class="leaderboard-stat-card">
                     <div class="stat-number" id="my-score">0</div>
-                    <div class="stat-label">我的分数</div>
+                    <div class="stat-label">自分のスコア</div>
                 </div>
                 <div class="leaderboard-stat-card">
                     <div class="stat-number" id="total-players">0</div>
-                    <div class="stat-label">总玩家数</div>
+                    <div class="stat-label">プレイヤー数</div>
                 </div>
             </div>
             
@@ -641,21 +641,21 @@
                         <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
                         <polyline points="22 4 12 14.01 9 11.01"></polyline>
                     </svg>
-                    提交当前分数
+                    現在のスコアを送信
                 </button>
                 <button type="button" id="refresh-leaderboard" class="ghost-button">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <polyline points="23 4 23 10 17 10"></polyline>
                         <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
                     </svg>
-                    刷新排行榜
+                    ランキングを更新
                 </button>
             </div>
             
             <div class="leaderboard-list" id="leaderboard-list">
                 <div class="leaderboard-loading">
                     <div class="spinner" style="width: 24px; height: 24px; margin: 0 auto;"></div>
-                    <p>加载中...</p>
+                    <p>読み込み中...</p>
                 </div>
             </div>
             
@@ -664,13 +664,13 @@
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <polyline points="15 18 9 12 15 6"></polyline>
                     </svg>
-                    上一页
+                    前へ
                 </button>
                 <div class="pagination-info">
                     <span id="current-leaderboard-page">1</span> / <span id="total-leaderboard-pages">1</span>
                 </div>
                 <button id="next-leaderboard-page" class="pagination-btn" disabled>
-                    下一页
+                    次へ
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <polyline points="9 18 15 12 9 6"></polyline>
                     </svg>
@@ -820,13 +820,13 @@
             if (backdrop) backdrop.classList.add('hidden');
         }
 
-        // 点击空白遮罩关闭所有模态（包含排行榜）
+        // 空白の領域クリックでモーダルを閉じる（ランキング含む）
         const globalBackdrop = document.getElementById('modal-backdrop');
         if (globalBackdrop) {
             globalBackdrop.addEventListener('click', closeAllModals);
         }
 
-        // 通用关闭按钮（data-close="modal"）同样使用统一关闭逻辑
+        // 共通閉じるボタン（data-close="modal"）も同じロジック
         document.querySelectorAll('[data-close="modal"]').forEach((btn) => {
             btn.addEventListener('click', closeAllModals);
         });
@@ -919,7 +919,7 @@
                 }
                 if (userMenu) userMenu.classList.remove('show');
                 
-                // 加载排行榜数据
+                // ランキングを読み込む
                 loadLeaderboard();
             });
         }
@@ -1065,15 +1065,15 @@
                 };
 
                 await setDoc(userRef, localData, { merge: true });
-                console.log('✅ 数据已同步到云端');
-                console.log('📊 同步的数据:', {
-                    正确: localData.correct,
-                    错误: localData.wrong,
-                    连击: localData.combo,
-                    总题数: localData.total,
-                    已掌握: Object.keys(localData.masteredEntries).length,
-                    错题本: localData.wrongWords.length
-                });
+                    console.log('✅ クラウドへ同期しました');
+                    console.log('📊 同期データ:', {
+                        正解: localData.correct,
+                        誤答: localData.wrong,
+                        連撃: localData.combo,
+                        総問題数: localData.total,
+                        習得済み: Object.keys(localData.masteredEntries).length,
+                        錯題本: localData.wrongWords.length
+                    });
 
                 // 同步成功后也轻量更新排行榜（静默）
                 try {
@@ -1284,7 +1284,7 @@
             const { silent = false } = options;
             const user = auth.currentUser;
             if (!user) {
-                if (!silent) showNotification('请先登录', 'error');
+                if (!silent) showNotification('まずはログインしてください', 'error');
                 return;
             }
 
@@ -1297,7 +1297,7 @@
                 const score = correct * 10 + combo * 5 + total * 2;
 
                 if (score === 0) {
-                    if (!silent) showNotification('当前分数为0，无法提交', 'error');
+                    if (!silent) showNotification('現在のスコアが 0 のため送信できません', 'error');
                     return;
                 }
 
@@ -1314,13 +1314,13 @@
                     submittedAt: serverTimestamp()
                 });
 
-                if (!silent) showNotification('分数已提交到排行榜！', 'success');
+                if (!silent) showNotification('ランキングにスコアを送信しました！', 'success');
                 
                 // 刷新排行榜
                 await loadLeaderboard();
             } catch (error) {
                 console.error('提交分数失败:', error);
-                if (!silent) showNotification('提交失败: ' + error.message, 'error');
+                if (!silent) showNotification('送信に失敗しました: ' + error.message, 'error');
             }
         }
 
@@ -1383,11 +1383,11 @@
                                 <path d="M9 11V9a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"></path>
                                 <line x1="12" y1="15" x2="12" y2="17"></line>
                             </svg>
-                            <p>加载排行榜失败</p>
+                    <p>ランキングの読み込みに失敗しました</p>
                         </div>
                     `;
                 }
-                showNotification('加载排行榜失败: ' + error.message, 'error');
+                showNotification('ランキングの読み込みに失敗しました: ' + error.message, 'error');
             }
         }
 
@@ -1442,7 +1442,7 @@
                             <path d="M9 11V9a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"></path>
                             <line x1="12" y1="15" x2="12" y2="17"></line>
                         </svg>
-                        <p>暂无排行榜数据</p>
+                        <p>ランキングデータがまだありません</p>
                     </div>
                 `;
                 return;
