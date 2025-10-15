@@ -1391,6 +1391,7 @@
         // 判断用户输入的类型
         const isUserInputKanji = isKanjiText(trimmedAnswer);
         const isUserInputHiragana = isHiraganaText(trimmedAnswer);
+        const isUserInputMixedKana = isMixedKanaText(trimmedAnswer);
         
         let analysis = {
             correctDisplay: '',
@@ -1414,15 +1415,15 @@
             analysis.userDisplay = createAlignedUserAnswerCards(trimmedAnswer, correctKanji);
             analysis.analysisMessage = kanjiAnalysis.message;
             analysis.hasAnalysis = kanjiAnalysis.hasDifference;
-        } else if (isUserInputHiragana) {
-            // 假名分析 - 保持用户原始输入
+        } else if (isUserInputHiragana || isUserInputMixedKana) {
+            // 假名分析（纯平假名或混合假名）- 保持用户原始输入
             const readingAnalysis = analyzeReadingForSingleToast(trimmedAnswer, correctReading);
             analysis.correctDisplay = createCorrectAnswerCards(correctReading);
             analysis.userDisplay = createAlignedUserAnswerCards(trimmedAnswer, correctReading);
             analysis.analysisMessage = readingAnalysis.message;
             analysis.hasAnalysis = readingAnalysis.hasDifference;
         } else {
-            // 其他情况，保持用户原始输入进行分析
+            // 其他情况（包含其他字符），保持用户原始输入进行分析
             const readingAnalysis = analyzeReadingForSingleToast(trimmedAnswer, correctReading);
             analysis.correctDisplay = createCorrectAnswerCards(correctReading);
             analysis.userDisplay = createAlignedUserAnswerCards(trimmedAnswer, correctReading);
@@ -1441,6 +1442,11 @@
     function isHiraganaText(text) {
         // 检查文本是否只包含平假名
         return /^[\u3040-\u309f]+$/.test(text);
+    }
+
+    function isMixedKanaText(text) {
+        // 检查文本是否包含假名（平假名或片假名）但不包含汉字
+        return /^[\u3040-\u309f\u30a0-\u30ff]+$/.test(text) && !/[\u4e00-\u9faf]/.test(text);
     }
 
     function analyzeKanjiForSingleToast(userAnswer, correctKanji) {
