@@ -6,6 +6,8 @@
     const THEMES = {
         classic: { name: 'Classic' },
         sakura: { name: 'Sakura Blossom' },
+        gaming: { name: 'Gaming' },
+        dark: { name: 'Dark' },
     };
     const THEME_STORAGE_KEY = 'kotoba.theme';
 
@@ -1006,6 +1008,53 @@
         saveProgress(state.dictionaryId);
     }
 
+    function getUniqueWrongWords() {
+        const wrongWords = JSON.parse(localStorage.getItem('wrongWords') || '[]');
+        const uniqueWords = [];
+        const seenKanji = new Set();
+        
+        // 去重处理：按时间倒序排序，保留最新的记录
+        const sortedByTime = [...wrongWords].sort((a, b) => new Date(b.addedAt) - new Date(a.addedAt));
+        for (const word of sortedByTime) {
+            if (!seenKanji.has(word.kanji)) {
+                uniqueWords.push(word);
+                seenKanji.add(word.kanji);
+            }
+        }
+        
+        return uniqueWords;
+    }
+
+    function showEncouragement(message, type = 'info') {
+        // 避免重复显示相同的鼓励消息
+        if (state.lastEncouragement === message) {
+            return;
+        }
+        state.lastEncouragement = message;
+        
+        // 清除之前的鼓励消息
+        clearAlerts();
+        
+        const encouragementToast = document.createElement('div');
+        encouragementToast.className = `alert alert-${type} encouragement-toast`;
+        encouragementToast.innerHTML = `
+            <div class="encouragement-content">
+                <span class="encouragement-icon">${message.split(' ')[0]}</span>
+                <span class="encouragement-text">${message}</span>
+            </div>
+        `;
+        
+        elements.alerts.appendChild(encouragementToast);
+        
+        // 3秒后自动消失
+        setTimeout(() => {
+            if (encouragementToast.parentNode) {
+                encouragementToast.remove();
+            }
+            state.lastEncouragement = null;
+        }, 3000);
+    }
+
     function updateProgressUI() {
         const isWrongWords = state.dictionaryId === 'wrong-words';
         const total = state.totalWords || 0;
@@ -1014,18 +1063,54 @@
         
         // 更新进度文本信息
         if (elements.progressFraction) {
-            if (!state.dictionaryId || isWrongWords || total === 0) {
+            if (!state.dictionaryId || total === 0) {
                 elements.progressFraction.textContent = '0 / 0';
+            } else if (isWrongWords) {
+                // 错题本模式：显示剩余错题数 / 总错题数
+                const uniqueWords = getUniqueWrongWords();
+                const totalWrongWords = uniqueWords.length;
+                const remainingWrongWords = totalWrongWords - mastered;
+                elements.progressFraction.textContent = `${remainingWrongWords} / ${totalWrongWords}`;
             } else {
                 elements.progressFraction.textContent = `${mastered} / ${total}`;
             }
         }
         
         if (elements.progressPercentage) {
-            if (!state.dictionaryId || isWrongWords || total === 0) {
+            if (!state.dictionaryId || total === 0) {
                 elements.progressPercentage.textContent = '0%';
+            } else if (isWrongWords) {
+                // 错题本模式：显示错题完成百分比
+                const wrongWordsPercent = total ? Math.round((mastered / total) * 100) : 0;
+                elements.progressPercentage.textContent = `${wrongWordsPercent}%`;
             } else {
                 elements.progressPercentage.textContent = `${percent}%`;
+            }
+        }
+        
+        // 更新经验条（错题本模式）
+        if (isWrongWords) {
+            const wrongWordsPercent = total ? Math.round((mastered / total) * 100) : 0;
+            
+            // 更新经验条
+            if (elements.expFill) {
+                elements.expFill.style.width = `${wrongWordsPercent}%`;
+            }
+            
+            // 更新经验文本
+            if (elements.expText) {
+                elements.expText.textContent = `${mastered} / ${total}`;
+            }
+            
+            // 错题本鼓励消息
+            if (wrongWordsPercent === 100 && total > 0) {
+                showEncouragement('🎉 错题本完成！太棒了！', 'success');
+            } else if (wrongWordsPercent >= 80) {
+                showEncouragement('💪 错题本快完成了！继续加油！', 'info');
+            } else if (wrongWordsPercent >= 50) {
+                showEncouragement('🌟 错题本进度过半！做得很好！', 'info');
+            } else if (wrongWordsPercent >= 25) {
+                showEncouragement('📚 错题本练习中，保持节奏！', 'info');
             }
         }
         
@@ -2639,10 +2724,6 @@
                 if (!state.dictionaryId || state.dictionaryId === 'wrong-words' || !state.totalWords) {
                     return;
                 }
-                const confirmed = window.confirm('現在の辞書の進捗をリセットしますか？');
-                if (!confirmed) {
-                    return;
-                }
                 const cleared = clearProgressForCurrentDictionary();
                 if (!cleared) {
                     return;
@@ -2650,6 +2731,9 @@
                 showLoading('進捗をリセットしています…');
                 try {
                     await loadRandomEntry();
+                    if (window.autoSyncData) {
+                        window.autoSyncData();
+                    }
                 } catch (error) {
                     showAlert('error', error.message || String(error));
                 } finally {
