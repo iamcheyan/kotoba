@@ -630,7 +630,7 @@
     <!-- Leaderboard Modal -->
     <div id="leaderboard-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="leaderboard-modal-title">
         <div class="modal-header">
-            <h2 id="leaderboard-modal-title">ランキング</h2>
+            <h2 id="leaderboard-modal-title">トップ10ランキング</h2>
             <button type="button" class="modal-close" data-close="modal" aria-label="閉じる">×</button>
         </div>
         <div class="modal-body leaderboard-body">
@@ -1307,7 +1307,7 @@
         // Leaderboard functionality
         let leaderboardData = [];
         let currentLeaderboardPage = 1;
-        const leaderboardPageSize = 20;
+        const leaderboardPageSize = 5;
 
         // Submit score to leaderboard
         async function submitScoreToLeaderboard(options = {}) {
@@ -1372,7 +1372,7 @@
                 const leaderboardQuery = query(
                     collection(db, 'leaderboard'),
                     orderBy('score', 'desc'),
-                    limit(100) // 限制前100名
+                    limit(10) // 仅前10名
                 );
                 
                 const snapshot = await getDocs(leaderboardQuery);
