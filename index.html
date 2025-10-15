@@ -21,12 +21,6 @@
     <meta name="theme-color" content="#667eea">
     
     <link rel="stylesheet" href="/static/styles.css">
-    <style>
-        @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-    </style>
     <script>
         (function () {
             function prepareModuleEnv() {
@@ -102,6 +96,18 @@
                         </svg>
                     </button>
                 </div>
+                <!-- 排行榜入口按钮（放在 user-account 右侧） -->
+                <button id="headerLeaderboardBtn" class="header-leaderboard-btn" title="ランキング">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M8 21h8"/>
+                        <path d="M12 17v4"/>
+                        <path d="M7 4h10v5l-5 3-5-3V4z"/>
+                        <path d="M5 9H4a2 2 0 0 1-2-2V5h3"/>
+                        <path d="M19 9h1a2 2 0 0 0 2-2V5h-3"/>
+                    </svg>
+                    <span>排行榜</span>
+                </button>
+
                 <!-- 用户账户 -->
                 <div class="user-account">
                     <!-- 未登录菜单触发器 -->
@@ -194,6 +200,17 @@
                                 </svg>
                                 <span>錯題を練習</span>
                             </button>
+                            <button id="leaderboardButton" class="user-menu-item">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path>
+                                    <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path>
+                                    <path d="M4 22h16"></path>
+                                    <path d="M10 14.66V17c0 .55-.47.98-.97 1.21l-2.99 1.42c-.53.24-1.04.37-1.04.37s.51-.13 1.04-.37l2.99-1.42c.5-.23.97-.66.97-1.21v-2.34"></path>
+                                    <path d="M14 14.66V17c0 .55.47.98.97 1.21l2.99 1.42c.53.24 1.04.37 1.04.37s-.51-.13-1.04-.37l-2.99-1.42c-.5-.23-.97-.66-.97-1.21v-2.34"></path>
+                                    <path d="M18 2H6v7l6 3 6-3V2z"></path>
+                                </svg>
+                                <span>排行榜</span>
+                            </button>
                             <div class="user-menu-divider"></div>
                             <button id="dictionaryButtonMenu" class="user-menu-item">
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -249,6 +266,8 @@
                         </div>
                     </div>
                 </div>
+                
+                
             </div>
         </header>
 
@@ -596,6 +615,72 @@
         </div>
     </div>
 
+    <!-- Leaderboard Modal -->
+    <div id="leaderboard-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="leaderboard-modal-title">
+        <div class="modal-header">
+            <h2 id="leaderboard-modal-title">排行榜</h2>
+            <button type="button" class="modal-close" data-close="modal" aria-label="閉じる">×</button>
+        </div>
+        <div class="modal-body leaderboard-body">
+            <div class="leaderboard-stats">
+                <div class="leaderboard-stat-card">
+                    <div class="stat-number" id="my-rank">-</div>
+                    <div class="stat-label">我的排名</div>
+                </div>
+                <div class="leaderboard-stat-card">
+                    <div class="stat-number" id="my-score">0</div>
+                    <div class="stat-label">我的分数</div>
+                </div>
+                <div class="leaderboard-stat-card">
+                    <div class="stat-number" id="total-players">0</div>
+                    <div class="stat-label">总玩家数</div>
+                </div>
+            </div>
+            
+            <div class="leaderboard-actions">
+                <button type="button" id="submit-score-button" class="ghost-button primary-button">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                    </svg>
+                    提交当前分数
+                </button>
+                <button type="button" id="refresh-leaderboard" class="ghost-button">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="23 4 23 10 17 10"></polyline>
+                        <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+                    </svg>
+                    刷新排行榜
+                </button>
+            </div>
+            
+            <div class="leaderboard-list" id="leaderboard-list">
+                <div class="leaderboard-loading">
+                    <div class="spinner" style="width: 24px; height: 24px; margin: 0 auto;"></div>
+                    <p>加载中...</p>
+                </div>
+            </div>
+            
+            <div class="leaderboard-pagination" id="leaderboard-pagination" style="display: none;">
+                <button id="prev-leaderboard-page" class="pagination-btn" disabled>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="15 18 9 12 15 6"></polyline>
+                    </svg>
+                    上一页
+                </button>
+                <div class="pagination-info">
+                    <span id="current-leaderboard-page">1</span> / <span id="total-leaderboard-pages">1</span>
+                </div>
+                <button id="next-leaderboard-page" class="pagination-btn" disabled>
+                    下一页
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="9 18 15 12 9 6"></polyline>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- PWA Install Progress Modal -->
     <div id="pwa-install-modal" class="modal hidden" role="dialog" aria-modal="true">
         <div class="modal-header">
@@ -645,7 +730,7 @@
         // Import Firebase modules
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
         import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, getDoc, collection, query, orderBy, limit, getDocs, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
 
         // Your web app's Firebase configuration
         const firebaseConfig = {
@@ -690,6 +775,10 @@
         const switchAccountButton = document.getElementById('switchAccountButton');
         const dictionaryButtonMenuGuest = document.getElementById('dictionaryButtonMenuGuest');
         const settingsButtonMenuGuest = document.getElementById('settingsButtonMenuGuest');
+        const headerLeaderboardBtn = document.getElementById('headerLeaderboardBtn');
+        const leaderboardButton = document.getElementById('leaderboardButton');
+        const submitScoreButton = document.getElementById('submit-score-button');
+        const refreshLeaderboardButton = document.getElementById('refresh-leaderboard');
 
         // Toggle guest menu
         if (guestMenuTrigger) {
@@ -711,6 +800,54 @@
         document.addEventListener('click', () => {
             if (userMenu) userMenu.classList.remove('show');
             if (guestMenu) guestMenu.classList.remove('show');
+        });
+
+        // 统一关闭逻辑（空白遮罩/通用关闭按钮）
+        function closeAllModals() {
+            const openModalIds = [
+                'dictionary-modal',
+                'settings-modal',
+                'wrong-words-modal',
+                'offline-download-modal',
+                'pwa-install-modal',
+                'leaderboard-modal'
+            ];
+            openModalIds.forEach((id) => {
+                const el = document.getElementById(id);
+                if (el && !el.classList.contains('hidden')) {
+                    el.classList.add('hidden');
+                }
+            });
+            const backdrop = document.getElementById('modal-backdrop');
+            if (backdrop) backdrop.classList.add('hidden');
+        }
+
+        // 点击空白遮罩关闭所有模态（包含排行榜）
+        const globalBackdrop = document.getElementById('modal-backdrop');
+        if (globalBackdrop) {
+            globalBackdrop.addEventListener('click', closeAllModals);
+        }
+
+        // 通用关闭按钮（data-close="modal"）同样使用统一关闭逻辑
+        document.querySelectorAll('[data-close="modal"]').forEach((btn) => {
+            btn.addEventListener('click', closeAllModals);
+        });
+
+        // Esc to close modals
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                const modals = ['dictionary-modal','settings-modal','wrong-words-modal','offline-download-modal','pwa-install-modal','leaderboard-modal'];
+                const backdrop = document.getElementById('modal-backdrop');
+                let closed = false;
+                modals.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el && !el.classList.contains('hidden')) {
+                        el.classList.add('hidden');
+                        closed = true;
+                    }
+                });
+                if (closed && backdrop) backdrop.classList.add('hidden');
+            }
         });
 
         // Prevent menu from closing when clicking inside
@@ -768,6 +905,74 @@
                     backdrop.classList.remove('hidden');
                 }
                 if (guestMenu) guestMenu.classList.remove('show');
+            });
+        }
+
+        // Leaderboard button
+        if (leaderboardButton) {
+            leaderboardButton.addEventListener('click', function() {
+                const leaderboardModal = document.getElementById('leaderboard-modal');
+                const backdrop = document.getElementById('modal-backdrop');
+                if (leaderboardModal) {
+                    leaderboardModal.classList.remove('hidden');
+                }
+                if (backdrop) {
+                    backdrop.classList.remove('hidden');
+                }
+                if (userMenu) userMenu.classList.remove('show');
+                
+                // 加载排行榜数据
+                loadLeaderboard();
+            });
+        }
+
+        // Header leaderboard entry
+        if (headerLeaderboardBtn) {
+            headerLeaderboardBtn.addEventListener('click', function() {
+                const leaderboardModal = document.getElementById('leaderboard-modal');
+                const backdrop = document.getElementById('modal-backdrop');
+                if (leaderboardModal) leaderboardModal.classList.remove('hidden');
+                if (backdrop) backdrop.classList.remove('hidden');
+                if (guestMenu) guestMenu.classList.remove('show');
+                if (userMenu) userMenu.classList.remove('show');
+                loadLeaderboard();
+            });
+        }
+
+        // Submit score button
+        if (submitScoreButton) {
+            submitScoreButton.addEventListener('click', async function() {
+                await submitScoreToLeaderboard();
+            });
+        }
+
+        // Refresh leaderboard button
+        if (refreshLeaderboardButton) {
+            refreshLeaderboardButton.addEventListener('click', async function() {
+                await loadLeaderboard();
+            });
+        }
+
+        // Leaderboard pagination
+        const prevLeaderboardPage = document.getElementById('prev-leaderboard-page');
+        const nextLeaderboardPage = document.getElementById('next-leaderboard-page');
+        
+        if (prevLeaderboardPage) {
+            prevLeaderboardPage.addEventListener('click', function() {
+                if (currentLeaderboardPage > 1) {
+                    currentLeaderboardPage--;
+                    displayLeaderboard();
+                }
+            });
+        }
+        
+        if (nextLeaderboardPage) {
+            nextLeaderboardPage.addEventListener('click', function() {
+                const totalPages = Math.ceil(leaderboardData.length / leaderboardPageSize);
+                if (currentLeaderboardPage < totalPages) {
+                    currentLeaderboardPage++;
+                    displayLeaderboard();
+                }
             });
         }
 
@@ -871,6 +1076,13 @@
                     已掌握: Object.keys(localData.masteredEntries).length,
                     错题本: localData.wrongWords.length
                 });
+
+                // 同步成功后也轻量更新排行榜（静默）
+                try {
+                    await submitScoreToLeaderboard({ silent: true });
+                } catch (e) {
+                    console.warn('静默更新排行榜失败:', e);
+                }
             } catch (error) {
                 console.error('❌ 同步数据失败:', error);
                 throw error;
@@ -1064,9 +1276,252 @@
             }
         });
 
+        // Leaderboard functionality
+        let leaderboardData = [];
+        let currentLeaderboardPage = 1;
+        const leaderboardPageSize = 20;
+
+        // Submit score to leaderboard
+        async function submitScoreToLeaderboard(options = {}) {
+            const { silent = false } = options;
+            const user = auth.currentUser;
+            if (!user) {
+                if (!silent) showNotification('请先登录', 'error');
+                return;
+            }
+
+            try {
+                // 计算总分：正确数 * 10 + 连击数 * 5 + 总题数 * 2
+                const correct = parseInt(localStorage.getItem('correct') || '0', 10);
+                const wrong = parseInt(localStorage.getItem('wrong') || '0', 10);
+                const combo = parseInt(localStorage.getItem('combo') || '0', 10);
+                const total = parseInt(localStorage.getItem('total') || '0', 10);
+                const score = correct * 10 + combo * 5 + total * 2;
+
+                if (score === 0) {
+                    if (!silent) showNotification('当前分数为0，无法提交', 'error');
+                    return;
+                }
+
+                // 提交到排行榜集合
+                await addDoc(collection(db, 'leaderboard'), {
+                    uid: user.uid,
+                    displayName: user.displayName || 'Anonymous',
+                    photoURL: user.photoURL || '',
+                    score: score,
+                    correct: correct,
+                    wrong: wrong,
+                    combo: combo,
+                    total: total,
+                    submittedAt: serverTimestamp()
+                });
+
+                if (!silent) showNotification('分数已提交到排行榜！', 'success');
+                
+                // 刷新排行榜
+                await loadLeaderboard();
+            } catch (error) {
+                console.error('提交分数失败:', error);
+                if (!silent) showNotification('提交失败: ' + error.message, 'error');
+            }
+        }
+
+        // Load leaderboard data
+        async function loadLeaderboard() {
+            try {
+                const leaderboardList = document.getElementById('leaderboard-list');
+                if (leaderboardList) {
+                    leaderboardList.innerHTML = `
+                        <div class="leaderboard-loading">
+                            <div class="spinner" style="width: 24px; height: 24px; margin: 0 auto;"></div>
+                            <p>加载中...</p>
+                        </div>
+                    `;
+                }
+
+                // 查询排行榜数据，按分数降序排列
+                const leaderboardQuery = query(
+                    collection(db, 'leaderboard'),
+                    orderBy('score', 'desc'),
+                    limit(100) // 限制前100名
+                );
+                
+                const snapshot = await getDocs(leaderboardQuery);
+                leaderboardData = [];
+                
+                snapshot.forEach(doc => {
+                    leaderboardData.push({
+                        id: doc.id,
+                        ...doc.data()
+                    });
+                });
+
+                // 去重：每个用户只保留最高分
+                const userScores = new Map();
+                leaderboardData.forEach(entry => {
+                    const existing = userScores.get(entry.uid);
+                    if (!existing || entry.score > existing.score) {
+                        userScores.set(entry.uid, entry);
+                    }
+                });
+                
+                leaderboardData = Array.from(userScores.values())
+                    .sort((a, b) => b.score - a.score);
+
+                // 更新统计信息
+                updateLeaderboardStats();
+                
+                // 显示排行榜
+                displayLeaderboard();
+                
+            } catch (error) {
+                console.error('加载排行榜失败:', error);
+                const leaderboardList = document.getElementById('leaderboard-list');
+                if (leaderboardList) {
+                    leaderboardList.innerHTML = `
+                        <div class="leaderboard-empty">
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M9 11H5a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2h-4"></path>
+                                <path d="M9 11V9a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"></path>
+                                <line x1="12" y1="15" x2="12" y2="17"></line>
+                            </svg>
+                            <p>加载排行榜失败</p>
+                        </div>
+                    `;
+                }
+                showNotification('加载排行榜失败: ' + error.message, 'error');
+            }
+        }
+
+        // Update leaderboard statistics
+        function updateLeaderboardStats() {
+            const user = auth.currentUser;
+            if (!user) return;
+
+            // 更新总玩家数
+            const totalPlayersEl = document.getElementById('total-players');
+            if (totalPlayersEl) {
+                totalPlayersEl.textContent = leaderboardData.length;
+            }
+
+            // 查找当前用户排名和分数
+            const userIndex = leaderboardData.findIndex(entry => entry.uid === user.uid);
+            const myRankEl = document.getElementById('my-rank');
+            const myScoreEl = document.getElementById('my-score');
+            
+            if (userIndex !== -1) {
+                const userEntry = leaderboardData[userIndex];
+                if (myRankEl) myRankEl.textContent = userIndex + 1;
+                if (myScoreEl) myScoreEl.textContent = userEntry.score;
+            } else {
+                // 用户不在排行榜中，显示当前本地分数
+                const correct = parseInt(localStorage.getItem('correct') || '0', 10);
+                const combo = parseInt(localStorage.getItem('combo') || '0', 10);
+                const total = parseInt(localStorage.getItem('total') || '0', 10);
+                const score = correct * 10 + combo * 5 + total * 2;
+                
+                if (myRankEl) myRankEl.textContent = '-';
+                if (myScoreEl) myScoreEl.textContent = score;
+            }
+        }
+
+        // Display leaderboard
+        function calculateLevel(correctCount) {
+            // 简单等级曲线：每 50 正确=1级，最少1级
+            const level = Math.max(1, Math.floor(correctCount / 50) + 1);
+            return level;
+        }
+
+        function displayLeaderboard() {
+            const leaderboardList = document.getElementById('leaderboard-list');
+            if (!leaderboardList) return;
+
+            if (leaderboardData.length === 0) {
+                leaderboardList.innerHTML = `
+                    <div class="leaderboard-empty">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M9 11H5a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2h-4"></path>
+                            <path d="M9 11V9a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"></path>
+                            <line x1="12" y1="15" x2="12" y2="17"></line>
+                        </svg>
+                        <p>暂无排行榜数据</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const user = auth.currentUser;
+            const startIndex = (currentLeaderboardPage - 1) * leaderboardPageSize;
+            const endIndex = Math.min(startIndex + leaderboardPageSize, leaderboardData.length);
+            const pageData = leaderboardData.slice(startIndex, endIndex);
+
+            let html = '';
+            pageData.forEach((entry, index) => {
+                const rank = startIndex + index + 1;
+                const isCurrentUser = user && entry.uid === user.uid;
+                
+                let rankClass = '';
+                if (rank === 1) rankClass = 'rank-1';
+                else if (rank === 2) rankClass = 'rank-2';
+                else if (rank === 3) rankClass = 'rank-3';
+                else if (rank <= 10) rankClass = 'top-3';
+
+                const level = calculateLevel(parseInt(entry.correct || 0, 10));
+                html += `
+                    <div class="leaderboard-item ${isCurrentUser ? 'current-user' : ''}">
+                        <div class="leaderboard-rank ${rankClass}">${rank}</div>
+                        <div class="leaderboard-user">
+                            <img src="${entry.photoURL || '/static/favicon.svg'}" 
+                                 alt="${entry.displayName}" 
+                                 class="leaderboard-avatar"
+                                 onerror="this.src='/static/favicon.svg'">
+                            <div class="leaderboard-user-info">
+                                <div class="leaderboard-username">${entry.displayName} <span class="lb-level-badge">Lv.${level}</span></div>
+                                <div class="leaderboard-user-stats">
+                                    <span class="lb-stat lb-correct" title="正解"><svg viewBox="0 0 24 24"><path d="M9 12l2 2 4-4"></path><circle cx="12" cy="12" r="9"></circle></svg>${entry.correct || 0}</span>
+                                    <span class="lb-stat lb-wrong" title="錯題"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="M9 9l6 6M15 9l-6 6"></path></svg>${entry.wrong || 0}</span>
+                                    <span class="lb-stat lb-combo" title="連撃"><svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9z"></path></svg>${entry.combo || 0}</span>
+                                    <span class="lb-stat lb-total" title="総題"><svg viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>${entry.total || 0}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="leaderboard-score">${entry.score}</div>
+                    </div>
+                `;
+            });
+
+            leaderboardList.innerHTML = html;
+
+            // 更新分页
+            updateLeaderboardPagination();
+        }
+
+        // Update leaderboard pagination
+        function updateLeaderboardPagination() {
+            const totalPages = Math.ceil(leaderboardData.length / leaderboardPageSize);
+            const pagination = document.getElementById('leaderboard-pagination');
+            const prevBtn = document.getElementById('prev-leaderboard-page');
+            const nextBtn = document.getElementById('next-leaderboard-page');
+            const currentPageEl = document.getElementById('current-leaderboard-page');
+            const totalPagesEl = document.getElementById('total-leaderboard-pages');
+
+            if (totalPages <= 1) {
+                if (pagination) pagination.style.display = 'none';
+                return;
+            }
+
+            if (pagination) pagination.style.display = 'flex';
+            if (prevBtn) prevBtn.disabled = currentLeaderboardPage <= 1;
+            if (nextBtn) nextBtn.disabled = currentLeaderboardPage >= totalPages;
+            if (currentPageEl) currentPageEl.textContent = currentLeaderboardPage;
+            if (totalPagesEl) totalPagesEl.textContent = totalPages;
+        }
+
         // Make functions available globally
         window.syncUserData = syncUserData;
         window.loadUserData = loadUserData;
+        window.submitScoreToLeaderboard = submitScoreToLeaderboard;
+        window.loadLeaderboard = loadLeaderboard;
         
         // Auto-sync on data changes
         let autoSyncTimer = null;
