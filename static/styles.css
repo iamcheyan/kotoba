@@ -1240,7 +1240,7 @@ ruby rt {
     flex-direction: column;
     gap: 16px;
     max-width: 600px;
-    width: 90%;
+    width: 50%;
     max-height: 80vh;
     overflow-y: auto;
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
@@ -1265,6 +1265,34 @@ ruby rt {
     border: 1px solid rgba(34, 197, 94, 0.2);
     backdrop-filter: blur(10px);
 } */
+
+/* 词汇信息样式 */
+.feedback-vocab-info {
+    margin-bottom: 16px;
+    text-align: center;
+}
+
+.vocab-word {
+    font-size: 2.2em;
+    font-weight: bold;
+    color: #1f2937;
+    margin-bottom: 8px;
+    font-family: 'Noto Sans JP', sans-serif;
+}
+
+.vocab-meaning {
+    font-size: 1.1em;
+    color: #4b5563;
+    margin-bottom: 6px;
+    font-weight: 500;
+}
+
+.vocab-romaji {
+    font-size: 1em;
+    color: #6b7280;
+    font-style: italic;
+    font-weight: 400;
+}
 
 .feedback-content {
     padding: 16px 20px;

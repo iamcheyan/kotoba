@@ -1347,9 +1347,14 @@
         // 分析用户答案和正确答案的差异
         const analysis = createErrorAnalysis(answer, entry);
         
-        // 构建toast内容：上面正确答案卡片，下面用户错误答案卡片（带标记）
+        // 构建toast内容：词汇信息 + 正确答案卡片 + 用户错误答案卡片
         backdrop.innerHTML = `
             <div class="feedback-toast">
+                <div class="feedback-vocab-info">
+                    <div class="vocab-word">${entry.kanji}</div>
+                    <div class="vocab-meaning">${entry.meaning}</div>
+                    <div class="vocab-romaji">${entry.romaji}</div>
+                </div>
                 <div class="feedback-content">
                     <div class="feedback-correct">
                         <div class="feedback-header">
