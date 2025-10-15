@@ -743,7 +743,7 @@
     <script type="module">
         // Import Firebase modules
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
-        import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
+        import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
         import { getFirestore, doc, setDoc, getDoc, collection, query, orderBy, limit, getDocs, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
 
         // Your web app's Firebase configuration
@@ -771,6 +771,42 @@
         // Make auth and db available globally
         window.firebaseAuth = auth;
         window.firebaseDb = db;
+
+        // Sign-in helper: prefer redirect in environments likely to block popups (COOP/PWA/iOS/Safari),
+        // otherwise try popup and fallback to redirect on known issues
+        async function signInWithBestAvailable(authInstance, providerInstance) {
+            const isStandalonePWA = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true;
+            const isCrossOriginIsolated = !!window.crossOriginIsolated;
+            const ua = navigator.userAgent || navigator.vendor || '';
+            const isIOS = /iPad|iPhone|iPod/.test(ua) && !window.MSStream;
+            const isSafari = /^((?!chrome|android).)*safari/i.test(ua);
+
+            if (isStandalonePWA || isCrossOriginIsolated || isIOS || isSafari) {
+                await signInWithRedirect(authInstance, providerInstance);
+                return null;
+            }
+
+            try {
+                return await signInWithPopup(authInstance, providerInstance);
+            } catch (err) {
+                const message = (err && err.message) || '';
+                const code = err && err.code;
+                const fallback = (
+                    code === 'auth/popup-blocked' ||
+                    code === 'auth/popup-closed-by-user' ||
+                    code === 'auth/cancelled-popup-request' ||
+                    code === 'auth/unauthorized-domain' ||
+                    /Cross-Origin-Opener-Policy/i.test(message) ||
+                    /window\.closed/i.test(message)
+                );
+                if (fallback) {
+                    console.warn('Popup login failed; fallback to redirect:', err);
+                    await signInWithRedirect(authInstance, providerInstance);
+                    return null;
+                }
+                throw err;
+            }
+        }
 
         // UI Elements
         const loginButton = document.getElementById('loginButton');
@@ -884,7 +920,7 @@
             loginButtonMenu.addEventListener('click', async () => {
                 try {
                     sessionStorage.removeItem('dataLoaded');
-                    const result = await signInWithPopup(auth, provider);
+                    const result = await signInWithBestAvailable(auth, provider);
                     const user = result.user;
                     console.log('User signed in:', user.displayName);
                     showNotification('ログインしました', 'success');
@@ -1013,7 +1049,7 @@
             loginButton.addEventListener('click', async () => {
                 try {
                     sessionStorage.removeItem('dataLoaded');
-                    const result = await signInWithPopup(auth, provider);
+                    const result = await signInWithBestAvailable(auth, provider);
                     const user = result.user;
                     console.log('User signed in:', user.displayName);
                     showNotification('ログインしました', 'success');
@@ -1046,7 +1082,7 @@
                     await signOut(auth);
                     setTimeout(async () => {
                         try {
-                            const result = await signInWithPopup(auth, provider);
+                            const result = await signInWithBestAvailable(auth, provider);
                             console.log('Switched to account:', result.user.displayName);
                             showNotification('アカウントを切り替えました', 'success');
                         } catch (error) {
