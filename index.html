@@ -207,16 +207,7 @@
                                 </svg>
                                 <span>錯題を練習</span>
                             </button>
-                            <button id="leaderboardButton" class="user-menu-item">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path>
-                                    <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path>
-                                    <path d="M4 22h16"></path>
-                                    <path d="M10 14.66V17c0 .55-.47.98-.97 1.21l-2.99 1.42c-.53.24-1.04.37-1.04.37s.51-.13 1.04-.37l2.99-1.42c.5-.23.97-.66.97-1.21v-2.34"></path>
-                                    <path d="M14 14.66V17c0 .55.47.98.97 1.21l2.99 1.42c.53.24 1.04.37 1.04.37s-.51-.13-1.04-.37l-2.99-1.42c-.5-.23-.97-.66-.97-1.21v-2.34"></path>
-                                    <path d="M18 2H6v7l6 3 6-3V2z"></path>
-                                </svg>
-                            </button>
+                            
                             <div class="user-menu-divider"></div>
                             <button id="dictionaryButtonMenu" class="user-menu-item">
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -793,7 +784,6 @@
         const settingsButtonMenuGuest = document.getElementById('settingsButtonMenuGuest');
         const clearEnvButtonGuest = document.getElementById('clearEnvButtonGuest');
         const headerLeaderboardBtn = document.getElementById('headerLeaderboardBtn');
-        const leaderboardButton = document.getElementById('leaderboardButton');
         const submitScoreButton = document.getElementById('submit-score-button');
         const refreshLeaderboardButton = document.getElementById('refresh-leaderboard');
         const clearEnvButton = document.getElementById('clearEnvButton');
@@ -934,23 +924,7 @@
             });
         }
 
-        // Leaderboard button
-        if (leaderboardButton) {
-            leaderboardButton.addEventListener('click', function() {
-                const leaderboardModal = document.getElementById('leaderboard-modal');
-                const backdrop = document.getElementById('modal-backdrop');
-                if (leaderboardModal) {
-                    leaderboardModal.classList.remove('hidden');
-                }
-                if (backdrop) {
-                    backdrop.classList.remove('hidden');
-                }
-                if (userMenu) userMenu.classList.remove('show');
-                
-                // ランキングを読み込む
-                loadLeaderboard();
-            });
-        }
+        // Removed user-menu leaderboard button
 
         // Header leaderboard entry
         if (headerLeaderboardBtn) {
