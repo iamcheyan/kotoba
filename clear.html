@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>環境クリア | Kotoba</title>
+    <style>
+        :root { color-scheme: light dark; }
+        body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 0; padding: 24px; }
+        .card { max-width: 720px; margin: 0 auto; border: 1px solid rgba(0,0,0,.1); border-radius: 12px; padding: 20px; }
+        h1 { margin: 0 0 12px; font-size: 20px; }
+        .log { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; line-height: 1.5; background: rgba(0,0,0,.04); border-radius: 8px; padding: 12px; min-height: 140px; white-space: pre-wrap; }
+        .btns { display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
+        button { padding: 10px 14px; border-radius: 8px; border: 1px solid rgba(0,0,0,.2); cursor: pointer; background: #fff; }
+        .primary { background: #4f46e5; color: #fff; border-color: #4f46e5; }
+        .muted { opacity: .8; }
+        .ok { color: #16a34a; }
+        .err { color: #dc2626; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>環境クリア（PWA/キャッシュ/ログアウト）</h1>
+        <p class="muted">このページはバージョン更新前に環境を強制クリアするためのツールです。実行すると保存済みデータ・キャッシュ・PWA 登録・ログイン状態が削除されます。</p>
+        <div class="btns">
+            <button id="run" class="primary">今すぐ実行</button>
+            <button id="home">トップへ戻る</button>
+        </div>
+        <div id="log" class="log" aria-live="polite"></div>
+    </div>
+
+    <script type="module">
+        import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js';
+        import { getAuth, signOut } from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAOp_lGAlIBxP5pFQID_RPelmLE4NTvZ2s",
+            authDomain: "kotoba-60aeb.firebaseapp.com",
+            projectId: "kotoba-60aeb",
+            storageBucket: "kotoba-60aeb.firebasestorage.app",
+            messagingSenderId: "367445040315",
+            appId: "1:367445040315:web:1b68e59976ac2ab1f91d9e",
+            measurementId: "G-CT0R8S7TQG"
+        };
+
+        const logEl = document.getElementById('log');
+        const runBtn = document.getElementById('run');
+        const homeBtn = document.getElementById('home');
+
+        function log(msg, cls) {
+            const ts = new Date().toLocaleTimeString();
+            const line = `[${ts}] ${msg}`;
+            const div = document.createElement('div');
+            if (cls) div.className = cls;
+            div.textContent = line;
+            logEl.appendChild(div);
+        }
+
+        async function logoutFirebase() {
+            try {
+                const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
+                const auth = getAuth(app);
+                if (auth.currentUser) {
+                    await signOut(auth);
+                    log('Firebase: ログアウト完了', 'ok');
+                } else {
+                    // 既にログアウト済み
+                    log('Firebase: ログイン状態なし', 'ok');
+                }
+            } catch (e) {
+                log('Firebase ログアウトに失敗: ' + (e?.message || e), 'err');
+            }
+        }
+
+        async function unregisterServiceWorkers() {
+            if (!('serviceWorker' in navigator)) {
+                log('Service Worker: 非対応', 'err');
+                return;
+            }
+            try {
+                const regs = await navigator.serviceWorker.getRegistrations();
+                if (regs.length === 0) {
+                    log('Service Worker: 登録なし', 'ok');
+                }
+                await Promise.allSettled(regs.map(async r => {
+                    try {
+                        // Push 購読解除
+                        const sub = await r.pushManager?.getSubscription?.();
+                        if (sub) {
+                            await sub.unsubscribe();
+                            log('Push: 購読解除', 'ok');
+                        }
+                    } catch {}
+                    await r.unregister();
+                }));
+                log('Service Worker: すべて解除', 'ok');
+            } catch (e) {
+                log('Service Worker 解除に失敗: ' + (e?.message || e), 'err');
+            }
+        }
+
+        async function clearCaches() {
+            try {
+                const names = await caches.keys();
+                await Promise.allSettled(names.map(n => caches.delete(n)));
+                log(`CacheStorage: 削除 (${names.length})`, 'ok');
+            } catch (e) {
+                log('CacheStorage 削除に失敗: ' + (e?.message || e), 'err');
+            }
+        }
+
+        async function clearStorage() {
+            try {
+                // local/session
+                localStorage.clear();
+                sessionStorage.clear();
+                log('localStorage / sessionStorage: クリア', 'ok');
+            } catch (e) {
+                log('Web Storage クリア失敗: ' + (e?.message || e), 'err');
+            }
+
+            // IndexedDB 全削除
+            try {
+                const dbs = (indexedDB.databases ? await indexedDB.databases() : []) || [];
+                if (dbs.length) {
+                    await Promise.allSettled(dbs.map(db => db && db.name ? new Promise((res) => { const req = indexedDB.deleteDatabase(db.name); req.onsuccess = req.onerror = req.onblocked = () => res(); }) : Promise.resolve()));
+                    log(`IndexedDB: 既知DB削除 (${dbs.length})`, 'ok');
+                }
+                // 一部ブラウザでは databases() が無いので、代表的な DB 名を手動削除
+                const known = ['firebase-installations-database', 'firebaseLocalStorageDb', 'keyval-store', 'workbox-precache-v2'];
+                await Promise.allSettled(known.map(name => new Promise((res) => { const req = indexedDB.deleteDatabase(name); req.onsuccess = req.onerror = req.onblocked = () => res(); })));
+            } catch (e) {
+                log('IndexedDB 削除に失敗: ' + (e?.message || e), 'err');
+            }
+        }
+
+        async function runAll() {
+            runBtn.disabled = true;
+            log('処理を開始します…');
+            await logoutFirebase();
+            await unregisterServiceWorkers();
+            await clearCaches();
+            await clearStorage();
+            try {
+                if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+                    navigator.serviceWorker.controller.postMessage({ type: 'SKIP_WAITING_AND_CLAIM' });
+                }
+            } catch {}
+            log('完了しました。数秒後にトップへ遷移します。', 'ok');
+            setTimeout(() => { window.location.href = '/'; }, 1200);
+        }
+
+        runBtn.addEventListener('click', runAll);
+        homeBtn.addEventListener('click', () => { window.location.href = '/'; });
+
+        // 自動実行（直接開いた場合は即クリア）
+        runAll();
+    </script>
+</body>
+</html>
+
+
