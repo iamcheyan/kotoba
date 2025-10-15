@@ -1138,17 +1138,6 @@ ruby rt {
     border-color: #d97706;
 }
 
-.alerts {
-    position: fixed;
-    top: 80px;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 1000;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    pointer-events: none;
-}
 
 .alert {
     padding: 12px 24px;
@@ -1197,6 +1186,287 @@ ruby rt {
 .alert-error:hover {
     background: rgba(220, 38, 38, 1);
     transform: scale(1.02);
+}
+
+.alert-info {
+    border-color: rgba(59, 130, 246, 0.3);
+    background: rgba(59, 130, 246, 0.95);
+    color: white;
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
+.alert-info:hover {
+    background: rgba(59, 130, 246, 1);
+    transform: scale(1.02);
+}
+
+/* 磨砂透明遮罩 */
+.feedback-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        backdrop-filter: blur(0px);
+    }
+    to {
+        opacity: 1;
+        backdrop-filter: blur(10px);
+    }
+}
+
+/* 透明toast样式 */
+.feedback-toast {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 20px;
+    color: #1f2937;
+    padding: 24px 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    max-width: 600px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+    animation: slideInUp 0.4s ease-out;
+}
+
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* .feedback-correct {
+    padding: 16px 20px;
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(22, 163, 74, 0.05));
+    border-radius: 12px;
+    border: 1px solid rgba(34, 197, 94, 0.2);
+    backdrop-filter: blur(10px);
+} */
+
+.feedback-content {
+    padding: 16px 20px;
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(220, 38, 38, 0.05));
+    border-radius: 12px;
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    backdrop-filter: blur(10px);
+}
+.feedback-user {
+    margin-top: 30px;
+}
+
+.feedback-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.feedback-icon {
+    font-size: 1.4em;
+    flex-shrink: 0;
+}
+
+.feedback-label {
+    /* font-weight: 700; */
+    flex-shrink: 0;
+    font-size: 1em;
+    color: #374151;
+}
+
+.feedback-answer {
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 1.2em;
+    font-weight: 600;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px;
+    align-items: center;
+}
+
+.correct-answer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px;
+    align-items: center;
+}
+
+.user-answer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px;
+    align-items: center;
+}
+
+.feedback-details {
+    padding: 16px 20px;
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(37, 99, 235, 0.05));
+    border-radius: 12px;
+    border: 1px solid rgba(59, 130, 246, 0.2);
+    font-size: 1em;
+    line-height: 1.6;
+    color: #374151;
+    backdrop-filter: blur(10px);
+}
+
+/* 晶莹剔透的字符标记样式 */
+.char-correct {
+    color: #ffffff;
+    background: linear-gradient(135deg, #22c55e, #16a34a);
+    padding: 8px 10px;
+    border-radius: 8px;
+    border: 1px solid rgba(34, 197, 94, 0.3);
+    font-weight: bold;
+    font-size: 1.1em;
+    box-shadow: 0 4px 8px rgba(34, 197, 94, 0.3);
+    backdrop-filter: blur(5px);
+    margin: 0 2px;
+    display: inline-block;
+    min-width: 32px;
+    text-align: center;
+    line-height: 1;
+}
+
+/* 正确答案卡片样式 - 与错误答案卡片颜色稍有区别 */
+.char-correct-card {
+    color: #ffffff;
+    background: linear-gradient(135deg, #22c55e, #16a34a);
+    padding: 8px 10px;
+    border-radius: 8px;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    font-weight: bold;
+    font-size: 1.1em;
+    box-shadow: 0 4px 8px rgba(16, 185, 129, 0.3);
+    backdrop-filter: blur(5px);
+    margin: 0 2px;
+    display: inline-block;
+    min-width: 32px;
+    text-align: center;
+    line-height: 1;
+}
+
+.char-wrong {
+    color: #ffffff;
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    padding: 8px 10px;
+    border-radius: 8px;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    font-weight: bold;
+    font-size: 1.1em;
+    text-decoration: underline;
+    box-shadow: 0 4px 8px rgba(239, 68, 68, 0.3);
+    animation: pulse-red 0.5s ease-in-out;
+    backdrop-filter: blur(5px);
+    margin: 0 2px;
+    display: inline-block;
+    min-width: 32px;
+    text-align: center;
+    line-height: 1;
+}
+
+.char-extra {
+    color: #ffffff;
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    padding: 8px 10px;
+    border-radius: 8px;
+    border: 1px solid rgba(245, 158, 11, 0.3);
+    font-weight: bold;
+    font-size: 1.1em;
+    box-shadow: 0 4px 8px rgba(245, 158, 11, 0.3);
+    backdrop-filter: blur(5px);
+    margin: 0 2px;
+    display: inline-block;
+    min-width: 32px;
+    text-align: center;
+    line-height: 1;
+}
+
+.char-missing {
+    color: #ffffff;
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    padding: 8px 10px;
+    border-radius: 8px;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    font-weight: bold;
+    font-size: 1.1em;
+    box-shadow: 0 4px 8px rgba(239, 68, 68, 0.3);
+    backdrop-filter: blur(5px);
+    margin: 0 2px;
+    display: inline-block;
+    min-width: 32px;
+    text-align: center;
+    line-height: 1;
+}
+
+@keyframes pulse-red {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+.empty-input {
+    color: #ef4444;
+    font-style: italic;
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(220, 38, 38, 0.1));
+    padding: 6px 10px;
+    border-radius: 8px;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    backdrop-filter: blur(5px);
+}
+
+/* 晶莹剔透的关闭按钮样式 */
+.feedback-actions {
+    display: flex;
+    justify-content: center;
+    margin-top: 16px;
+}
+
+.feedback-close-btn {
+    background: linear-gradient(135deg, #ec4899, #db2777);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 12px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(236, 72, 153, 0.3);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(236, 72, 153, 0.2);
+}
+
+.feedback-close-btn:hover {
+    background: linear-gradient(135deg, #db2777, #be185d);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(236, 72, 153, 0.4);
+}
+
+.feedback-close-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 4px 12px rgba(236, 72, 153, 0.3);
 }
 
 .alert-message {

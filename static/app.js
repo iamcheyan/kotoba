@@ -1336,17 +1336,304 @@
 
     function showIncorrectFeedback(answer, entry) {
         clearAlerts();
-        const wrongLine = document.createElement('div');
-        wrongLine.className = 'alert alert-error';
-        wrongLine.textContent = `❎ ${(answer || '').replace(/\s+/g, '')}`;
-        elements.alerts.appendChild(wrongLine);
+        
+        // 创建磨砂透明遮罩
+        const backdrop = document.createElement('div');
+        backdrop.className = 'feedback-backdrop';
+        backdrop.onclick = () => {
+            backdrop.remove();
+        };
+        
+        // 分析用户答案和正确答案的差异
+        const analysis = createErrorAnalysis(answer, entry);
+        
+        // 构建toast内容：上面正确答案卡片，下面用户错误答案卡片（带标记）
+        backdrop.innerHTML = `
+            <div class="feedback-toast">
+                <div class="feedback-content">
+                    <div class="feedback-correct">
+                        <div class="feedback-header">
+                            <span class="feedback-icon">✅</span>
+                            <span class="feedback-label">正解：</span>
+                        </div>
+                        <div class="feedback-answer correct-answer">${analysis.correctDisplay}</div>
+                    </div>
+                    <div class="feedback-user">
+                        <div class="feedback-header">
+                            <span class="feedback-icon">❌</span>
+                            <span class="feedback-label">あなたの答え：</span>
+                        </div>
+                        <div class="feedback-answer user-answer">${analysis.userDisplay}</div>
+                    </div>
+                </div>
+                ${analysis.hasAnalysis ? `<div class="feedback-details">${analysis.analysisMessage}</div>` : ''}
+                <div class="feedback-actions">
+                    <button type="button" class="feedback-close-btn" onclick="this.closest('.feedback-backdrop').remove()">
+                        分かった
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        elements.alerts.appendChild(backdrop);
+    }
 
-        const correctLine = document.createElement('div');
-        correctLine.className = 'alert alert-success';
-        const reading = (entry.reading || '').replace(/\s+/g, '');
-        const romaji = (entry.romaji || '').replace(/\s+/g, '');
-        correctLine.textContent = `✅ ${entry.kanji}/${reading}/${romaji}`;
-        elements.alerts.appendChild(correctLine);
+    function createErrorAnalysis(userAnswer, correctEntry) {
+        const trimmedAnswer = (userAnswer || '').replace(/\s+/g, '').trim();
+        const correctKanji = correctEntry.kanji;
+        const correctReading = correctEntry.normalizedReading;
+        
+        // 判断用户输入的类型
+        const isUserInputKanji = isKanjiText(trimmedAnswer);
+        const isUserInputHiragana = isHiraganaText(trimmedAnswer);
+        
+        let analysis = {
+            correctDisplay: '',
+            userDisplay: '',
+            analysisMessage: '',
+            hasAnalysis: false
+        };
+        
+        if (!trimmedAnswer) {
+            analysis.correctDisplay = correctKanji;
+            analysis.userDisplay = '<span class="empty-input">[入力なし]</span>';
+            analysis.analysisMessage = 'まだ何も入力していません';
+            analysis.hasAnalysis = true;
+            return analysis;
+        }
+        
+        if (isUserInputKanji) {
+            // 汉字分析
+            const kanjiAnalysis = analyzeKanjiForSingleToast(trimmedAnswer, correctKanji);
+            analysis.correctDisplay = createCorrectAnswerCards(correctKanji);
+            analysis.userDisplay = createAlignedUserAnswerCards(trimmedAnswer, correctKanji);
+            analysis.analysisMessage = kanjiAnalysis.message;
+            analysis.hasAnalysis = kanjiAnalysis.hasDifference;
+        } else if (isUserInputHiragana) {
+            // 假名分析 - 保持用户原始输入
+            const readingAnalysis = analyzeReadingForSingleToast(trimmedAnswer, correctReading);
+            analysis.correctDisplay = createCorrectAnswerCards(correctReading);
+            analysis.userDisplay = createAlignedUserAnswerCards(trimmedAnswer, correctReading);
+            analysis.analysisMessage = readingAnalysis.message;
+            analysis.hasAnalysis = readingAnalysis.hasDifference;
+        } else {
+            // 其他情况，保持用户原始输入进行分析
+            const readingAnalysis = analyzeReadingForSingleToast(trimmedAnswer, correctReading);
+            analysis.correctDisplay = createCorrectAnswerCards(correctReading);
+            analysis.userDisplay = createAlignedUserAnswerCards(trimmedAnswer, correctReading);
+            analysis.analysisMessage = readingAnalysis.message;
+            analysis.hasAnalysis = readingAnalysis.hasDifference;
+        }
+        
+        return analysis;
+    }
+
+    function isKanjiText(text) {
+        // 检查文本是否包含汉字
+        return /[\u4e00-\u9faf]/.test(text);
+    }
+
+    function isHiraganaText(text) {
+        // 检查文本是否只包含平假名
+        return /^[\u3040-\u309f]+$/.test(text);
+    }
+
+    function analyzeKanjiForSingleToast(userAnswer, correctKanji) {
+        const userLen = userAnswer.length;
+        const correctLen = correctKanji.length;
+        
+        if (userLen === 0) {
+            return {
+                hasDifference: true,
+                userDisplay: '<span class="empty-input">[入力なし]</span>',
+                message: `まだ何も入力していません。正解は "${correctKanji}" です`
+            };
+        }
+
+        if (userLen !== correctLen) {
+            const lengthDiff = userLen - correctLen;
+            let lengthMessage = '';
+            if (lengthDiff > 0) {
+                lengthMessage = `${lengthDiff}文字多く入力しています`;
+            } else {
+                lengthMessage = `${Math.abs(lengthDiff)}文字足りません`;
+            }
+            
+            return {
+                hasDifference: true,
+                userDisplay: createMarkedUserAnswer(userAnswer, correctKanji),
+                message: lengthMessage
+            };
+        }
+
+        // 逐字符比较
+        const differences = [];
+        for (let i = 0; i < Math.min(userLen, correctLen); i++) {
+            if (userAnswer[i] !== correctKanji[i]) {
+                differences.push({
+                    position: i,
+                    userChar: userAnswer[i],
+                    correctChar: correctKanji[i]
+                });
+            }
+        }
+
+        if (differences.length > 0) {
+            const diffDetails = differences.map(diff => 
+                `第${diff.position + 1}文字目：「${diff.userChar}」を入力しましたが、「${diff.correctChar}」であるべきです`
+            ).join('；');
+            
+            return {
+                hasDifference: true,
+                userDisplay: createMarkedUserAnswer(userAnswer, correctKanji),
+                message: diffDetails
+            };
+        }
+
+        return { hasDifference: false };
+    }
+
+    function analyzeReadingForSingleToast(userAnswer, correctReading) {
+        // 保持用户原始输入，不进行转换
+        const userLen = userAnswer.length;
+        const correctLen = correctReading.length;
+        
+        if (userLen === 0) {
+            return {
+                hasDifference: true,
+                userDisplay: '<span class="empty-input">[入力なし]</span>',
+                message: `まだ何も入力していません。正解は "${correctReading}" です`
+            };
+        }
+
+        if (userLen !== correctLen) {
+            const lengthDiff = userLen - correctLen;
+            let lengthMessage = '';
+            if (lengthDiff > 0) {
+                lengthMessage = `${lengthDiff}文字多く入力しています`;
+            } else {
+                lengthMessage = `${Math.abs(lengthDiff)}文字足りません`;
+            }
+            
+            return {
+                hasDifference: true,
+                userDisplay: createMarkedUserAnswer(userAnswer, correctReading),
+                message: lengthMessage
+            };
+        }
+
+        // 逐字符比较
+        const differences = [];
+        for (let i = 0; i < Math.min(userLen, correctLen); i++) {
+            if (userAnswer[i] !== correctReading[i]) {
+                differences.push({
+                    position: i,
+                    userChar: userAnswer[i],
+                    correctChar: correctReading[i]
+                });
+            }
+        }
+
+        if (differences.length > 0) {
+            const diffDetails = differences.map(diff => 
+                `第${diff.position + 1}文字目：「${diff.userChar}」を入力しましたが、「${diff.correctChar}」であるべきです`
+            ).join('；');
+            
+            return {
+                hasDifference: true,
+                userDisplay: createMarkedUserAnswer(userAnswer, correctReading),
+                message: diffDetails
+            };
+        }
+
+        return { hasDifference: false };
+    }
+
+    function createMarkedUserAnswer(userText, correctText) {
+        let result = '';
+        const maxLen = Math.max(userText.length, correctText.length);
+        
+        for (let i = 0; i < maxLen; i++) {
+            const userChar = userText[i] || '';
+            const correctChar = correctText[i] || '';
+            
+            if (i >= userText.length) {
+                // 用户答案太短，标记缺失的字符
+                result += `<span class="char-missing">[不足:${correctChar}]</span>`;
+            } else if (i >= correctText.length) {
+                // 用户答案太长，标记多余的字符
+                result += `<span class="char-extra">[余分:${userChar}]</span>`;
+            } else if (userChar !== correctChar) {
+                // 字符不同，标记错误
+                result += `<span class="char-wrong">${userChar}</span>`;
+            } else {
+                // 字符正确
+                result += `<span class="char-correct">${userChar}</span>`;
+            }
+        }
+        
+        return result;
+    }
+
+    function createDetailedMarkup(userText, correctText) {
+        let result = '';
+        const maxLen = Math.max(userText.length, correctText.length);
+        
+        for (let i = 0; i < maxLen; i++) {
+            const userChar = userText[i] || '';
+            const correctChar = correctText[i] || '';
+            
+            if (i >= userText.length) {
+                // 用户答案太短，标记缺失的字符
+                result += `<span style="color: #ef4444; background: #fef2f2; padding: 1px 2px; border-radius: 2px; font-size: 0.9em;">[缺少:${correctChar}]</span>`;
+            } else if (i >= correctText.length) {
+                // 用户答案太长，标记多余的字符
+                result += `<span style="color: #f59e0b; background: #fffbeb; padding: 1px 2px; border-radius: 2px; font-size: 0.9em;">[多余:${userChar}]</span>`;
+            } else if (userChar !== correctChar) {
+                // 字符不同，标记错误
+                result += `<span style="color: #ef4444; background: #fef2f2; padding: 1px 2px; border-radius: 2px; font-size: 0.9em; text-decoration: underline;">${userChar}</span>`;
+            } else {
+                // 字符正确
+                result += `<span style="color: #22c55e; background: #f0fdf4; padding: 1px 2px; border-radius: 2px; font-size: 0.9em;">${userChar}</span>`;
+            }
+        }
+        
+        return result;
+    }
+
+    function createCorrectAnswerCards(correctText) {
+        let result = '';
+        for (let i = 0; i < correctText.length; i++) {
+            const char = correctText[i];
+            result += `<span class="char-correct-card">${char}</span>`;
+        }
+        return result;
+    }
+
+    function createAlignedUserAnswerCards(userText, correctText) {
+        let result = '';
+        const maxLen = Math.max(userText.length, correctText.length);
+        
+        for (let i = 0; i < maxLen; i++) {
+            const userChar = userText[i] || '';
+            const correctChar = correctText[i] || '';
+            
+            if (i >= userText.length) {
+                // 用户答案太短，标记缺失的字符
+                result += `<span class="char-missing">[不足:${correctChar}]</span>`;
+            } else if (i >= correctText.length) {
+                // 用户答案太长，标记多余的字符
+                result += `<span class="char-extra">[余分:${userChar}]</span>`;
+            } else if (userChar !== correctChar) {
+                // 字符不同，标记错误
+                result += `<span class="char-wrong">${userChar}</span>`;
+            } else {
+                // 字符正确
+                result += `<span class="char-correct">${userChar}</span>`;
+            }
+        }
+        
+        return result;
     }
 
     async function ensureDictionaryLoaded(dictPath) {
@@ -2104,43 +2391,23 @@
             return { correct: false, match: null, userRomaji: '' };
         }
         
+        // 汉字判断
         if (trimmed.toLowerCase() === entry.normalizedKanji) {
             return { correct: true, match: 'kanji', userRomaji: entry.normalizedRomaji };
         }
-        let romajiInput = '';
-        try {
-            if (state.kuroshiroReady) {
-                romajiInput = await state.kuroshiro.convert(answer, { to: 'romaji', romajiSystem: 'hepburn' });
-            }
-        } catch (error) {
-            if (window.wanakana) {
-                romajiInput = window.wanakana.toRomaji(answer);
-            } else {
-                romajiInput = trimmed;
-            }
-        }
-        if (!romajiInput && window.wanakana) {
-            romajiInput = window.wanakana.toRomaji(answer);
-        }
-        if (!romajiInput) {
-            romajiInput = trimmed;
-        }
-        const normalizedRomaji = removePunctuation((romajiInput || '').replace(/\s+/g, '')).toLowerCase();
         
-        if (normalizedRomaji === entry.normalizedRomaji) {
-            return { correct: true, match: 'romaji', userRomaji: normalizedRomaji };
-        }
+        // 假名判断
         const hiraganaInput = window.wanakana ? window.wanakana.toHiragana(answer) : answer;
         const normalizedReading = removePunctuation((hiraganaInput || '').replace(/\s+/g, '')).toLowerCase();
         
         if (normalizedReading === entry.normalizedReading) {
-            return { correct: true, match: 'reading', userRomaji: normalizedRomaji };
+            return { correct: true, match: 'reading', userRomaji: entry.normalizedRomaji };
         }
         
         // 答错时添加到错题本
         addToWrongWords(entry);
         
-        return { correct: false, match: null, userRomaji: normalizedRomaji };
+        return { correct: false, match: null, userRomaji: entry.normalizedRomaji };
     }
 
     async function handleAnswerSubmit(event) {
