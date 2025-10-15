@@ -2390,7 +2390,7 @@ ruby rt {
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    padding: 8px 12px;
+    padding: 7px 12px;
     border: none;
     border-radius: 999px;
     background: linear-gradient(135deg, #6366f1, #8b5cf6);
