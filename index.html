@@ -1327,7 +1327,8 @@
                 const correct = parseInt(localStorage.getItem('correct') || '0', 10);
                 const wrong = parseInt(localStorage.getItem('wrong') || '0', 10);
                 const combo = parseInt(localStorage.getItem('combo') || '0', 10);
-                const total = parseInt(localStorage.getItem('total') || '0', 10);
+                // 以当前正确+错误计算总题数，避免 localStorage.total 为空或过期
+                const total = correct + wrong;
                 const score = correct * 10 + combo * 5 + total * 2;
 
                 if (score === 0) {
