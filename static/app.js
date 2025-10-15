@@ -172,6 +172,8 @@
         answerInput: document.getElementById('answer-input'),
         answerSubmit: document.getElementById('answer-submit'),
         skipButton: document.getElementById('skip-button'),
+        replayButton: document.getElementById('replay-button'),
+        nextButton: document.getElementById('next-button'),
         alerts: document.getElementById('alerts'),
         dictionaryButton: document.getElementById('dictionary-button'),
         settingsButton: document.getElementById('settings-button'),
@@ -213,6 +215,7 @@
         // 模式切换元素
         modeInputBtn: document.getElementById('mode-input'),
         modePuzzleBtn: document.getElementById('mode-puzzle'),
+        modePlayBtn: document.getElementById('mode-play'),
         inputModeContainer: document.getElementById('input-mode-container'),
         puzzleModeContainer: document.getElementById('puzzle-mode-container'),
         puzzleAnswerArea: document.getElementById('puzzle-answer-area'),
@@ -2972,6 +2975,23 @@
                 }
             });
         }
+        // 播放模式控制：重听/下一個
+        if (elements.replayButton) {
+            elements.replayButton.addEventListener('click', () => {
+                try { speechSynthesis.cancel(); } catch (_) {}
+                setTimeout(() => playTTS(), 50);
+            });
+        }
+        if (elements.nextButton) {
+            elements.nextButton.addEventListener('click', async () => {
+                try {
+                    await loadRandomEntry();
+                    playTTS();
+                } catch (e) {
+                    showAlert('error', e && e.message ? e.message : String(e));
+                }
+            });
+        }
         if (elements.dictionaryButton) {
             elements.dictionaryButton.addEventListener('click', () => {
                 hideModals();
@@ -3198,11 +3218,43 @@
         if (elements.modeInputBtn) {
             elements.modeInputBtn.addEventListener('click', () => {
                 switchToMode('input');
+                // 显示做题UI，隐藏播放控制
+                if (elements.answerInput) elements.answerInput.classList.remove('hidden');
+                if (elements.answerSubmit) elements.answerSubmit.classList.remove('hidden');
+                if (elements.skipButton) elements.skipButton.classList.remove('hidden');
+                if (elements.replayButton) elements.replayButton.classList.add('hidden');
+                if (elements.nextButton) elements.nextButton.classList.add('hidden');
             });
         }
         if (elements.modePuzzleBtn) {
             elements.modePuzzleBtn.addEventListener('click', () => {
                 switchToMode('puzzle');
+                // 显示做题UI，隐藏播放控制
+                if (elements.answerInput) elements.answerInput.classList.remove('hidden');
+                if (elements.answerSubmit) elements.answerSubmit.classList.remove('hidden');
+                if (elements.skipButton) elements.skipButton.classList.remove('hidden');
+                if (elements.replayButton) elements.replayButton.classList.add('hidden');
+                if (elements.nextButton) elements.nextButton.classList.add('hidden');
+            });
+        }
+        if (elements.modePlayBtn) {
+            elements.modePlayBtn.addEventListener('click', () => {
+                switchToMode('play');
+                // 播放模式：强制自动朗读
+                state.autoPronunciation = true;
+                try { localStorage.setItem('auto_pronunciation', '1'); } catch (_) {}
+                // 隐藏做题UI，显示播放控制
+                if (elements.answerInput) elements.answerInput.classList.add('hidden');
+                if (elements.answerSubmit) elements.answerSubmit.classList.add('hidden');
+                if (elements.skipButton) elements.skipButton.classList.add('hidden');
+                if (elements.replayButton) elements.replayButton.classList.remove('hidden');
+                if (elements.nextButton) elements.nextButton.classList.remove('hidden');
+                // 立即播放当前词
+                setTimeout(() => {
+                    // 某些浏览器需要用户交互后才能发声
+                    try { speechSynthesis.resume(); } catch (_) {}
+                    playTTS();
+                }, 100);
             });
         }
     }
@@ -3215,13 +3267,21 @@
         localStorage.setItem('answerMode', mode);
         
         // 更新按钮状态
-        if (elements.modeInputBtn && elements.modePuzzleBtn) {
+        if (elements.modeInputBtn && elements.modePuzzleBtn && elements.modePlayBtn) {
             if (mode === 'input') {
                 elements.modeInputBtn.classList.add('active');
                 elements.modePuzzleBtn.classList.remove('active');
+                elements.modePlayBtn.classList.remove('active');
             } else {
-                elements.modePuzzleBtn.classList.add('active');
-                elements.modeInputBtn.classList.remove('active');
+                if (mode === 'puzzle') {
+                    elements.modePuzzleBtn.classList.add('active');
+                    elements.modeInputBtn.classList.remove('active');
+                    elements.modePlayBtn.classList.remove('active');
+                } else if (mode === 'play') {
+                    elements.modePlayBtn.classList.add('active');
+                    elements.modeInputBtn.classList.remove('active');
+                    elements.modePuzzleBtn.classList.remove('active');
+                }
             }
         }
         
@@ -3566,6 +3626,17 @@
 
             utterance.onend = function(event) {
                 console.log('Speech ended (rate: ' + rate + ')');
+                // 播放模式下，自动切换到下一个单词
+                if (state.answerMode === 'play') {
+                    setTimeout(async () => {
+                        try {
+                            await loadRandomEntry();
+                            playTTS();
+                        } catch (e) {
+                            console.warn('Failed to advance in play mode:', e);
+                        }
+                    }, 1000);
+                }
             };
 
             utterance.onerror = function(event) {

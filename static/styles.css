@@ -1,3 +1,4 @@
+.hidden { display: none !important; }
 :root {
     color-scheme: light dark;
     font-family: "Noto Sans JP", "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
@@ -18,6 +19,8 @@
     --error: #dc2626;
     --success: #16a34a;
 }
+
+
 
 body {
     margin: 0;
@@ -1147,7 +1150,7 @@ a:hover {
     justify-content: center;
     gap: 12px;
     /* margin-bottom: 12px; */
-    height: 100px;
+    /* height: 100px; */
 }
 
 .tts-button {
@@ -2380,7 +2383,7 @@ ruby rt {
 .leaderboard-pagination .pagination-info { font-size: 14px; color: var(--text-secondary, #64748b); }
 
 @media (max-width: 640px) {
-    .leaderboard-stats { grid-template-columns: 1fr; gap: 12px; }
+    .leaderboard-stats { gap: 12px; }
     .leaderboard-actions { flex-direction: column; }
     .leaderboard-actions .ghost-button { flex: none; }
 }
@@ -3345,14 +3348,7 @@ ruby rt {
         padding: 10px;
     }
     
-    .alerts {
-        top: 60px;
-        left: 50%;
-        transform: translateX(-50%);
-        width: calc(100% - 32px);
-        max-width: 400px;
-    }
-    
+
     .alert {
         padding: 10px 18px;
         padding-right: 44px;
@@ -3956,4 +3952,52 @@ body.theme-sakura .pwa-progress-bar {
     font-size: 0.85rem;
     color: var(--muted);
     margin-top: 8px;
+}
+
+
+/* ===== 移动端错题反馈浮层适配 ===== */
+@media (max-width: 639px) {
+    .feedback-user { margin-top: 10px;}
+    .feedback-backdrop {
+        padding: 10px;
+    }
+
+    .feedback-toast {
+        width: 100%;
+        max-width: none;
+        padding: 16px 16px calc(16px + env(safe-area-inset-bottom));
+        border-radius: 18px;
+        /* max-height: 72vh; */
+        margin-bottom: env(safe-area-inset-bottom);
+        box-shadow: 0 24px 60px var(--modal-shadow);
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior: contain;
+        gap: 10px;
+    }
+
+    .feedback-vocab-info { margin-bottom: 8px; }
+    .vocab-word { font-size: 1.4em; }
+    .vocab-meaning { font-size: 1em; }
+    .vocab-romaji { font-size: 0.95em; }
+
+    .feedback-content,
+    .feedback-details { padding: 12px; }
+    .feedback-answer { font-size: 1em; }
+
+    .char-correct-card,
+    .char-correct,
+    .char-wrong,
+    .char-extra,
+    .char-missing {
+        padding: 6px 8px;
+        min-width: 28px;
+        font-size: 1em;
+    }
+
+    .feedback-actions { margin-top: 8px; }
+    .feedback-close-btn {
+        width: 100%;
+        padding: 12px;
+        font-size: 1rem;
+    }
 }
