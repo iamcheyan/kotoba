@@ -2318,9 +2318,10 @@ ruby rt {
 }
 
 .leaderboard-item.current-user {
-    background: linear-gradient(135deg, #4f46e5, #7c3aed);
-    color: white;
-    border-color: #4f46e5;
+    background: var(--card-bg, #ffffff);
+    color: var(--text);
+    border: 2px solid var(--accent, #6366f1);
+    box-shadow: 0 8px 20px rgba(99,102,241,0.18);
 }
 
 .leaderboard-rank {
@@ -2348,6 +2349,25 @@ ruby rt {
 .leaderboard-user-stats .lb-combo { background: rgba(245,158,11,.12); color:#f59e0b; }
 .leaderboard-user-stats .lb-total { background: rgba(99,102,241,.12); color:#6366f1; }
 .lb-level-badge { margin-left:6px; padding:2px 8px; border-radius:999px; font-size:11px; font-weight:700; background: linear-gradient(135deg,#fbbf24,#f59e0b); color:#fff; }
+
+/* 当前用户项中的统计色块在浅底背景下更清晰 */
+.leaderboard-item.current-user .leaderboard-user-stats .lb-stat { filter: none; opacity: 1; }
+.leaderboard-item.current-user .leaderboard-score { color: var(--accent, #6366f1); font-weight: 800; }
+
+/* 排行榜操作按钮适配尺寸（更小、更协调） */
+.leaderboard-actions .ghost-button,
+.leaderboard-actions .primary-button {
+    padding: 10px 16px;
+    border-radius: 12px;
+    flex: 0 0 auto;
+}
+
+@media (max-width: 640px) {
+    .leaderboard-actions .ghost-button,
+    .leaderboard-actions .primary-button {
+        width: 100%;
+    }
+}
 .leaderboard-score { font-size: 18px; font-weight: bold; color: var(--primary-color, #4f46e5); }
 
 .leaderboard-loading { text-align: center; padding: 40px 20px; color: var(--text-secondary, #64748b); }
