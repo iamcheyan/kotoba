@@ -803,6 +803,8 @@
     
     function incrementCombo() {
         currentCombo++;
+        console.log('连击数增加到:', currentCombo);
+        
         if (elements.comboStat) {
             elements.comboStat.textContent = currentCombo;
             // 触发连击动画
@@ -816,45 +818,87 @@
         }
         
         // 触发连击里程碑动画
+        console.log('触发连击动画，连击数:', currentCombo);
         triggerComboAnimation(currentCombo);
     }
     
     // 连击里程碑列表，全局定义
     const milestones = [
-        { count: 3,  text: 'コンボ',     class: 'combo-3',  icon: '🔥', sound: 'combo-basic' },
-        { count: 5,  text: 'すごい',     class: 'combo-5',  icon: '✨', sound: 'combo-good' },
-        { count: 10, text: '素晴らしい', class: 'combo-10', icon: '🎉', sound: 'combo-great' },
-        { count: 20, text: '驚異',      class: 'combo-20', icon: '🌟', sound: 'combo-amazing' },
-        { count: 30, text: '幻想的',    class: 'combo-30', icon: '🦄', sound: 'combo-fantasy' },
-        { count: 50, text: '伝説',      class: 'combo-50', icon: '🏆', sound: 'combo-legend' },
-        { count: 100, text: '神話',     class: 'combo-100', icon: '👑', sound: 'combo-myth' },
-        { count: 200, text: '永遠',     class: 'combo-200', icon: '💎', sound: 'combo-eternal' },
-        { count: 300, text: '宇宙',     class: 'combo-300', icon: '🚀', sound: 'combo-space' },
+        { count: 3,   text: 'コンボ',     class: 'combo-3',    icon: '🔥', sound: 'combo-basic' },
+        { count: 5,   text: 'すごい',     class: 'combo-5',    icon: '✨', sound: 'combo-good' },
+        { count: 10,  text: '素晴らしい', class: 'combo-10',   icon: '🎉', sound: 'combo-great' },
+        { count: 20,  text: '驚異',      class: 'combo-20',   icon: '🌟', sound: 'combo-amazing' },
+        { count: 30,  text: '幻想的',    class: 'combo-30',   icon: '🦄', sound: 'combo-fantasy' },
+        { count: 50,  text: '伝説',      class: 'combo-50',   icon: '🏆', sound: 'combo-legend' },
+        { count: 60,  text: '伝説',      class: 'combo-50',   icon: '🏆', sound: 'combo-legend' },
+        { count: 70,  text: '伝説',      class: 'combo-50',   icon: '🏆', sound: 'combo-legend' },
+        { count: 80,  text: '伝説',      class: 'combo-50',   icon: '🏆', sound: 'combo-legend' },
+        { count: 90,  text: '伝説',      class: 'combo-50',   icon: '🏆', sound: 'combo-legend' },
+        { count: 100, text: '神話',      class: 'combo-100',  icon: '👑', sound: 'combo-myth' },
+        { count: 200, text: '永遠',      class: 'combo-200',  icon: '💎', sound: 'combo-eternal' },
+        { count: 300, text: '宇宙',      class: 'combo-300',  icon: '🚀', sound: 'combo-space' },
         { count: 500, text: '伝説の極み', class: 'combo-500', icon: '🌌', sound: 'combo-galaxy' },
-        { count: 1000, text: '神',      class: 'combo-1000', icon: '🧙‍♂️', sound: 'combo-divine' }
+        { count: 1000, text: '神',       class: 'combo-1000', icon: '🧙‍♂️', sound: 'combo-divine' }
     ];
     
     // 音效播放函数
-    function playComboSound(soundType) {
+    function playComboSoundByType(soundType) {
+        console.log('playComboSound 被调用，音效类型:', soundType);
+        
         // 检查音效是否开启
         const soundEnabled = localStorage.getItem('comboSoundEnabled') !== 'false';
+        console.log('音效设置状态:', soundEnabled);
         if (!soundEnabled) {
+            console.log('音效已关闭');
             return;
         }
         
         try {
             // 创建音频上下文（如果不存在）
             if (!window.audioContext) {
+                console.log('创建新的音频上下文...');
                 window.audioContext = new (window.AudioContext || window.webkitAudioContext)();
             }
             
             const audioContext = window.audioContext;
+            console.log('音频上下文状态:', audioContext.state);
+            
+            // 检查音频上下文状态，如果暂停则恢复
+            if (audioContext.state === 'suspended') {
+                console.log('音频上下文暂停，尝试恢复...');
+                audioContext.resume().then(() => {
+                    console.log('音频上下文已恢复，开始播放音效');
+                    // 恢复后重新调用音效播放
+                    playComboSoundInternal(soundType, audioContext);
+                }).catch(err => {
+                    console.log('音频上下文恢复失败:', err);
+                    return;
+                });
+                return; // 等待恢复完成
+            }
+            
+            console.log('音频上下文正常，直接播放音效');
+            // 如果音频上下文正常，直接播放
+            playComboSoundInternal(soundType, audioContext);
+        } catch (error) {
+            console.log('音效播放失败:', error);
+        }
+    }
+    
+    // 内部音效播放函数
+    function playComboSoundInternal(soundType, audioContext) {
+        console.log('playComboSoundInternal 开始执行，音效类型:', soundType);
+        try {
             const oscillator = audioContext.createOscillator();
             const gainNode = audioContext.createGain();
+            
+            console.log('音频节点创建成功');
             
             // 连接音频节点
             oscillator.connect(gainNode);
             gainNode.connect(audioContext.destination);
+            
+            console.log('音频节点连接成功');
             
             // 根据音效类型设置不同的频率和效果
             let frequency, duration, volume;
@@ -925,34 +969,156 @@
             oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
             oscillator.type = 'sine';
             
+            console.log(`设置音效参数: 频率=${frequency}Hz, 时长=${duration}s, 音量=${volume}`);
+            
             // 设置音量包络
             gainNode.gain.setValueAtTime(0, audioContext.currentTime);
             gainNode.gain.linearRampToValueAtTime(volume, audioContext.currentTime + 0.01);
             gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
             
+            console.log('音量包络设置完成');
+            
             // 播放音效
+            console.log('开始播放音效...');
             oscillator.start(audioContext.currentTime);
             oscillator.stop(audioContext.currentTime + duration);
+            
+            console.log(`音效播放命令已发送: ${soundType}, 频率: ${frequency}Hz, 时长: ${duration}s`);
             
         } catch (error) {
             console.log('音效播放失败:', error);
         }
     }
     
+    // 测试音效函数
+    function testComboSound() {
+        console.log('测试音效...');
+        playComboSoundByType('combo-basic');
+        
+        // 备选方案：使用简单的HTML5 Audio测试
+        setTimeout(() => {
+            console.log('尝试备选音效方案...');
+            testSimpleSound();
+        }, 100);
+    }
+    
+    // 简单音效测试（备选方案）
+    function testSimpleSound() {
+        try {
+            console.log('开始简单音效测试...');
+            // 创建一个简单的音频上下文测试
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            console.log('音频上下文创建成功，状态:', audioContext.state);
+            
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            console.log('音频节点创建成功');
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            console.log('音频节点连接成功');
+            
+            oscillator.frequency.setValueAtTime(440, audioContext.currentTime);
+            oscillator.type = 'sine';
+            
+            console.log('振荡器参数设置完成');
+            
+            gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+            gainNode.gain.linearRampToValueAtTime(0.3, audioContext.currentTime + 0.01);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+            
+            console.log('音量包络设置完成');
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.2);
+            
+            console.log('备选音效播放命令已发送');
+        } catch (error) {
+            console.log('备选音效也失败了:', error);
+        }
+    }
+    
+    // 测试特定连击音效
+    function testSpecificComboSound(combo) {
+        console.log(`测试特定连击音效: ${combo}连击`);
+        triggerComboAnimation(combo);
+    }
+    
+    // 直接测试音效播放函数
+    function testDirectSound(soundType) {
+        console.log(`直接测试音效: ${soundType}`);
+        playComboSoundByType(soundType);
+    }
+    
+    // 将直接测试函数也暴露到全局
+    window.testDirectSound = testDirectSound;
+    
+    // 将测试函数暴露到全局，方便调试
+    window.testComboSound = testComboSound;
+    window.testSimpleSound = testSimpleSound;
+    window.testSpecificComboSound = testSpecificComboSound;
+    
     function triggerComboAnimation(combo) {
+        console.log('triggerComboAnimation 被调用，连击数:', combo);
+        
         // 检查是否达到里程碑
         const milestone = milestones.find(m => m.count === combo);
+        console.log('找到的里程碑:', milestone);
+        
         if (!milestone) {
+            console.log('没有找到对应的里程碑');
             // 对于50+的连击，每10次显示一次
             if (combo > 50 && combo % 10 === 0) {
-                playComboSound('combo-legend');
-                showComboNotification('伝説', combo, 'combo-50');
+                console.log('触发50+连击音效');
+                
+                // 根据连击数选择不同的音效
+                let soundType = 'combo-legend';
+                if (combo >= 1000) {
+                    soundType = 'combo-divine';
+                } else if (combo >= 500) {
+                    soundType = 'combo-galaxy';
+                } else if (combo >= 300) {
+                    soundType = 'combo-space';
+                } else if (combo >= 200) {
+                    soundType = 'combo-eternal';
+                } else if (combo >= 100) {
+                    soundType = 'combo-myth';
+                }
+                
+                playComboSoundByType(soundType);
+                let fallbackMilestone = null;
+                switch (soundType) {
+                    case 'combo-divine':
+                        fallbackMilestone = milestones.find(m => m.count === 1000);
+                        break;
+                    case 'combo-galaxy':
+                        fallbackMilestone = milestones.find(m => m.count === 500);
+                        break;
+                    case 'combo-space':
+                        fallbackMilestone = milestones.find(m => m.count === 300);
+                        break;
+                    case 'combo-eternal':
+                        fallbackMilestone = milestones.find(m => m.count === 200);
+                        break;
+                    case 'combo-myth':
+                        fallbackMilestone = milestones.find(m => m.count === 100);
+                        break;
+                    default:
+                        fallbackMilestone = milestones.find(m => m.count === 50);
+                        break;
+                }
+                const displayText = fallbackMilestone ? fallbackMilestone.text : '伝説';
+                const displayClass = fallbackMilestone ? fallbackMilestone.class : 'combo-50';
+                showComboNotification(displayText, combo, displayClass);
             }
             return;
         }
         
+        console.log('播放连击音效:', milestone.sound);
         // 播放音效
-        playComboSound(milestone.sound);
+        playComboSoundByType(milestone.sound);
         
         showComboNotification(milestone.text, combo, milestone.class);
     }
@@ -960,7 +1126,32 @@
     function showComboNotification(text, combo, comboClass) {
         // 获取对应的里程碑信息
         const milestone = milestones.find(m => m.class === comboClass);
-        const icon = milestone ? milestone.icon : '🔥';
+        let icon = milestone ? milestone.icon : '🔥';
+        
+        // 为高连击数提供特殊的显示逻辑
+        if (combo >= 100) {
+            // 根据连击数选择不同的图标和文字
+            if (combo >= 1000) {
+                icon = '🧙‍♂️';
+                text = '神';
+            } else if (combo >= 500) {
+                icon = '🌌';
+                text = '伝説の極み';
+            } else if (combo >= 300) {
+                icon = '🚀';
+                text = '宇宙';
+            } else if (combo >= 200) {
+                icon = '💎';
+                text = '永遠';
+            } else if (combo >= 100) {
+                icon = '👑';
+                text = '神話';
+            }
+        } else if (combo > 50 && combo % 10 === 0) {
+            // 50-99之间的连击，每10次显示一次
+            icon = '🏆';
+            text = '伝説';
+        }
         
         
         // 创建连击通知容器
@@ -998,26 +1189,12 @@
         document.body.appendChild(notification);
         
         // 播放音效（如果有）
-        playComboSound(combo);
+        // 音效由 triggerComboAnimation 控制，这里只负责展示动画
         
         // 自动移除
         setTimeout(() => {
             notification.remove();
         }, 1200);
-    }
-    
-    function playComboSound(combo) {
-        // 可以根据连击数播放不同音效
-        // 这里先保留接口，以后可以添加音效
-        if (combo >= 50) {
-            // 传说连击音效
-        } else if (combo >= 30) {
-            // 梦幻连击音效
-        } else if (combo >= 20) {
-            // 惊人连击音效
-        } else if (combo >= 10) {
-            // 优秀连击音效
-        }
     }
     
     function resetCombo() {
@@ -1424,8 +1601,13 @@
     }
 
     function triggerCelebration() {
-        // 播放庆祝音效
-        playCelebrationSound();
+        // 如果有连击，不播放庆祝音效，避免与连击音效冲突
+        if (state.combo > 1) {
+            console.log('有连击，跳过庆祝音效');
+        } else {
+            // 播放庆祝音效
+            playCelebrationSound();
+        }
         
         // 创建彩纸效果
         createConfetti();
@@ -2673,6 +2855,8 @@
                 // 只触发彩带动画，不显示toast
                 triggerCelebration();
                 
+                // 连击音效已经在 incrementCombo() 中触发了，这里不需要重复调用
+                
                 // 自动同步数据到 Firebase
                 syncToFirebase();
                 
@@ -2899,6 +3083,25 @@
         if (elements.modalBackdrop) {
             elements.modalBackdrop.addEventListener('click', hideModals);
         }
+        
+        // 音效测试按钮
+        const testComboSoundBtn = document.getElementById('test-combo-sound');
+        if (testComboSoundBtn) {
+            testComboSoundBtn.addEventListener('click', () => {
+                console.log('用户点击音效测试按钮');
+                testComboSound();
+            });
+        }
+        
+        // 连击音效测试按钮
+        const comboTestBtns = document.querySelectorAll('.combo-test-btn');
+        comboTestBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const combo = parseInt(btn.dataset.combo);
+                console.log(`测试连击音效: ${combo}连击`);
+                testSpecificComboSound(combo);
+            });
+        });
         document.querySelectorAll('[data-close="modal"]').forEach((node) => {
             node.addEventListener('click', hideModals);
         });

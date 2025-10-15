@@ -2066,6 +2066,65 @@ ruby rt {
     }
 }
 
+/* 音效测试区域 */
+.sound-test-section {
+    margin-top: 16px;
+    padding: 12px;
+    background: var(--bg-soft);
+    border-radius: 8px;
+    border: 1px solid var(--border);
+}
+
+.sound-test-section button {
+    width: 100%;
+    padding: 8px 16px;
+    font-size: 14px;
+}
+
+/* 连击音效测试区域 */
+.combo-sound-tests {
+    margin-top: 16px;
+    padding: 16px;
+    background: var(--bg-soft);
+    border-radius: 8px;
+    border: 1px solid var(--border);
+}
+
+.combo-sound-tests h4 {
+    margin: 0 0 12px 0;
+    font-size: 14px;
+    color: var(--text);
+}
+
+.combo-test-buttons {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 8px;
+}
+
+.combo-test-btn {
+    padding: 8px 12px;
+    font-size: 12px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--text);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.combo-test-btn:hover {
+    background: var(--accent-soft);
+    border-color: var(--accent);
+    transform: translateY(-1px);
+}
+
+.combo-test-btn:active {
+    transform: translateY(0);
+    background: var(--accent);
+    color: white;
+}
+
 .theme-options {
     margin-top: 6px;
     padding: 0;
