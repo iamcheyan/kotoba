@@ -821,29 +821,138 @@
     
     // 连击里程碑列表，全局定义
     const milestones = [
-        { count: 3,  text: 'コンボ',     class: 'combo-3',  icon: '🔥' },
-        { count: 5,  text: 'すごい',     class: 'combo-5',  icon: '✨' },
-        { count: 10, text: '素晴らしい', class: 'combo-10', icon: '🎉' },
-        { count: 20, text: '驚異',      class: 'combo-20', icon: '🌟' },
-        { count: 30, text: '幻想的',    class: 'combo-30', icon: '🦄' },
-        { count: 50, text: '伝説',      class: 'combo-50', icon: '🏆' },
-        { count: 100, text: '神話',     class: 'combo-100', icon: '👑' },
-        { count: 200, text: '永遠',     class: 'combo-200', icon: '💎' },
-        { count: 300, text: '宇宙',     class: 'combo-300', icon: '🚀' },
-        { count: 500, text: '伝説の極み', class: 'combo-500', icon: '🌌' },
-        { count: 1000, text: '神',      class: 'combo-1000', icon: '🧙‍♂️' }
+        { count: 3,  text: 'コンボ',     class: 'combo-3',  icon: '🔥', sound: 'combo-basic' },
+        { count: 5,  text: 'すごい',     class: 'combo-5',  icon: '✨', sound: 'combo-good' },
+        { count: 10, text: '素晴らしい', class: 'combo-10', icon: '🎉', sound: 'combo-great' },
+        { count: 20, text: '驚異',      class: 'combo-20', icon: '🌟', sound: 'combo-amazing' },
+        { count: 30, text: '幻想的',    class: 'combo-30', icon: '🦄', sound: 'combo-fantasy' },
+        { count: 50, text: '伝説',      class: 'combo-50', icon: '🏆', sound: 'combo-legend' },
+        { count: 100, text: '神話',     class: 'combo-100', icon: '👑', sound: 'combo-myth' },
+        { count: 200, text: '永遠',     class: 'combo-200', icon: '💎', sound: 'combo-eternal' },
+        { count: 300, text: '宇宙',     class: 'combo-300', icon: '🚀', sound: 'combo-space' },
+        { count: 500, text: '伝説の極み', class: 'combo-500', icon: '🌌', sound: 'combo-galaxy' },
+        { count: 1000, text: '神',      class: 'combo-1000', icon: '🧙‍♂️', sound: 'combo-divine' }
     ];
-
+    
+    // 音效播放函数
+    function playComboSound(soundType) {
+        // 检查音效是否开启
+        const soundEnabled = localStorage.getItem('comboSoundEnabled') !== 'false';
+        if (!soundEnabled) {
+            return;
+        }
+        
+        try {
+            // 创建音频上下文（如果不存在）
+            if (!window.audioContext) {
+                window.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            
+            const audioContext = window.audioContext;
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            // 连接音频节点
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            // 根据音效类型设置不同的频率和效果
+            let frequency, duration, volume;
+            
+            switch(soundType) {
+                case 'combo-basic':
+                    frequency = 440; // A4
+                    duration = 0.1;
+                    volume = 0.3;
+                    break;
+                case 'combo-good':
+                    frequency = 523; // C5
+                    duration = 0.15;
+                    volume = 0.4;
+                    break;
+                case 'combo-great':
+                    frequency = 659; // E5
+                    duration = 0.2;
+                    volume = 0.5;
+                    break;
+                case 'combo-amazing':
+                    frequency = 784; // G5
+                    duration = 0.25;
+                    volume = 0.6;
+                    break;
+                case 'combo-fantasy':
+                    frequency = 880; // A5
+                    duration = 0.3;
+                    volume = 0.7;
+                    break;
+                case 'combo-legend':
+                    frequency = 1047; // C6
+                    duration = 0.4;
+                    volume = 0.8;
+                    break;
+                case 'combo-myth':
+                    frequency = 1319; // E6
+                    duration = 0.5;
+                    volume = 0.9;
+                    break;
+                case 'combo-eternal':
+                    frequency = 1568; // G6
+                    duration = 0.6;
+                    volume = 1.0;
+                    break;
+                case 'combo-space':
+                    frequency = 1760; // A6
+                    duration = 0.7;
+                    volume = 1.0;
+                    break;
+                case 'combo-galaxy':
+                    frequency = 2093; // C7
+                    duration = 0.8;
+                    volume = 1.0;
+                    break;
+                case 'combo-divine':
+                    frequency = 2637; // E7
+                    duration = 1.0;
+                    volume = 1.0;
+                    break;
+                default:
+                    frequency = 440;
+                    duration = 0.1;
+                    volume = 0.3;
+            }
+            
+            // 设置振荡器参数
+            oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
+            oscillator.type = 'sine';
+            
+            // 设置音量包络
+            gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+            gainNode.gain.linearRampToValueAtTime(volume, audioContext.currentTime + 0.01);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+            
+            // 播放音效
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + duration);
+            
+        } catch (error) {
+            console.log('音效播放失败:', error);
+        }
+    }
+    
     function triggerComboAnimation(combo) {
         // 检查是否达到里程碑
         const milestone = milestones.find(m => m.count === combo);
         if (!milestone) {
             // 对于50+的连击，每10次显示一次
             if (combo > 50 && combo % 10 === 0) {
+                playComboSound('combo-legend');
                 showComboNotification('伝説', combo, 'combo-50');
             }
             return;
         }
+        
+        // 播放音效
+        playComboSound(milestone.sound);
         
         showComboNotification(milestone.text, combo, milestone.class);
     }
@@ -2638,6 +2747,14 @@
         state.showKatakanaReading = params.get('show_katakana_reading') === '1';
         state.showFurigana = !params.has('hide_furigana');
         state.autoPronunciation = params.get('auto_pronunciation') === '1';
+        
+        // 初始化音效设置
+        const comboSoundEnabled = localStorage.getItem('comboSoundEnabled') !== 'false';
+        const comboSoundCheckbox = document.getElementById('toggle-combo-sound');
+        if (comboSoundCheckbox) {
+            comboSoundCheckbox.checked = comboSoundEnabled;
+        }
+        
         return params;
     }
 
@@ -2761,6 +2878,11 @@
                 elements.toggleKatakana.checked ? params.set('show_katakana_reading', '1') : params.delete('show_katakana_reading');
                 elements.toggleFurigana.checked ? params.delete('hide_furigana') : params.set('hide_furigana', '1');
                 elements.toggleAutoPronunciation.checked ? params.set('auto_pronunciation', '1') : params.delete('auto_pronunciation');
+                
+                // 保存音效设置
+                const comboSoundEnabled = document.getElementById('toggle-combo-sound').checked;
+                localStorage.setItem('comboSoundEnabled', comboSoundEnabled.toString());
+                
                 updateBrowserParams(params);
                 const selectedTheme = isSupportedTheme(state.pendingTheme) ? state.pendingTheme : state.theme;
                 applyTheme(selectedTheme);
