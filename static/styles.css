@@ -1522,7 +1522,6 @@ ruby rt {
 
 /* 词汇信息样式 */
 .feedback-vocab-info {
-    margin-bottom: 16px;
     text-align: center;
 }
 
@@ -1530,14 +1529,14 @@ ruby rt {
     font-size: 2.2em;
     font-weight: bold;
     color: #1f2937;
-    margin-bottom: 8px;
+    /* margin-bottom: 8px; */
     font-family: 'Noto Sans JP', sans-serif;
 }
 
 .vocab-meaning {
     font-size: 1.1em;
     color: #4b5563;
-    margin-bottom: 6px;
+    margin-bottom: 0;
     font-weight: 500;
 }
 
@@ -1750,7 +1749,6 @@ ruby rt {
 .feedback-actions {
     display: flex;
     justify-content: center;
-    margin-top: 16px;
 }
 
 .feedback-close-btn {
@@ -3975,7 +3973,6 @@ body.theme-sakura .pwa-progress-bar {
         gap: 10px;
     }
 
-    .feedback-vocab-info { margin-bottom: 8px; }
     .vocab-word { font-size: 1.4em; }
     .vocab-meaning { font-size: 1em; }
     .vocab-romaji { font-size: 0.95em; }
