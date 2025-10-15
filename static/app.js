@@ -819,17 +819,22 @@
         triggerComboAnimation(currentCombo);
     }
     
+    // 连击里程碑列表，全局定义
+    const milestones = [
+        { count: 3,  text: 'コンボ',     class: 'combo-3',  icon: '🔥' },
+        { count: 5,  text: 'すごい',     class: 'combo-5',  icon: '✨' },
+        { count: 10, text: '素晴らしい', class: 'combo-10', icon: '🎉' },
+        { count: 20, text: '驚異',      class: 'combo-20', icon: '🌟' },
+        { count: 30, text: '幻想的',    class: 'combo-30', icon: '🦄' },
+        { count: 50, text: '伝説',      class: 'combo-50', icon: '🏆' },
+        { count: 100, text: '神話',     class: 'combo-100', icon: '👑' },
+        { count: 200, text: '永遠',     class: 'combo-200', icon: '💎' },
+        { count: 300, text: '宇宙',     class: 'combo-300', icon: '🚀' },
+        { count: 500, text: '伝説の極み', class: 'combo-500', icon: '🌌' },
+        { count: 1000, text: '神',      class: 'combo-1000', icon: '🧙‍♂️' }
+    ];
+
     function triggerComboAnimation(combo) {
-        // 连击里程碑：3, 5, 10, 20, 30, 50
-        const milestones = [
-            { count: 3, text: 'コンボ', class: 'combo-3' },
-            { count: 5, text: 'すごい', class: 'combo-5' },
-            { count: 10, text: '素晴らしい', class: 'combo-10' },
-            { count: 20, text: '驚異', class: 'combo-20' },
-            { count: 30, text: '幻想的', class: 'combo-30' },
-            { count: 50, text: '伝説', class: 'combo-50' }
-        ];
-        
         // 检查是否达到里程碑
         const milestone = milestones.find(m => m.count === combo);
         if (!milestone) {
@@ -844,6 +849,11 @@
     }
     
     function showComboNotification(text, combo, comboClass) {
+        // 获取对应的里程碑信息
+        const milestone = milestones.find(m => m.class === comboClass);
+        const icon = milestone ? milestone.icon : '🔥';
+        
+        
         // 创建连击通知容器
         const notification = document.createElement('div');
         notification.className = `combo-notification ${comboClass}`;
@@ -851,7 +861,8 @@
         const comboText = document.createElement('div');
         comboText.className = 'combo-text';
         comboText.innerHTML = `
-            ${text}
+            <span class="combo-icon">${icon}</span>
+            <span class="combo-label">${text}</span>
             <span class="combo-number">×${combo}</span>
         `;
         

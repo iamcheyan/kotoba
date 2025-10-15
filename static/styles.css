@@ -2933,36 +2933,79 @@ ruby rt {
         height: 10px;
     }
     
-    /* 移动端主题切换优化 */
+    /* 移动端主题切换优化 - 只显示色块 */
     .theme-options {
         display: flex;
-        gap: 16px;
+        gap: 12px;
         justify-content: center;
+        flex-wrap: wrap;
     }
     
     .theme-option {
-        flex-direction: row;
-        padding: 10px 12px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
         gap: 8px;
+        padding: 12px;
         min-height: auto;
-        flex: 0 0 auto;
-        width: 48%;
+        width: 60px;
+        border-radius: 12px;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+    
+    .theme-option:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     }
     
     .theme-option__content {
-        display: none;
+        display: none;  /* 隐藏文字内容 */
     }
     
     .theme-option__preview {
-        width: 36px;
-        height: 36px;
+        width: 40px;
+        height: 40px;
         margin: 0;
+        flex-shrink: 0;
+        border-radius: 8px;
     }
     
     .theme-option__indicator {
-        width: 18px;
-        height: 18px;
+        width: 16px;
+        height: 16px;
         flex-shrink: 0;
+        margin-top: 4px;
+    }
+    
+    /* 确保主题选项在移动端正确对齐 */
+    .theme-option input {
+        position: absolute;
+        inset: 0;
+        opacity: 0;
+        pointer-events: none;
+    }
+    
+    .theme-option:focus-within {
+        outline: 2px solid var(--accent-ring);
+        outline-offset: 2px;
+    }
+    
+    .theme-option.is-active {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 2px var(--accent-soft);
+        background: var(--accent-soft);
+    }
+    
+    .theme-option.is-active .theme-option__indicator {
+        border-color: var(--accent);
+        background: var(--accent);
+        box-shadow: 0 0 0 2px var(--accent-soft);
+    }
+    
+    .theme-option.is-active .theme-option__preview {
+        box-shadow: 0 0 12px rgba(16, 185, 129, 0.4);
+        transform: scale(1.05);
     }
     
     /* 移动端按钮优化 */
@@ -3132,6 +3175,26 @@ ruby rt {
     .combo-notification.combo-50 .combo-text {
         font-size: 4.5rem !important;
     }
+    
+    .combo-notification.combo-100 .combo-text {
+        font-size: 5rem !important;
+    }
+    
+    .combo-notification.combo-200 .combo-text {
+        font-size: 5.5rem !important;
+    }
+    
+    .combo-notification.combo-300 .combo-text {
+        font-size: 6rem !important;
+    }
+    
+    .combo-notification.combo-500 .combo-text {
+        font-size: 6.5rem !important;
+    }
+    
+    .combo-notification.combo-1000 .combo-text {
+        font-size: 7rem !important;
+    }
 }
 
 /* Combo Animation Styles */
@@ -3151,12 +3214,43 @@ ruby rt {
     text-shadow: 0 0 20px currentColor, 0 0 40px currentColor;
     letter-spacing: 0.1em;
     animation: comboFloat 1.2s ease-out;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
 }
 
-/* 不同等级的连击颜色 */
+.combo-icon {
+    font-size: 1.2em;
+    animation: comboIconBounce 0.6s ease-out, comboIconRotate 0.8s ease-out;
+    display: block;
+    margin-bottom: 4px;
+}
+
+.combo-label {
+    font-size: 0.6em;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    opacity: 0.9;
+    animation: comboLabelSlide 0.8s ease-out;
+}
+
+.combo-number {
+    font-size: 0.4em;
+    font-weight: 800;
+    margin-top: 4px;
+    animation: comboNumberPop 0.8s ease-out;
+    opacity: 0.8;
+}
+
+/* 不同等级的连击颜色和图标动画 */
 .combo-notification.combo-3 .combo-text {
     color: #3b82f6;
     text-shadow: 0 0 20px #3b82f6, 0 0 40px #3b82f6, 0 0 60px #3b82f6;
+}
+
+.combo-notification.combo-3 .combo-icon {
+    animation: comboIconBounce 0.6s ease-out, comboIconRotate 0.8s ease-out;
 }
 
 .combo-notification.combo-5 .combo-text {
@@ -3164,10 +3258,18 @@ ruby rt {
     text-shadow: 0 0 20px #10b981, 0 0 40px #10b981, 0 0 60px #10b981;
 }
 
+.combo-notification.combo-5 .combo-icon {
+    animation: comboIconBounce 0.6s ease-out, comboIconRotate 0.8s ease-out;
+}
+
 .combo-notification.combo-10 .combo-text {
     color: #f59e0b;
     font-size: 5rem;
     text-shadow: 0 0 30px #f59e0b, 0 0 60px #f59e0b, 0 0 90px #f59e0b;
+}
+
+.combo-notification.combo-10 .combo-icon {
+    animation: comboIconBounce 0.6s ease-out, comboIconRotate 0.8s ease-out, comboIconGlow 1s ease-in-out infinite;
 }
 
 .combo-notification.combo-20 .combo-text {
@@ -3177,11 +3279,19 @@ ruby rt {
     animation: comboFloat 1.2s ease-out, comboShake 0.5s ease-in-out;
 }
 
+.combo-notification.combo-20 .combo-icon {
+    animation: comboIconBounce 0.6s ease-out, comboIconRotate 0.8s ease-out, comboIconShake 0.5s ease-in-out;
+}
+
 .combo-notification.combo-30 .combo-text {
     color: #a855f7;
     font-size: 6rem;
     text-shadow: 0 0 40px #a855f7, 0 0 80px #a855f7, 0 0 120px #a855f7;
     animation: comboFloat 1.2s ease-out, comboPulse 0.6s ease-in-out infinite;
+}
+
+.combo-notification.combo-30 .combo-icon {
+    animation: comboIconBounce 0.6s ease-out, comboIconRotate 0.8s ease-out, comboIconPulse 0.6s ease-in-out infinite;
 }
 
 .combo-notification.combo-50 .combo-text {
@@ -3193,6 +3303,96 @@ ruby rt {
     background-clip: text;
     animation: comboFloat 1.2s ease-out, comboRainbow 2s linear infinite, comboMegaPulse 0.4s ease-in-out infinite;
     text-shadow: none;
+}
+
+.combo-notification.combo-50 .combo-icon {
+    animation: comboIconBounce 0.6s ease-out, comboIconRotate 0.8s ease-out, comboIconMegaPulse 0.4s ease-in-out infinite;
+    filter: drop-shadow(0 0 10px currentColor);
+}
+
+/* 100连击 - 神話 */
+.combo-notification.combo-100 .combo-text {
+    font-size: 7rem;
+    background: linear-gradient(45deg, #ffd700, #ffed4e, #ffd700);
+    background-size: 200% 200%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: comboFloat 1.2s ease-out, comboGold 2s linear infinite, comboMegaPulse 0.3s ease-in-out infinite;
+    text-shadow: none;
+}
+
+.combo-notification.combo-100 .combo-icon {
+    animation: comboIconBounce 0.6s ease-out, comboIconRotate 0.8s ease-out, comboIconCrown 1s ease-in-out infinite;
+    filter: drop-shadow(0 0 15px #ffd700);
+}
+
+/* 200连击 - 永遠 */
+.combo-notification.combo-200 .combo-text {
+    font-size: 7.5rem;
+    background: linear-gradient(45deg, #e5e7eb, #f3f4f6, #ffffff, #e5e7eb);
+    background-size: 200% 200%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: comboFloat 1.2s ease-out, comboDiamond 2s linear infinite, comboMegaPulse 0.3s ease-in-out infinite;
+    text-shadow: none;
+}
+
+.combo-notification.combo-200 .combo-icon {
+    animation: comboIconBounce 0.6s ease-out, comboIconRotate 0.8s ease-out, comboIconDiamond 1s ease-in-out infinite;
+    filter: drop-shadow(0 0 20px #ffffff);
+}
+
+/* 300连击 - 宇宙 */
+.combo-notification.combo-300 .combo-text {
+    font-size: 8rem;
+    background: linear-gradient(45deg, #1e40af, #3b82f6, #60a5fa, #93c5fd);
+    background-size: 200% 200%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: comboFloat 1.2s ease-out, comboSpace 2s linear infinite, comboMegaPulse 0.3s ease-in-out infinite;
+    text-shadow: none;
+}
+
+.combo-notification.combo-300 .combo-icon {
+    animation: comboIconBounce 0.6s ease-out, comboIconRotate 0.8s ease-out, comboIconRocket 1s ease-in-out infinite;
+    filter: drop-shadow(0 0 25px #3b82f6);
+}
+
+/* 500连击 - 伝説の極み */
+.combo-notification.combo-500 .combo-text {
+    font-size: 8.5rem;
+    background: linear-gradient(45deg, #7c3aed, #a855f7, #c084fc, #ddd6fe);
+    background-size: 200% 200%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: comboFloat 1.2s ease-out, comboGalaxy 2s linear infinite, comboMegaPulse 0.2s ease-in-out infinite;
+    text-shadow: none;
+}
+
+.combo-notification.combo-500 .combo-icon {
+    animation: comboIconBounce 0.6s ease-out, comboIconRotate 0.8s ease-out, comboIconGalaxy 1s ease-in-out infinite;
+    filter: drop-shadow(0 0 30px #a855f7);
+}
+
+/* 1000连击 - 神 */
+.combo-notification.combo-1000 .combo-text {
+    font-size: 9rem;
+    background: linear-gradient(45deg, #fbbf24, #f59e0b, #d97706, #92400e);
+    background-size: 200% 200%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: comboFloat 1.2s ease-out, comboDivine 2s linear infinite, comboMegaPulse 0.1s ease-in-out infinite;
+    text-shadow: none;
+}
+
+.combo-notification.combo-1000 .combo-icon {
+    animation: comboIconBounce 0.6s ease-out, comboIconRotate 0.8s ease-out, comboIconDivine 1s ease-in-out infinite;
+    filter: drop-shadow(0 0 35px #f59e0b);
 }
 
 .combo-number {
@@ -3277,6 +3477,161 @@ ruby rt {
     100% {
         transform: scale(1);
         opacity: 1;
+    }
+}
+
+@keyframes comboIconBounce {
+    0% {
+        transform: scale(0) rotate(-180deg);
+        opacity: 0;
+    }
+    50% {
+        transform: scale(1.3) rotate(-90deg);
+        opacity: 1;
+    }
+    70% {
+        transform: scale(0.9) rotate(0deg);
+    }
+    100% {
+        transform: scale(1) rotate(0deg);
+        opacity: 1;
+    }
+}
+
+@keyframes comboIconRotate {
+    0% {
+        transform: rotate(-180deg);
+    }
+    100% {
+        transform: rotate(0deg);
+    }
+}
+
+@keyframes comboLabelSlide {
+    0% {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+    60% {
+        transform: translateY(-5px);
+        opacity: 0.8;
+    }
+    100% {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes comboIconGlow {
+    0%, 100% {
+        filter: drop-shadow(0 0 5px currentColor);
+        transform: scale(1);
+    }
+    50% {
+        filter: drop-shadow(0 0 15px currentColor);
+        transform: scale(1.1);
+    }
+}
+
+@keyframes comboIconShake {
+    0%, 100% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-3px); }
+    20%, 40%, 60%, 80% { transform: translateX(3px); }
+}
+
+@keyframes comboIconPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}
+
+@keyframes comboIconMegaPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+}
+
+/* 新里程碑动画效果 */
+@keyframes comboGold {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+@keyframes comboDiamond {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+@keyframes comboSpace {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+@keyframes comboGalaxy {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+@keyframes comboDivine {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+@keyframes comboIconCrown {
+    0%, 100% { 
+        transform: scale(1) rotate(0deg);
+        filter: drop-shadow(0 0 15px #ffd700);
+    }
+    50% { 
+        transform: scale(1.1) rotate(5deg);
+        filter: drop-shadow(0 0 25px #ffd700);
+    }
+}
+
+@keyframes comboIconDiamond {
+    0%, 100% { 
+        transform: scale(1) rotate(0deg);
+        filter: drop-shadow(0 0 20px #ffffff);
+    }
+    50% { 
+        transform: scale(1.15) rotate(10deg);
+        filter: drop-shadow(0 0 30px #ffffff);
+    }
+}
+
+@keyframes comboIconRocket {
+    0%, 100% { 
+        transform: scale(1) translateY(0);
+        filter: drop-shadow(0 0 25px #3b82f6);
+    }
+    50% { 
+        transform: scale(1.1) translateY(-5px);
+        filter: drop-shadow(0 0 35px #3b82f6);
+    }
+}
+
+@keyframes comboIconGalaxy {
+    0%, 100% { 
+        transform: scale(1) rotate(0deg);
+        filter: drop-shadow(0 0 30px #a855f7);
+    }
+    50% { 
+        transform: scale(1.2) rotate(15deg);
+        filter: drop-shadow(0 0 40px #a855f7);
+    }
+}
+
+@keyframes comboIconDivine {
+    0%, 100% { 
+        transform: scale(1) rotate(0deg);
+        filter: drop-shadow(0 0 35px #f59e0b);
+    }
+    50% { 
+        transform: scale(1.25) rotate(20deg);
+        filter: drop-shadow(0 0 45px #f59e0b);
     }
 }
 
