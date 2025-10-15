@@ -3138,11 +3138,39 @@
 
         // WanaKana input conversion for answer input
         // Use setTimeout to ensure WanaKana is fully loaded
+        function attachLongVowelHotkey(inputElement) {
+            if (!inputElement || inputElement.__longVowelHotkeyAttached) return;
+            inputElement.__longVowelHotkeyAttached = true;
+            inputElement.addEventListener('keydown', function (e) {
+                // Ignore when using IME composition or with modifier keys
+                if (e.isComposing || e.metaKey || e.ctrlKey || e.altKey) return;
+                // Map L/l to Japanese prolonged sound mark
+                if (e.key === 'l' || e.key === 'L') {
+                    e.preventDefault();
+                    const target = e.target;
+                    const start = target.selectionStart || 0;
+                    const end = target.selectionEnd || start;
+                    const before = target.value.slice(0, start);
+                    const after = target.value.slice(end);
+                    const inserted = 'ー';
+                    target.value = before + inserted + after;
+                    const newPos = start + inserted.length;
+                    try {
+                        target.setSelectionRange(newPos, newPos);
+                    } catch (_) {}
+                    // Notify any listeners (including WanaKana bound handlers)
+                    target.dispatchEvent(new Event('input', { bubbles: true }));
+                }
+            });
+        }
+
         setTimeout(() => {
             if (elements.answerInput && window.wanakana) {
                 console.log('Binding WanaKana to answer input...');
                 window.wanakana.bind(elements.answerInput);
                 console.log('WanaKana bound successfully to answer input');
+                // Attach custom hotkey: L -> ー
+                attachLongVowelHotkey(elements.answerInput);
             } else {
                 console.warn('WanaKana binding failed:', {
                     answerInput: !!elements.answerInput,
@@ -3154,6 +3182,8 @@
                         console.log('Retrying WanaKana binding...');
                         window.wanakana.bind(elements.answerInput);
                         console.log('WanaKana bound successfully on retry');
+                        // Attach custom hotkey: L -> ー (ensure attached once)
+                        attachLongVowelHotkey(elements.answerInput);
                     } else {
                         console.error('WanaKana binding failed after retry:', {
                             answerInput: !!elements.answerInput,
