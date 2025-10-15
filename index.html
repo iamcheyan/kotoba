@@ -743,7 +743,7 @@
     <script type="module">
         // Import Firebase modules
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
-        import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
+        import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
         import { getFirestore, doc, setDoc, getDoc, collection, query, orderBy, limit, getDocs, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
 
         // Your web app's Firebase configuration
@@ -772,72 +772,7 @@
         window.firebaseAuth = auth;
         window.firebaseDb = db;
 
-        const AUTH_FORCE_REDIRECT_KEY = 'kotoba.auth.forceRedirect';
-
-        function shouldForceRedirect() {
-            try {
-                return localStorage.getItem(AUTH_FORCE_REDIRECT_KEY) === 'true';
-            } catch (error) {
-                console.warn('Unable to read auth redirect preference', error);
-                return false;
-            }
-        }
-
-        function persistForceRedirect(value) {
-            try {
-                if (value) {
-                    localStorage.setItem(AUTH_FORCE_REDIRECT_KEY, 'true');
-                } else {
-                    localStorage.removeItem(AUTH_FORCE_REDIRECT_KEY);
-                }
-            } catch (error) {
-                console.warn('Unable to persist auth redirect preference', error);
-            }
-        }
-
-        // Sign-in helper: prefer redirect in environments likely to block popups (COOP/PWA/iOS/Safari),
-        // otherwise try popup and fallback to redirect on known issues
-        async function signInWithBestAvailable(authInstance, providerInstance) {
-            const isStandalonePWA = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true;
-            const isCrossOriginIsolated = !!window.crossOriginIsolated;
-            const ua = navigator.userAgent || navigator.vendor || '';
-            const isIOS = /iPad|iPhone|iPod/.test(ua) && !window.MSStream;
-            const isSafari = /^((?!chrome|android).)*safari/i.test(ua);
-            const forceRedirect = shouldForceRedirect();
-
-            if (isStandalonePWA || isCrossOriginIsolated || isIOS || isSafari || forceRedirect) {
-                await signInWithRedirect(authInstance, providerInstance);
-                return null;
-            }
-
-            try {
-                const result = await signInWithPopup(authInstance, providerInstance);
-                persistForceRedirect(false);
-                return result;
-            } catch (err) {
-                const message = (err && err.message) || '';
-                const code = err && err.code;
-                const coopRelated =
-                    /Cross-Origin-Opener-Policy/i.test(message) ||
-                    /window\.closed/i.test(message);
-                const fallback = (
-                    code === 'auth/popup-blocked' ||
-                    code === 'auth/popup-closed-by-user' ||
-                    code === 'auth/cancelled-popup-request' ||
-                    code === 'auth/unauthorized-domain' ||
-                    coopRelated
-                );
-                if (fallback) {
-                    if (coopRelated) {
-                        persistForceRedirect(true);
-                    }
-                    console.warn('Popup login failed; fallback to redirect:', code || message);
-                    await signInWithRedirect(authInstance, providerInstance);
-                    return null;
-                }
-                throw err;
-            }
-        }
+        // 简化为与 Terebi 相同的登录方式：仅使用 Popup
 
         // UI Elements
         const loginButton = document.getElementById('loginButton');
@@ -951,7 +886,7 @@
             loginButtonMenu.addEventListener('click', async () => {
                 try {
                     sessionStorage.removeItem('dataLoaded');
-                    const result = await signInWithBestAvailable(auth, provider);
+                    const result = await signInWithPopup(auth, provider);
                     const user = result.user;
                     console.log('User signed in:', user.displayName);
                     showNotification('ログインしました', 'success');
@@ -1080,7 +1015,7 @@
             loginButton.addEventListener('click', async () => {
                 try {
                     sessionStorage.removeItem('dataLoaded');
-                    const result = await signInWithBestAvailable(auth, provider);
+                    const result = await signInWithPopup(auth, provider);
                     const user = result.user;
                     console.log('User signed in:', user.displayName);
                     showNotification('ログインしました', 'success');
@@ -1113,8 +1048,9 @@
                     await signOut(auth);
                     setTimeout(async () => {
                         try {
-                            const result = await signInWithBestAvailable(auth, provider);
-                            console.log('Switched to account:', result.user.displayName);
+                            const result = await signInWithPopup(auth, provider);
+                            const user = result.user;
+                            console.log('Switched to account:', user.displayName);
                             showNotification('アカウントを切り替えました', 'success');
                         } catch (error) {
                             console.error('Switch account error:', error);
