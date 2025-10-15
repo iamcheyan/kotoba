@@ -3291,6 +3291,7 @@ ruby rt {
     font-weight: 700;
     letter-spacing: 0.05em;
     opacity: 0.9;
+    display: inline-block;
     animation: comboLabelSlide 0.8s ease-out;
 }
 
@@ -3298,6 +3299,7 @@ ruby rt {
     font-size: 0.4em;
     font-weight: 800;
     margin-top: 4px;
+    display: inline-block;
     animation: comboNumberPop 0.8s ease-out;
     opacity: 0.8;
 }
@@ -3355,13 +3357,19 @@ ruby rt {
 
 .combo-notification.combo-50 .combo-text {
     font-size: 6.5rem;
+    color: #ffffff;
+    animation: comboFloat 1.2s ease-out, comboMegaPulse 0.4s ease-in-out infinite;
+    text-shadow: none;
+}
+
+.combo-notification.combo-50 .combo-label,
+.combo-notification.combo-50 .combo-number {
+    color: #ffffff;
     background: linear-gradient(45deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #9400d3);
     background-size: 200% 200%;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    background-clip: text;
-    animation: comboFloat 1.2s ease-out, comboRainbow 2s linear infinite, comboMegaPulse 0.4s ease-in-out infinite;
-    text-shadow: none;
+    animation: comboRainbow 2s linear infinite;
 }
 
 .combo-notification.combo-50 .combo-icon {
@@ -3372,13 +3380,19 @@ ruby rt {
 /* 100连击 - 神話 */
 .combo-notification.combo-100 .combo-text {
     font-size: 7rem;
+    color: #ffffff;
+    animation: comboFloat 1.2s ease-out, comboMegaPulse 0.3s ease-in-out infinite;
+    text-shadow: none;
+}
+
+.combo-notification.combo-100 .combo-label,
+.combo-notification.combo-100 .combo-number {
+    color: #ffffff;
     background: linear-gradient(45deg, #ffd700, #ffed4e, #ffd700);
     background-size: 200% 200%;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    background-clip: text;
-    animation: comboFloat 1.2s ease-out, comboGold 2s linear infinite, comboMegaPulse 0.3s ease-in-out infinite;
-    text-shadow: none;
+    animation: comboGold 2s linear infinite;
 }
 
 .combo-notification.combo-100 .combo-icon {
@@ -3389,13 +3403,19 @@ ruby rt {
 /* 200连击 - 永遠 */
 .combo-notification.combo-200 .combo-text {
     font-size: 7.5rem;
+    color: #ffffff;
+    animation: comboFloat 1.2s ease-out, comboMegaPulse 0.3s ease-in-out infinite;
+    text-shadow: none;
+}
+
+.combo-notification.combo-200 .combo-label,
+.combo-notification.combo-200 .combo-number {
+    color: #ffffff;
     background: linear-gradient(45deg, #e5e7eb, #f3f4f6, #ffffff, #e5e7eb);
     background-size: 200% 200%;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    background-clip: text;
-    animation: comboFloat 1.2s ease-out, comboDiamond 2s linear infinite, comboMegaPulse 0.3s ease-in-out infinite;
-    text-shadow: none;
+    animation: comboDiamond 2s linear infinite;
 }
 
 .combo-notification.combo-200 .combo-icon {
@@ -3406,13 +3426,19 @@ ruby rt {
 /* 300连击 - 宇宙 */
 .combo-notification.combo-300 .combo-text {
     font-size: 8rem;
+    color: #ffffff;
+    animation: comboFloat 1.2s ease-out, comboMegaPulse 0.3s ease-in-out infinite;
+    text-shadow: none;
+}
+
+.combo-notification.combo-300 .combo-label,
+.combo-notification.combo-300 .combo-number {
+    color: #ffffff;
     background: linear-gradient(45deg, #1e40af, #3b82f6, #60a5fa, #93c5fd);
     background-size: 200% 200%;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    background-clip: text;
-    animation: comboFloat 1.2s ease-out, comboSpace 2s linear infinite, comboMegaPulse 0.3s ease-in-out infinite;
-    text-shadow: none;
+    animation: comboSpace 2s linear infinite;
 }
 
 .combo-notification.combo-300 .combo-icon {
@@ -3423,13 +3449,19 @@ ruby rt {
 /* 500连击 - 伝説の極み */
 .combo-notification.combo-500 .combo-text {
     font-size: 8.5rem;
+    color: #ffffff;
+    animation: comboFloat 1.2s ease-out, comboMegaPulse 0.2s ease-in-out infinite;
+    text-shadow: none;
+}
+
+.combo-notification.combo-500 .combo-label,
+.combo-notification.combo-500 .combo-number {
+    color: #ffffff;
     background: linear-gradient(45deg, #7c3aed, #a855f7, #c084fc, #ddd6fe);
     background-size: 200% 200%;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    background-clip: text;
-    animation: comboFloat 1.2s ease-out, comboGalaxy 2s linear infinite, comboMegaPulse 0.2s ease-in-out infinite;
-    text-shadow: none;
+    animation: comboGalaxy 2s linear infinite;
 }
 
 .combo-notification.combo-500 .combo-icon {
@@ -3440,13 +3472,19 @@ ruby rt {
 /* 1000连击 - 神 */
 .combo-notification.combo-1000 .combo-text {
     font-size: 9rem;
+    color: #ffffff;
+    animation: comboFloat 1.2s ease-out, comboMegaPulse 0.1s ease-in-out infinite;
+    text-shadow: none;
+}
+
+.combo-notification.combo-1000 .combo-label,
+.combo-notification.combo-1000 .combo-number {
+    color: #ffffff;
     background: linear-gradient(45deg, #fbbf24, #f59e0b, #d97706, #92400e);
     background-size: 200% 200%;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    background-clip: text;
-    animation: comboFloat 1.2s ease-out, comboDivine 2s linear infinite, comboMegaPulse 0.1s ease-in-out infinite;
-    text-shadow: none;
+    animation: comboDivine 2s linear infinite;
 }
 
 .combo-notification.combo-1000 .combo-icon {
