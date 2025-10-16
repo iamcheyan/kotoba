@@ -1018,6 +1018,16 @@
         if (logoutButton) {
             logoutButton.addEventListener('click', async () => {
                 try {
+                    // 清除本地积分信息，避免账号切换时沿用
+                    (function clearLocalScore() {
+                        ['correct','wrong','combo','total'].forEach((k) => {
+                            try { localStorage.removeItem(k); } catch (_) {}
+                        });
+                        if (window.updateScoreboard) {
+                            try { window.updateScoreboard(); } catch (_) {}
+                        }
+                    })();
+
                     await signOut(auth);
                     console.log('User signed out');
                     showNotification('ログアウトしました', 'success');
@@ -1033,6 +1043,13 @@
             switchAccountButton.addEventListener('click', async () => {
                 try {
                     sessionStorage.removeItem('dataLoaded');
+                    // 先清除本地积分，防止切换账户后继承
+                    ['correct','wrong','combo','total'].forEach((k) => {
+                        try { localStorage.removeItem(k); } catch (_) {}
+                    });
+                    if (window.updateScoreboard) {
+                        try { window.updateScoreboard(); } catch (_) {}
+                    }
                     await signOut(auth);
                     setTimeout(async () => {
                         try {
@@ -1278,6 +1295,13 @@
             } else {
                 console.log('User is signed out');
                 sessionStorage.removeItem('dataLoaded');
+                // 账号已登出：清除本地积分信息
+                ['correct','wrong','combo','total'].forEach((k) => {
+                    try { localStorage.removeItem(k); } catch (_) {}
+                });
+                if (window.updateScoreboard) {
+                    try { window.updateScoreboard(); } catch (_) {}
+                }
                 
                 // Update UI - 显示未登录状态
                 if (guestProfile) guestProfile.style.display = 'flex';
