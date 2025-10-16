@@ -93,37 +93,6 @@ body.theme-magic ::-webkit-scrollbar-thumb:active {
     background: linear-gradient(180deg, #d97706, #b45309);
 }
 
-/* 樱花主题滚动条 */
-body.theme-sakura ::-webkit-scrollbar-thumb {
-    background: linear-gradient(180deg, #fda4af, #fb7185);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4);
-}
-
-body.theme-sakura ::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(180deg, #fb7185, #f43f5e);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
-}
-
-body.theme-sakura ::-webkit-scrollbar-thumb:active {
-    background: linear-gradient(180deg, #f43f5e, #e11d48);
-}
-
-/* 海洋主题滚动条 */
-body.theme-ocean ::-webkit-scrollbar-thumb {
-    background: linear-gradient(180deg, #67e8f9, #22d3ee);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4);
-}
-
-body.theme-ocean ::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(180deg, #22d3ee, #06b6d4);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
-}
-
-body.theme-ocean ::-webkit-scrollbar-thumb:active {
-    background: linear-gradient(180deg, #06b6d4, #0891b2);
-}
 
 /* 滚动条动画效果 */
 ::-webkit-scrollbar-thumb {
@@ -168,35 +137,7 @@ body.darkmode--activated {
     --celebration-bg: linear-gradient(135deg, rgba(34, 197, 94, 0.18), rgba(129, 140, 248, 0.16));
 }
 
-body.theme-classic {
-    color-scheme: light;
-}
-
-body.theme-sakura {
-    color-scheme: light;
-    --bg: linear-gradient(160deg, #fff7fb 0%, #ffe5f1 45%, #fff5f8 100%);
-    --card-bg: rgba(255, 255, 255, 0.88);
-    --text: #3d1d2a;
-    --muted: #8f6074;
-    --border: rgba(255, 182, 193, 0.6);
-    --accent: #f472b6;
-    --accent-hover: #ec4899;
-    --accent-soft: rgba(244, 114, 182, 0.18);
-    --accent-ring: rgba(244, 114, 182, 0.38);
-    --card-shadow: rgba(244, 114, 182, 0.22);
-    --modal-shadow: rgba(244, 114, 182, 0.26);
-    --celebration-glow: rgba(244, 114, 182, 0.35);
-    --celebration-bg: linear-gradient(135deg, rgba(34, 197, 94, 0.12), rgba(244, 114, 182, 0.18));
-}
-
-body.theme-sakura .app {
-    backdrop-filter: saturate(120%) blur(6px);
-}
-
-body.theme-sakura .card,
-body.theme-sakura .modal {
-    border-color: rgba(244, 114, 182, 0.28);
-}
+/* legacy theme definitions removed (classic, sakura) */
 
 /* 魔法书主题 - 立体童话风 */
 body.theme-magic {
@@ -431,8 +372,8 @@ body.theme-magic .main::before {
     top: -40px;
     left: 50%;
     transform: translateX(-50%);
-    width: 560px;
-    height: 560px;
+    /* width: 560px; */
+    /* height: 560px; */
     background: radial-gradient(circle, rgba(255, 214, 153, 0.4), transparent 70%);
     filter: blur(12px);
     z-index: -1;
@@ -703,21 +644,7 @@ body.theme-dark .modal {
     border-color: rgba(75, 85, 99, 0.4);
 }
 
-body.theme-sakura .card {
-    box-shadow: 0 20px 40px rgba(244, 114, 182, 0.18);
-}
-
-body.theme-sakura #settings-save,
-body.theme-sakura #dictionary-save {
-    background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);
-    box-shadow: 0 2px 8px rgba(236, 72, 153, 0.3);
-}
-
-body.theme-sakura #settings-save:hover,
-body.theme-sakura #dictionary-save:hover {
-    background: linear-gradient(135deg, #db2777 0%, #ec4899 100%);
-    box-shadow: 0 4px 12px rgba(236, 72, 153, 0.4);
-}
+/* legacy theme styles removed */
 
 * {
     box-sizing: border-box;
@@ -3867,15 +3794,17 @@ ruby rt {
 
     .user-menu {
         position: fixed;
-        top: auto;
-        right: 8px;
-        left: 8px;
-        bottom: 8px;
+        top: calc(env(safe-area-inset-top) + 56px);
+        right: 12px;
+        left: auto;
+        bottom: auto;
         width: auto;
-        min-width: auto;
-        max-height: 80vh;
+        min-width: 240px;
+        max-width: 92vw;
+        max-height: 72vh;
         overflow-y: auto;
-        transform: translateY(calc(100% + 16px));
+        z-index: 2000;
+        transform: translateY(-10px);
         opacity: 0;
         visibility: hidden;
     }
@@ -4740,9 +4669,7 @@ ruby rt {
     border-radius: 4px;
 }
 
-body.theme-sakura .pwa-progress-bar {
-    background: linear-gradient(90deg, #ec4899 0%, #db2777 100%);
-}
+/* legacy theme styles removed */
 
 .pwa-progress-text {
     font-size: 0.85rem;
@@ -4801,7 +4728,7 @@ body.theme-sakura .pwa-progress-bar {
    全局移动端适配（<=480px）
    ============================= */
 @media (max-width: 480px) {
-    .app { padding: 10px 12px; }
+    body.theme-magic .app { margin: 0; border-radius: 0; padding: 10px 20px;}
 
     /* 标题缩放 */
     h1, .word { font-size: 1.6rem; }

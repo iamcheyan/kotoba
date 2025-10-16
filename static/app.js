@@ -3,9 +3,8 @@
 
     const KUROMOJI_DICT_PATHS = ['/static/kuromoji-dict/'];
     const DEFAULT_THEME = 'magic';
-    const THEMES = {
-        magic: { name: 'Magic Book' },
-    };
+    // 仅保留单一主题，移除切换相关存储键
+    const THEMES = { magic: { name: 'Magic Book' } };
     const THEME_STORAGE_KEY = 'kotoba.theme';
 
     const PROGRESS_STORAGE_PREFIX = 'kotoba.progress.';
@@ -185,7 +184,8 @@
         toggleKatakana: document.getElementById('toggle-katakana'),
         toggleFurigana: document.getElementById('toggle-furigana'),
         toggleAutoPronunciation: document.getElementById('toggle-auto-pronunciation'),
-        themeRadios: Array.from(document.querySelectorAll('input[name="theme"]')),
+        // 移除主题单选项收集（仅单主题）
+        themeRadios: [],
         voiceSelect: document.getElementById('voice-select'),
         voicePreview: document.getElementById('voice-preview'),
         rateSlider: document.getElementById('rate-slider'),
@@ -219,58 +219,22 @@
         puzzleOptionsArea: document.getElementById('puzzle-options-area'),
     };
 
-    function isSupportedTheme(theme) {
-        return typeof theme === 'string' && Object.prototype.hasOwnProperty.call(THEMES, theme);
-    }
+    function isSupportedTheme(theme) { return theme === DEFAULT_THEME; }
 
-    function updateThemeOptionUI(theme) {
-        if (!elements.themeRadios || !elements.themeRadios.length) {
-            return;
-        }
-        elements.themeRadios.forEach((radio) => {
-            const isActive = radio.value === theme;
-            radio.checked = isActive;
-            const option = radio.closest('.theme-option');
-            if (option) {
-                option.classList.toggle('is-active', isActive);
-            }
-        });
-    }
+    function updateThemeOptionUI() {}
 
-    function applyTheme(theme, { persist = true } = {}) {
-        const targetTheme = isSupportedTheme(theme) ? theme : DEFAULT_THEME;
+    function applyTheme() {
         const body = document.body;
         if (body) {
-            Object.keys(THEMES).forEach((name) => {
-                body.classList.toggle(`theme-${name}`, name === targetTheme);
-            });
-            body.dataset.theme = targetTheme;
+            body.classList.add('theme-magic');
+            body.dataset.theme = DEFAULT_THEME;
         }
-        state.theme = targetTheme;
-        state.pendingTheme = targetTheme;
-        if (persist) {
-            try {
-                localStorage.setItem(THEME_STORAGE_KEY, targetTheme);
-            } catch (error) {
-                console.warn('[Theme] Failed to persist selection', error);
-            }
-        }
-        updateThemeOptionUI(targetTheme);
+        state.theme = DEFAULT_THEME;
+        state.pendingTheme = DEFAULT_THEME;
+        updateThemeOptionUI();
     }
 
-    function initTheme() {
-        let savedTheme = null;
-        try {
-            savedTheme = localStorage.getItem(THEME_STORAGE_KEY);
-        } catch (error) {
-            console.warn('[Theme] Failed to read stored selection', error);
-        }
-        if (isSupportedTheme(savedTheme)) {
-            applyTheme(savedTheme, { persist: false });
-        } else {
-            applyTheme(DEFAULT_THEME);
-        }
-    }
+    function initTheme() { applyTheme(DEFAULT_THEME); }
 
     function setButtonToAnswer() {
         state.awaitingNext = false;
@@ -3055,8 +3019,10 @@
         if (elements.modalBackdrop) {
             elements.modalBackdrop.classList.add('hidden');
         }
-        state.pendingTheme = state.theme;
-        updateThemeOptionUI(state.theme);
+        state.pendingTheme = DEFAULT_THEME;
+        updateThemeOptionUI();
+        state.pendingTheme = DEFAULT_THEME;
+        updateThemeOptionUI();
     }
 
     function showModal(modal) {
@@ -3174,15 +3140,7 @@
                 showModal(elements.settingsModal);
             });
         }
-        if (elements.themeRadios && elements.themeRadios.length) {
-            elements.themeRadios.forEach((radio) => {
-                radio.addEventListener('change', () => {
-                    const value = radio.value;
-                    state.pendingTheme = isSupportedTheme(value) ? value : DEFAULT_THEME;
-                    updateThemeOptionUI(state.pendingTheme);
-                });
-            });
-        }
+        // 主题切换事件移除（仅单主题）
         // 设置面板：保存音效/触感
         const comboSoundCheckbox = document.getElementById('toggle-combo-sound');
         if (comboSoundCheckbox) comboSoundCheckbox.addEventListener('change', () => {
@@ -3268,8 +3226,7 @@
                 localStorage.setItem('comboSoundEnabled', comboSoundEnabled.toString());
                 
                 updateBrowserParams(params);
-                const selectedTheme = isSupportedTheme(state.pendingTheme) ? state.pendingTheme : state.theme;
-                applyTheme(selectedTheme);
+                applyTheme(DEFAULT_THEME);
                 hideModals();
                 parseSettingsFromParams();
                 renderQuestion();
