@@ -4086,8 +4086,15 @@
         // 绑定“自动发声”按钮
         const autoPronounceBtn = document.getElementById('autoPronounceBtn');
         if (autoPronounceBtn) {
-            const saved = localStorage.getItem('auto_pronunciation') === '1' || state.autoPronunciation;
-            state.autoPronunciation = !!saved;
+            // 默认开启：如果本地没有记录，则设为开启
+            let stored = null;
+            try { stored = localStorage.getItem('auto_pronunciation'); } catch(_) {}
+            if (stored === null) {
+                state.autoPronunciation = true;
+                try { localStorage.setItem('auto_pronunciation', '1'); } catch(_) {}
+            } else {
+                state.autoPronunciation = stored === '1' || state.autoPronunciation;
+            }
             autoPronounceBtn.setAttribute('aria-pressed', state.autoPronunciation ? 'true' : 'false');
             if (state.autoPronunciation) autoPronounceBtn.classList.add('active');
             autoPronounceBtn.addEventListener('click', () => {
