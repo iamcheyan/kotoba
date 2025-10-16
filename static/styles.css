@@ -155,6 +155,7 @@ body.theme-magic {
     --modal-shadow: rgba(149, 73, 36, 0.45);
     --celebration-glow: rgba(255, 189, 102, 0.45);
     --celebration-bg: linear-gradient(135deg, rgba(255, 189, 102, 0.35), rgba(144, 215, 149, 0.25));
+    padding: 50px 0;
 }
 
 body.theme-magic,
@@ -167,7 +168,7 @@ body.theme-magic .app {
     background: linear-gradient(135deg, #fff6e1, #f4deb3);
     border-radius: 20px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
-    margin: 50px auto;
+    /* margin: 50px auto; */
 }
 
 
@@ -2579,33 +2580,40 @@ ruby rt {
     padding: 16px;
 }
 
-/* 模态框确认按钮 */
+/* 模态框确认按钮（魔法书主题风格） */
 #settings-save,
 #dictionary-save {
-    background: linear-gradient(135deg, var(--accent) 0%, #764ba2 100%);
-    color: white;
+    background: linear-gradient(135deg, #ffb267 0%, #ff9040 100%);
+    color: #5b3324;
     border: none;
-    padding: 10px 24px;
-    border-radius: 8px;
-    font-size: 0.95rem;
-    font-weight: 600;
+    padding: 12px 26px;
+    border-radius: 18px;
+    font-size: 1rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
     cursor: pointer;
-    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
-    transition: all 0.2s ease;
-    min-width: 100px;
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.7),
+        0 6px 14px rgba(208, 106, 52, 0.35);
+    transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.2s ease;
+    min-width: 112px;
 }
 
 #settings-save:hover,
 #dictionary-save:hover {
-    background: linear-gradient(135deg, #764ba2 0%, var(--accent) 100%);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    background: linear-gradient(135deg, #ff9040 0%, #ff7a35 100%);
+    transform: translateY(-2px);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.8),
+        0 10px 20px rgba(208, 106, 52, 0.45);
 }
 
 #settings-save:active,
 #dictionary-save:active {
     transform: translateY(0);
-    box-shadow: 0 1px 4px rgba(102, 126, 234, 0.3);
+    box-shadow:
+        inset 0 2px 4px rgba(0, 0, 0, 0.1),
+        0 2px 8px rgba(208, 106, 52, 0.3);
 }
 
 /* 模态框取消按钮优化 */
