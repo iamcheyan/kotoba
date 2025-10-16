@@ -1120,6 +1120,22 @@ a:hover {
     align-items: center;
 }
 
+/* Auto pronounce toggle button */
+#autoPronounceBtn[aria-pressed="true"] {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+}
+
+#autoPronounceBtn {
+    display: inline-flex;
+    align-items: center;
+    /* gap: 6px; */
+    height: 30px;
+    width: 30px;
+    border-radius: 50%;
+}
+
 /* 模式切换器 */
 .mode-switcher {
     display: flex;
@@ -1163,7 +1179,7 @@ a:hover {
     background: transparent;
     border: 1px solid var(--border);
     color: var(--text);
-    padding: 6px 12px;
+    text-align: center;
     border-radius: 999px;
     cursor: pointer;
     transition: background 0.2s ease;

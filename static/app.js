@@ -4082,6 +4082,22 @@
         } finally {
             hideLoading();
         }
+
+        // 绑定“自动发声”按钮
+        const autoPronounceBtn = document.getElementById('autoPronounceBtn');
+        if (autoPronounceBtn) {
+            const saved = localStorage.getItem('auto_pronunciation') === '1' || state.autoPronunciation;
+            state.autoPronunciation = !!saved;
+            autoPronounceBtn.setAttribute('aria-pressed', state.autoPronunciation ? 'true' : 'false');
+            if (state.autoPronunciation) autoPronounceBtn.classList.add('active');
+            autoPronounceBtn.addEventListener('click', () => {
+                state.autoPronunciation = !state.autoPronunciation;
+                autoPronounceBtn.setAttribute('aria-pressed', state.autoPronunciation ? 'true' : 'false');
+                autoPronounceBtn.classList.toggle('active', state.autoPronunciation);
+                try { localStorage.setItem('auto_pronunciation', state.autoPronunciation ? '1' : '0'); } catch (_) {}
+                showNotification(state.autoPronunciation ? '自動発音: ON' : '自動発音: OFF', 'info');
+            });
+        }
     }
 
     if (document.readyState === 'loading') {
