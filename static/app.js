@@ -866,9 +866,26 @@
             }
         }
         
-        // 触发连击里程碑动画
+    // 触发连击里程碑动画（节奏加快）
         console.log('触发连击动画，连击数:', currentCombo);
         triggerComboAnimation(currentCombo);
+    // 连击到达阈值的节奏音
+    try {
+        const comboSoundEnabled = localStorage.getItem('comboSoundEnabled') !== 'false';
+        if (comboSoundEnabled && currentCombo > 0) {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const o = ctx.createOscillator();
+            const g = ctx.createGain();
+            o.type = 'triangle';
+            // 提高音调随连击
+            const base = 660;
+            o.frequency.value = base + Math.min(400, currentCombo * 8);
+            g.gain.setValueAtTime(0.0001, ctx.currentTime);
+            g.gain.exponentialRampToValueAtTime(0.15, ctx.currentTime + 0.01);
+            g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.12);
+            o.connect(g); g.connect(ctx.destination); o.start(); o.stop(ctx.currentTime + 0.13);
+        }
+    } catch(_) {}
     }
     
     // 连击里程碑列表，全局定义
@@ -2234,6 +2251,23 @@
         if (window.autoSyncData) {
             window.autoSyncData();
         }
+    // 正确答题轻量音效/触感
+    try {
+        const sfxEnabled = localStorage.getItem('sfxEnabled') !== 'false';
+        if (sfxEnabled && key === 'correct') {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const o = ctx.createOscillator();
+            const g = ctx.createGain();
+            o.type = 'sine';
+            o.frequency.value = 880; // A5
+            g.gain.setValueAtTime(0.0001, ctx.currentTime);
+            g.gain.exponentialRampToValueAtTime(0.2, ctx.currentTime + 0.01);
+            g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.15);
+            o.connect(g); g.connect(ctx.destination); o.start(); o.stop(ctx.currentTime + 0.16);
+        }
+        const hapticsEnabled = localStorage.getItem('hapticsEnabled') !== 'false';
+        if (hapticsEnabled && navigator.vibrate) navigator.vibrate(10);
+    } catch(_) {}
     }
 
     async function loadWrongWordsDict() {
@@ -3046,10 +3080,16 @@
         
         // 初始化音效设置
         const comboSoundEnabled = localStorage.getItem('comboSoundEnabled') !== 'false';
+        const sfxEnabled = localStorage.getItem('sfxEnabled') !== 'false';
+        const hapticsEnabled = localStorage.getItem('hapticsEnabled') !== 'false';
         const comboSoundCheckbox = document.getElementById('toggle-combo-sound');
         if (comboSoundCheckbox) {
             comboSoundCheckbox.checked = comboSoundEnabled;
         }
+        const sfxCheckbox = document.getElementById('toggle-sound-effects');
+        if (sfxCheckbox) sfxCheckbox.checked = sfxEnabled;
+        const hapticsCheckbox = document.getElementById('toggle-haptics');
+        if (hapticsCheckbox) hapticsCheckbox.checked = hapticsEnabled;
         
         return params;
     }
@@ -3143,6 +3183,19 @@
                 });
             });
         }
+        // 设置面板：保存音效/触感
+        const comboSoundCheckbox = document.getElementById('toggle-combo-sound');
+        if (comboSoundCheckbox) comboSoundCheckbox.addEventListener('change', () => {
+            try { localStorage.setItem('comboSoundEnabled', comboSoundCheckbox.checked ? 'true' : 'false'); } catch(_) {}
+        });
+        const sfxCheckbox = document.getElementById('toggle-sound-effects');
+        if (sfxCheckbox) sfxCheckbox.addEventListener('change', () => {
+            try { localStorage.setItem('sfxEnabled', sfxCheckbox.checked ? 'true' : 'false'); } catch(_) {}
+        });
+        const hapticsCheckbox = document.getElementById('toggle-haptics');
+        if (hapticsCheckbox) hapticsCheckbox.addEventListener('change', () => {
+            try { localStorage.setItem('hapticsEnabled', hapticsCheckbox.checked ? 'true' : 'false'); } catch(_) {}
+        });
         if (elements.dictionarySave) {
             elements.dictionarySave.addEventListener('click', async () => {
                 const selected = elements.dictionarySelect.value;

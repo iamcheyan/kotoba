@@ -680,7 +680,7 @@ a:hover {
     position: absolute;
     left: 8px;
     top: -18px;
-    font-size: 24px;
+    font-size: 20px;
     font-weight: 700;
     padding: 2px 8px;
     border-radius: 999px;
@@ -690,7 +690,7 @@ a:hover {
     pointer-events: none;
     opacity: 0;
     transform: translateY(6px);
-    animation: deltaFloat 0.8s ease-out forwards;
+    animation: deltaFloat 0.4s ease-out forwards;
 }
 .score-delta.gain { background: rgba(34,197,94,0.15); color: #16a34a; }
 .score-delta.loss { background: rgba(239,68,68,0.15); color: #dc2626; }
@@ -2475,9 +2475,11 @@ ruby rt {
 .leaderboard-rank.rank-3 { color: #cd7c2f; }
 
 .leaderboard-user { flex: 1; display: flex; align-items: center; gap: 10px; }
-.leaderboard-avatar { width: 46px; height: 46px; border-radius: 50%; object-fit: cover; border: 2px solid var(--border-color, #e2e8f0); }
+.leaderboard-avatar { width: 46px; height: 46px; border-radius: 50%; object-fit: cover; border: 2px solid var(--border-color, #e2e8f0); box-shadow: 0 0 0 2px #fff, 0 0 0 6px rgba(79,70,229,.15); }
 .leaderboard-user-info { flex: 1; }
 .leaderboard-username { font-weight: 600; font-size: 14px; margin-bottom: 2px; }
+.lb-title { margin-left: 8px; font-size: .85em; padding: 2px 8px; border-radius: 999px; background: #eef2ff; color: #3730a3; border: 1px solid #e0e7ff; }
+.lb-lastbest { font-size: .8em; color: var(--text-secondary, #64748b); margin-top: 2px; }
 .leaderboard-user-stats { font-size: 12px; color: var(--text-secondary, #64748b); }
 .leaderboard-user-stats .lb-stat { display:inline-flex; align-items:center; gap:6px; padding:2px 6px; border-radius:8px; background: var(--accent-soft); color: inherit; }
 .leaderboard-user-stats .lb-stat svg { width:14px; height:14px; stroke: currentColor; fill: none; stroke-width: 2.2; }
@@ -3539,7 +3541,7 @@ ruby rt {
     transform: translate(-50%, -50%);
     z-index: 9999;
     pointer-events: none;
-    animation: comboAppear 1.2s ease-out forwards;
+    animation: comboAppear 0.8s ease-out forwards;
 }
 
 /* 连击背后的高斯模糊遮罩 */

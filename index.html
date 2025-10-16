@@ -499,6 +499,14 @@
                     <input type="checkbox" id="toggle-combo-sound" checked>
                     連撃音效
                 </label>
+                <label class="checkbox">
+                    <input type="checkbox" id="toggle-sound-effects" checked>
+                    効果音（正解/報酬）
+                </label>
+                <label class="checkbox">
+                    <input type="checkbox" id="toggle-haptics" checked>
+                    触感（対応デバイス）
+                </label>
                 <div class="sound-test-section" style="display: none;">
                     <button type="button" id="test-combo-sound" class="ghost-button">
                         🔊 音效テスト
@@ -1562,6 +1570,9 @@
                 else if (rank <= 10) rankClass = 'top-3';
 
                 const level = calculateLevel(parseInt(entry.correct || 0, 10));
+                const lastUpdated = entry.submittedAt && entry.submittedAt.toDate ? entry.submittedAt.toDate() : null;
+                const lastBestText = lastUpdated ? new Date(lastUpdated).toLocaleString() : '';
+                const title = entry.combo >= 50 ? '伝説の連撃' : (entry.combo >= 20 ? '驚異の挑戦者' : (entry.combo >= 10 ? '素晴らしい挑戦者' : '挑戦者'));
                 html += `
                     <div class="leaderboard-item ${isCurrentUser ? 'current-user' : ''}">
                         <div class="leaderboard-rank ${rankClass}">${rank}</div>
@@ -1571,13 +1582,14 @@
                                  class="leaderboard-avatar"
                                  onerror="this.src='/static/logo.svg'">
                             <div class="leaderboard-user-info">
-                                <div class="leaderboard-username">${entry.displayName} <span class="lb-level-badge">Lv.${level}</span></div>
+                                <div class="leaderboard-username">${entry.displayName} <span class="lb-level-badge">Lv.${level}</span> <span class="lb-title">${title}</span></div>
                                 <div class="leaderboard-user-stats">
                                     <span class="lb-stat lb-correct" title="正解"><svg viewBox="0 0 24 24"><path d="M9 12l2 2 4-4"></path><circle cx="12" cy="12" r="9"></circle></svg>${entry.correct || 0}</span>
                                     <span class="lb-stat lb-wrong" title="錯題"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="M9 9l6 6M15 9l-6 6"></path></svg>${entry.wrong || 0}</span>
                                     <span class="lb-stat lb-combo" title="連撃"><svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9z"></path></svg>${entry.combo || 0}</span>
                                     <span class="lb-stat lb-total" title="総題"><svg viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>${entry.total || 0}</span>
                                 </div>
+                                ${lastBestText ? `<div class="lb-lastbest">最終更新: ${lastBestText}</div>` : ''}
                             </div>
                         </div>
                         <div class="leaderboard-score">${entry.score}</div>
