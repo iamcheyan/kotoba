@@ -2123,7 +2123,14 @@
         entry.romaji = romaji || entry.kanji;
         entry.furigana = furigana;
         entry.normalizedKanji = removePunctuation(entry.kanji.replace(/\s+/g, '')).toLowerCase();
-        entry.normalizedReading = removePunctuation((reading || '').replace(/\s+/g, '')).toLowerCase();
+        // 规范化reading用于比较：NFKC + 长音统一 + 去空白 + 转平假名 + 去标点
+        (function(){
+            let r = entry.reading || '';
+            try { r = r.normalize('NFKC'); } catch(_) {}
+            r = r.replace(/[ｰ－—–]/g, 'ー').replace(/\s+/g, '');
+            try { r = window.wanakana ? window.wanakana.toHiragana(r) : r; } catch(_) {}
+            entry.normalizedReading = removePunctuation(r).toLowerCase();
+        })();
         entry.normalizedRomaji = removePunctuation((romaji || '').replace(/\s+/g, '')).toLowerCase();
         entry.segments = parseRubySegments(furigana, entry.kanji);
         entry.__computed = true;
