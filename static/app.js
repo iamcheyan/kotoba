@@ -1421,12 +1421,6 @@
         if (elements.progressFraction) {
             if (!state.dictionaryId || total === 0) {
                 elements.progressFraction.textContent = '0 / 0';
-            } else if (isWrongWords) {
-                // 错题本模式：显示剩余错题数 / 总错题数
-                const uniqueWords = getUniqueWrongWords();
-                const totalWrongWords = uniqueWords.length;
-                const remainingWrongWords = totalWrongWords - mastered;
-                elements.progressFraction.textContent = `${remainingWrongWords} / ${totalWrongWords}`;
             } else {
                 elements.progressFraction.textContent = `${mastered} / ${total}`;
             }
@@ -1435,45 +1429,17 @@
         if (elements.progressPercentage) {
             if (!state.dictionaryId || total === 0) {
                 elements.progressPercentage.textContent = '0%';
-            } else if (isWrongWords) {
-                // 错题本模式：显示错题完成百分比
-                const wrongWordsPercent = total ? Math.round((mastered / total) * 100) : 0;
-                elements.progressPercentage.textContent = `${wrongWordsPercent}%`;
             } else {
                 elements.progressPercentage.textContent = `${percent}%`;
             }
         }
         
-        // 更新经验条（错题本模式）
-        if (isWrongWords) {
-            const wrongWordsPercent = total ? Math.round((mastered / total) * 100) : 0;
-            
-            // 更新经验条
-            if (elements.expFill) {
-                elements.expFill.style.width = `${wrongWordsPercent}%`;
-            }
-            
-            // 更新经验文本
-            if (elements.expText) {
-                elements.expText.textContent = `${mastered} / ${total}`;
-            }
-            
-            // 錯題本の応援メッセージ
-            if (wrongWordsPercent === 100 && total > 0) {
-                showEncouragement('🎉 錯題本が完了しました！素晴らしい！', 'success');
-            } else if (wrongWordsPercent >= 80) {
-                showEncouragement('💪 もう少しで完成！この調子！', 'info');
-            } else if (wrongWordsPercent >= 50) {
-                showEncouragement('🌟 進捗は半分を超えました！いい感じ！', 'info');
-            } else if (wrongWordsPercent >= 25) {
-                showEncouragement('📚 練習中…リズムを保ちましょう！', 'info');
-            }
-        }
+        // 经验条与鼓励提示统一使用常规规则（不区分错题本）
         
         // 保持旧的进度容器兼容（如果存在）
         const container = elements.progressContainer;
         if (container) {
-            if (!state.dictionaryId || isWrongWords || total === 0) {
+            if (!state.dictionaryId || total === 0) {
                 container.classList.add('hidden');
                 if (elements.progressReset) {
                     elements.progressReset.classList.add('hidden');
@@ -2843,19 +2809,33 @@
         if (!entry) {
             throw new Error('問題が読み込まれていません');
         }
-        const trimmed = removePunctuation((answer || '').replace(/\s+/g, '')).trim();
+    // 统一比较：规范化、统一长音、去空白、统一到平假名
+    function normalizeForCompare(text) {
+        if (!text) return '';
+        let t = text.normalize('NFKC');
+        // 统一长音符号到「ー」
+        t = t.replace(/[ｰ－—–]/g, 'ー');
+        // 去掉所有空白/控制
+        t = t.replace(/[\u0000-\u001F\u007F\s]+/g, '');
+        // 去标点
+        t = removePunctuation(t);
+        // 统一到平假名进行比较（保留汉字不变）
+        try { t = window.wanakana ? window.wanakana.toHiragana(t) : t; } catch (_) {}
+        return t.toLowerCase();
+    }
+
+    const trimmed = normalizeForCompare(answer);
         if (!trimmed) {
             return { correct: false, match: null, userRomaji: '' };
         }
         
         // 汉字判断
-        if (trimmed.toLowerCase() === entry.normalizedKanji) {
+    if (trimmed === entry.normalizedKanji) {
             return { correct: true, match: 'kanji', userRomaji: entry.normalizedRomaji };
         }
         
         // 假名判断
-        const hiraganaInput = window.wanakana ? window.wanakana.toHiragana(answer) : answer;
-        const normalizedReading = removePunctuation((hiraganaInput || '').replace(/\s+/g, '')).toLowerCase();
+    const normalizedReading = normalizeForCompare(answer);
         
         if (normalizedReading === entry.normalizedReading) {
             return { correct: true, match: 'reading', userRomaji: entry.normalizedRomaji };

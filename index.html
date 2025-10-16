@@ -1448,9 +1448,9 @@
                     }
                 });
 
+                // 只记录每个用户最新一条；显示时不再截断为10个
                 leaderboardData = Array.from(byUserLatest.values())
-                    .sort((a, b) => b.score - a.score)
-                    .slice(0, 10);
+                    .sort((a, b) => b.score - a.score);
                 
                 console.log('📊 去重后的数据:', leaderboardData.length, '个唯一用户');
                 console.log('📊 最终排行榜:', leaderboardData.map(entry => ({ uid: entry.uid, displayName: entry.displayName, score: entry.score })));
