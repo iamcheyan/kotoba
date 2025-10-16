@@ -104,14 +104,7 @@ body.theme-magic .app {
     margin: 50px auto;
 }
 
-body.theme-magic .app::before,
-body.theme-magic .app::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    z-index: -1;
-}
+
 
 body.theme-magic .app::before {
     background: radial-gradient(circle at 20% 10%, rgba(255, 236, 179, 0.35), transparent 55%),
@@ -396,32 +389,11 @@ body.theme-magic #answer-input {
     background: rgba(255, 255, 255, 0.72);
     border-radius: 20px;
     border: 1px solid rgba(232, 152, 92, 0.35);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7),
-                0 10px 18px rgba(170, 114, 70, 0.15);
     padding: 16px 20px;
     font-size: 1.1rem;
 }
 
-body.theme-magic #answer-submit,
-body.theme-magic #skip-button,
-body.theme-magic #replay-button,
-body.theme-magic #next-button,
-body.theme-magic .mode-btn,
-body.theme-magic .ghost-button {
-    position: relative;
-    border-radius: 22px;
-    border: 1px solid rgba(255, 255, 255, 0.5);
-    background: linear-gradient(135deg, rgba(255, 206, 164, 0.85), rgba(255, 174, 122, 0.95));
-    color: #6b3018;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6),
-                0 10px 18px rgba(170, 114, 70, 0.18);
-    text-transform: uppercase;
-    backdrop-filter: blur(6px);
-    overflow: hidden;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
+
 
 body.theme-magic .mode-btn svg {
     stroke: currentColor;
@@ -516,14 +488,7 @@ body.theme-magic .book-action-btn:hover {
     100% { transform: translateX(200%) skewX(-20deg); opacity: 0; }
 }
 
-body.theme-magic .progress-text-info {
-    background: rgba(255, 247, 230, 0.72);
-    padding: 14px 22px;
-    border-radius: 20px;
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6),
-                0 8px 16px rgba(186, 110, 54, 0.18);
-    margin-top: 28px;
-}
+
 
 body.theme-magic .progress-percentage {
     color: #ef524a;
@@ -542,13 +507,7 @@ body.theme-magic .exp-bar-fill {
                 inset 0 1px 0 rgba(255, 255, 255, 0.55);
 }
 
-body.theme-magic .stats-grid .stat-item {
-    background: linear-gradient(145deg, rgba(255, 247, 232, 0.8), rgba(255, 231, 206, 0.65));
-    border: 1px solid rgba(255, 255, 255, 0.55);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.65),
-                0 10px 18px rgba(170, 114, 70, 0.15);
-    border-radius: 18px;
-}
+
 
 body.theme-magic .footer {
     margin: 20px auto;
@@ -821,7 +780,6 @@ a:hover {
     border-radius: 20px;
     padding: 20px;
     border: 2px solid var(--border);
-    box-shadow: 0 8px 24px var(--card-shadow);
     margin-top: 10px;
     position: relative;
     overflow: hidden;
@@ -1179,37 +1137,19 @@ a:hover {
     mix-blend-mode: difference;
 }
 
-.stats-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 8px;
-}
+.stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
 
-.stat-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-    padding: 8px 6px;
-    background: var(--accent-soft);
-    border-radius: 12px;
-    border: 1px solid var(--border);
-    transition: all 0.2s ease;
-}
+.stat-item { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 14px; border-radius: 14px; border: 1px solid rgba(255,255,255,.6); background: linear-gradient(180deg, rgba(255,255,255,.9), rgba(245,247,255,.9)), var(--card-bg); position: relative; }
 
 .stat-item:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 12px var(--card-shadow);
 }
 
-.stat-item svg {
-    color: var(--accent);
-}
+.stat-item svg { width: 22px; height: 22px; filter: drop-shadow(0 2px 3px rgba(0,0,0,.15)); }
+.stat-value { font-weight: 800; font-size: 18px; }
 
-.stat-item.stat-correct {
-    background: rgba(34, 197, 94, 0.08);
-    border-color: rgba(34, 197, 94, 0.2);
-}
+.stat-item.stat-correct { background: radial-gradient(120% 120% at 30% 20%, #ecfff6, #d6f5ff); border-color: #b8f5d8; }
 
 .stat-item.stat-correct svg {
     color: #22c55e;
@@ -1220,18 +1160,14 @@ a:hover {
     border-color: rgba(239, 68, 68, 0.2);
 }
 
-.stat-item.stat-wrong svg {
-    color: #ef4444;
-}
+.stat-item.stat-wrong { background: radial-gradient(120% 120% at 30% 20%, #fff5f5, #ffe9ef); border-color: #ffd0d6; }
 
 .stat-item.stat-combo {
     background: rgba(245, 158, 11, 0.08);
     border-color: rgba(245, 158, 11, 0.2);
 }
 
-.stat-item.stat-combo svg {
-    color: #f59e0b;
-}
+.stat-item.stat-combo { background: radial-gradient(120% 120% at 30% 20%, #eff6ff, #eef1ff); border-color: #c8d7ff; }
 
 .stat-item.stat-combo.active {
     animation: combo-pulse 0.6s ease-in-out;
@@ -1247,9 +1183,17 @@ a:hover {
     border-color: rgba(168, 85, 247, 0.2);
 }
 
-.stat-item.stat-total svg {
-    color: #a855f7;
-}
+.stat-item.stat-total { background: radial-gradient(120% 120% at 30% 20%, #fff7ed, #fff5d6); border-color: #ffd8a8; }
+
+/* 立体拟物图标（用 mask + 渐变） */
+.stat-item::before { content: ''; width: 28px; height: 28px; display: inline-block; background: linear-gradient(180deg, rgba(255,255,255,.8), rgba(255,255,255,0) 40%), linear-gradient(135deg, rgba(255,255,255,.3), rgba(255,255,255,0) 60%), var(--icon-color, #ffd166); border-radius: 8px; box-shadow: inset 0 4px 8px rgba(255,255,255,.6), inset 0 -6px 10px rgba(0,0,0,.12), 0 4px 10px rgba(0,0,0,.08); margin-right: 6px; mask-size: contain; -webkit-mask-size: contain; mask-repeat: no-repeat; -webkit-mask-repeat: no-repeat; mask-position: center; -webkit-mask-position: center; }
+.stat-correct::before { --icon-color: #8de1ff; mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="%23000" d="M12 2l3 6 6 1-4 4 1 6-6-3-6 3 1-6-4-4 6-1z"/></svg>'); }
+.stat-wrong::before { --icon-color: #ffd166; mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="%23000"/></svg>'); }
+.stat-combo::before { --icon-color: #b197fc; mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="%23000" d="M13 2L3 14h6l-1 8 10-12h-6z"/></svg>'); }
+.stat-total::before { --icon-color: #80ed99; mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="%23000" d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>'); }
+
+/* 隐藏原有的 SVG 图标，只显示彩色拟物图标 */
+.stat-item svg { display: none; }
 
 .stat-value {
     font-size: 0.95rem;
@@ -1568,28 +1512,52 @@ a:hover {
 }
 
 .mode-btn {
-    background: transparent;
-    border: none;
-    border-radius: 999px;
-    width: 30px;
-    height: 30px;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.8), rgba(248, 250, 252, 0.8));
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: 50%;
+    width: 34px;
+    height: 34px;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
     color: var(--muted);
+    box-shadow: 
+        inset 0 2px 4px rgba(255, 255, 255, 0.6),
+        inset 0 -2px 4px rgba(0, 0, 0, 0.05),
+        0 2px 8px rgba(0, 0, 0, 0.1);
     transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
 }
 
 .mode-btn:hover {
-    background: var(--accent-soft);
+    background: linear-gradient(135deg, rgba(79, 70, 229, 0.1), rgba(124, 58, 237, 0.1));
     color: var(--accent);
+    transform: translateY(-1px);
+    box-shadow: 
+        inset 0 2px 4px rgba(255, 255, 255, 0.7),
+        inset 0 -2px 4px rgba(0, 0, 0, 0.05),
+        0 3px 10px rgba(79, 70, 229, 0.2);
 }
 
 .mode-btn.active {
-    background: var(--accent);
+    background: linear-gradient(135deg, #4f46e5, #7c3aed);
     color: #ffffff;
-    box-shadow: 0 2px 8px rgba(79, 70, 229, 0.3);
+    border-color: rgba(255, 255, 255, 0.3);
+    box-shadow: 
+        inset 0 2px 4px rgba(255, 255, 255, 0.3),
+        inset 0 -2px 4px rgba(0, 0, 0, 0.1),
+        0 4px 12px rgba(79, 70, 229, 0.4);
+    transform: translateY(-1px);
+}
+
+.mode-btn:active {
+    transform: translateY(0);
+    box-shadow: 
+        inset 0 2px 4px rgba(255, 255, 255, 0.4),
+        inset 0 -2px 4px rgba(0, 0, 0, 0.1),
+        0 1px 4px rgba(79, 70, 229, 0.2);
 }
 
 .mode-btn svg {
@@ -1597,18 +1565,37 @@ a:hover {
 }
 
 .ghost-button {
-    background: transparent;
-    border: 1px solid var(--border);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.8), rgba(248, 250, 252, 0.8));
+    border: 1px solid rgba(255, 255, 255, 0.4);
     color: var(--text);
     text-align: center;
-    border-radius: 999px;
+    border-radius: 16px;
     cursor: pointer;
-    transition: background 0.2s ease;
+    box-shadow: 
+        inset 0 2px 4px rgba(255, 255, 255, 0.6),
+        inset 0 -2px 4px rgba(0, 0, 0, 0.05),
+        0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
 }
 
 .ghost-button:hover,
 .ghost-button:focus-visible {
-    background: var(--accent-soft);
+    background: linear-gradient(135deg, rgba(79, 70, 229, 0.1), rgba(124, 58, 237, 0.1));
+    transform: translateY(-2px);
+    box-shadow: 
+        inset 0 2px 4px rgba(255, 255, 255, 0.7),
+        inset 0 -2px 4px rgba(0, 0, 0, 0.05),
+        0 4px 12px rgba(79, 70, 229, 0.2);
+}
+
+.ghost-button:active {
+    transform: translateY(0);
+    box-shadow: 
+        inset 0 2px 4px rgba(255, 255, 255, 0.4),
+        inset 0 -2px 4px rgba(0, 0, 0, 0.1),
+        0 1px 4px rgba(79, 70, 229, 0.1);
 }
 
 .main {
@@ -1677,29 +1664,43 @@ a:hover {
 }
 
 .tts-button {
-    background: transparent;
-    border: 1px solid var(--border);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(248, 250, 252, 0.9));
+    border: 1px solid rgba(255, 255, 255, 0.4);
     border-radius: 50%;
-    width: 40px;
-    height: 40px;
+    width: 44px;
+    height: 44px;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
     font-size: 1.2rem;
+    box-shadow: 
+        inset 0 2px 4px rgba(255, 255, 255, 0.6),
+        inset 0 -2px 4px rgba(0, 0, 0, 0.05),
+        0 2px 8px rgba(0, 0, 0, 0.1);
     transition: all 0.2s ease;
     color: var(--muted);
+    position: relative;
+    overflow: hidden;
 }
 
 .tts-button:hover {
-    background: var(--accent);
+    background: linear-gradient(135deg, #4f46e5, #7c3aed);
     color: white;
-    border-color: var(--accent);
-    transform: scale(1.05);
+    border-color: rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 
+        inset 0 2px 4px rgba(255, 255, 255, 0.3),
+        inset 0 -2px 4px rgba(0, 0, 0, 0.1),
+        0 4px 12px rgba(79, 70, 229, 0.3);
 }
 
 .tts-button:active {
-    transform: scale(0.95);
+    transform: translateY(0) scale(0.95);
+    box-shadow: 
+        inset 0 2px 4px rgba(255, 255, 255, 0.2),
+        inset 0 -2px 4px rgba(0, 0, 0, 0.2),
+        0 1px 4px rgba(79, 70, 229, 0.2);
 }
 
 .tts-icon {
@@ -1787,18 +1788,29 @@ ruby rt {
 }
 
 .answer-form input {
-    padding: 10px 14px;
+    padding: 12px 16px;
     font-size: 1rem;
-    border-radius: 12px;
-    border: 1px solid var(--border);
-    background: transparent;
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(248, 250, 252, 0.9));
     color: inherit;
     width: 100%;
+    box-shadow: 
+        inset 0 2px 4px rgba(255, 255, 255, 0.6),
+        inset 0 -2px 4px rgba(0, 0, 0, 0.05),
+        0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s ease;
 }
 
 .answer-form input:focus {
-    outline: 2px solid var(--accent-ring);
-    outline-offset: 2px;
+    outline: none;
+    border-color: #4f46e5;
+    box-shadow: 
+        inset 0 2px 4px rgba(255, 255, 255, 0.7),
+        inset 0 -2px 4px rgba(0, 0, 0, 0.05),
+        0 0 0 3px rgba(79, 70, 229, 0.2),
+        0 4px 12px rgba(79, 70, 229, 0.2);
+    transform: translateY(-1px);
 }
 
 /* 拼词模式样式 */
@@ -1919,14 +1931,21 @@ ruby rt {
 }
 
 .answer-form button {
-    padding: 10px 16px;
+    padding: 12px 20px;
     font-size: 1rem;
-    border-radius: 12px;
-    border: none;
+    font-weight: 600;
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
     cursor: pointer;
-    background: var(--accent);
+    background: linear-gradient(135deg, #4f46e5, #7c3aed);
     color: #ffffff;
-    transition: background 0.2s ease;
+    box-shadow: 
+        inset 0 2px 4px rgba(255, 255, 255, 0.3),
+        inset 0 -2px 4px rgba(0, 0, 0, 0.1),
+        0 4px 12px rgba(79, 70, 229, 0.3);
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
 }
 
 .answer-form button:disabled {
@@ -1935,21 +1954,64 @@ ruby rt {
 }
 
 .answer-form button:hover:not(:disabled) {
-    background: var(--accent-hover);
+    transform: translateY(-2px);
+    box-shadow: 
+        inset 0 2px 4px rgba(255, 255, 255, 0.4),
+        inset 0 -2px 4px rgba(0, 0, 0, 0.1),
+        0 6px 16px rgba(79, 70, 229, 0.4);
 }
 
-/* 让跳过按钮使用黄色主题，使用更高特异性覆盖通用按钮样式 */
-.answer-form .skip-button {
-    background: #f59e0b; /* amber-500 */
-    color: #ffffff;
-    border: 1px solid #f59e0b;
-    min-width: 72px;
+.answer-form button:active:not(:disabled) {
+    transform: translateY(0);
+    box-shadow: 
+        inset 0 2px 4px rgba(255, 255, 255, 0.2),
+        inset 0 -2px 4px rgba(0, 0, 0, 0.2),
+        0 2px 8px rgba(79, 70, 229, 0.2);
 }
 
-.answer-form .skip-button:hover:not(:disabled),
-.answer-form .skip-button:focus-visible:not(:disabled) {
-    background: #d97706; /* amber-600 */
-    border-color: #d97706;
+/* === Primary main action (回答) uses green skeuomorphic style === */
+.answer-form #answer-submit {
+    margin-top: 6px;
+    background: linear-gradient(180deg, #98e66d, #64c33d);
+    color: #2f4b1d;
+    font-size: 22px;
+    border: none;
+    padding: 10px 40px;
+    box-shadow: 0 4px 0 #3b7b25, 0 6px 10px rgba(0, 0, 0, 0.3);
+    transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+.answer-form #answer-submit:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 5px 0 #3b7b25, 0 10px 14px rgba(0, 0, 0, 0.28);
+}
+
+.answer-form #answer-submit:active:not(:disabled) {
+    transform: translateY(2px);
+    box-shadow: 0 2px 0 #3b7b25, 0 4px 8px rgba(0, 0, 0, 0.25);
+}
+
+/* Skip button: neutral/secondary style for clear contrast */
+.answer-form #skip-button {
+    margin-top: 6px;
+    background: linear-gradient(180deg, #f3f4f6, #d1d5db);
+    color: #1f2937;
+    font-size: 22px;
+    border: none;
+    padding: 10px 28px;
+    box-shadow: 0 4px 0 #9ca3af, 0 6px 10px rgba(0, 0, 0, 0.15);
+    transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+.answer-form #skip-button:hover:not(:disabled),
+.answer-form #skip-button:focus-visible:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 5px 0 #9ca3af, 0 10px 14px rgba(0, 0, 0, 0.18);
+}
+
+.answer-form #skip-button:active:not(:disabled) {
+    transform: translateY(2px);
+    box-shadow: 0 2px 0 #9ca3af, 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
 
@@ -2496,9 +2558,10 @@ ruby rt {
 
 /* 模态框取消按钮优化 */
 .modal-footer .ghost-button {
-    padding: 10px 20px;
-    border-radius: 8px;
+    padding: 12px 24px;
+    border-radius: 16px;
     font-size: 0.95rem;
+    font-weight: 600;
 }
 
 .modal-body {
@@ -2513,13 +2576,30 @@ ruby rt {
     font-size: 1rem;
 }
 
+.modal-body select:focus {
+    outline: none;
+    border-color: #4f46e5;
+    box-shadow: 
+        inset 0 2px 4px rgba(255, 255, 255, 0.7),
+        inset 0 -2px 4px rgba(0, 0, 0, 0.05),
+        0 0 0 3px rgba(79, 70, 229, 0.2),
+        0 4px 12px rgba(79, 70, 229, 0.2);
+    transform: translateY(-1px);
+}
+
 .modal-body select {
-    padding: 8px 12px;
-    border-radius: 10px;
-    border: 1px solid var(--border);
-    background: transparent;
+    padding: 12px 16px;
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(248, 250, 252, 0.9));
     color: inherit;
     width: 100%;
+    box-shadow: 
+        inset 0 2px 4px rgba(255, 255, 255, 0.6),
+        inset 0 -2px 4px rgba(0, 0, 0, 0.05),
+        0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s ease;
+    font-weight: 500;
 }
 
 .checkbox {
@@ -2555,7 +2635,9 @@ ruby rt {
 
 .dictionary-modal-body .voice-selection .ghost-button {
     justify-self: start;
-    padding: 6px 14px;
+    padding: 8px 16px;
+    border-radius: 12px;
+    font-weight: 600;
 }
 
 .dictionary-modal-body .rate-control__track {
@@ -2566,6 +2648,56 @@ ruby rt {
 
 .dictionary-modal-body .rate-control input[type="range"] {
     flex: 1;
+    -webkit-appearance: none;
+    appearance: none;
+    height: 8px;
+    border-radius: 4px;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.8), rgba(248, 250, 252, 0.8));
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    box-shadow: 
+        inset 0 2px 4px rgba(255, 255, 255, 0.6),
+        inset 0 -2px 4px rgba(0, 0, 0, 0.05),
+        0 2px 8px rgba(0, 0, 0, 0.1);
+    outline: none;
+    cursor: pointer;
+}
+
+.dictionary-modal-body .rate-control input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #4f46e5, #7c3aed);
+    border: 2px solid rgba(255, 255, 255, 0.8);
+    box-shadow: 
+        inset 0 2px 4px rgba(255, 255, 255, 0.6),
+        inset 0 -2px 4px rgba(0, 0, 0, 0.1),
+        0 2px 8px rgba(79, 70, 229, 0.3);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.dictionary-modal-body .rate-control input[type="range"]::-webkit-slider-thumb:hover {
+    transform: scale(1.1);
+    box-shadow: 
+        inset 0 2px 4px rgba(255, 255, 255, 0.7),
+        inset 0 -2px 4px rgba(0, 0, 0, 0.1),
+        0 4px 12px rgba(79, 70, 229, 0.4);
+}
+
+.dictionary-modal-body .rate-control input[type="range"]::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #4f46e5, #7c3aed);
+    border: 2px solid rgba(255, 255, 255, 0.8);
+    box-shadow: 
+        inset 0 2px 4px rgba(255, 255, 255, 0.6),
+        inset 0 -2px 4px rgba(0, 0, 0, 0.1),
+        0 2px 8px rgba(79, 70, 229, 0.3);
+    cursor: pointer;
+    transition: all 0.2s ease;
 }
 
 .dictionary-modal-body .rate-control span {
