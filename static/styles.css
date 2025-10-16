@@ -675,6 +675,42 @@ a:hover {
     to { left: -30%; opacity: 0.0; }
 }
 
+/* 分数变化轻量提示气泡（不打扰视线） */
+.score-delta {
+    position: absolute;
+    left: 8px;
+    top: -18px;
+    font-size: 24px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: rgba(0,0,0,0.06);
+    color: #111827;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    pointer-events: none;
+    opacity: 0;
+    transform: translateY(6px);
+    animation: deltaFloat 0.8s ease-out forwards;
+}
+.score-delta.gain { background: rgba(34,197,94,0.15); color: #16a34a; }
+.score-delta.loss { background: rgba(239,68,68,0.15); color: #dc2626; }
+
+@keyframes deltaFloat {
+    0% { opacity: 0; transform: translateY(6px); }
+    20% { opacity: 1; transform: translateY(0); }
+    100% { opacity: 0; transform: translateY(-10px); }
+}
+
+/* 放置在回答表单处的大号分数提示 */
+#answer-form { position: relative; }
+.計算ルール {
+    right: auto;
+    left: 12px;
+    top: -26px;
+    font-size: 28px;
+    padding: 4px 10px;
+}
+
 .exp-bar {
     height: 24px;
     background: rgba(79, 70, 229, 0.12);
@@ -1256,6 +1292,27 @@ a:hover {
     margin: 0;
     color: var(--muted);
     font-size: 0.95rem;
+}
+
+/* Romaji 行内帮助按钮样式 */
+.romaji-line { display: inline-flex; align-items: center; gap: 6px; justify-content: center; }
+#question-romaji { display: inline; vertical-align: middle; }
+.romaji-help {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    color: var(--muted);
+    text-decoration: none;
+    font-weight: 700;
+    vertical-align: middle;
+}
+.romaji-help:hover, .romaji-help:focus-visible {
+    color: var(--accent);
+    border-color: var(--accent);
 }
 
 ruby rt {
@@ -2348,10 +2405,6 @@ ruby rt {
     min-width: 120px;
 }
 
-.leaderboard-list {
-    margin-bottom: 20px;
-}
-
 .leaderboard-item {
     display: flex;
     align-items: center;
@@ -2694,7 +2747,6 @@ ruby rt {
     align-items: center;
     gap: 12px;
     padding: 16px;
-    border-bottom: 1px solid var(--border);
 }
 
 .user-avatar-large {

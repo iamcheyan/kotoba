@@ -1,0 +1,349 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title data-i18n="title">Kotoba 帮助 / Help / ヘルプ</title>
+  <link rel="icon" href="/static/logo.svg">
+  <style>
+    :root {
+      --text: #1f2937;
+      --muted: #6b7280;
+      --accent: #6366f1;
+      --bg: #f9fafb;
+      --card: #ffffff;
+      --border: #e5e7eb;
+    }
+    body { margin: 0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Noto Sans, Arial, "Noto Sans JP", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif; background: var(--bg); color: var(--text); }
+    .container { max-width: 860px; margin: 0 auto; padding: 20px; }
+    header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+    .brand { font-weight: 800; letter-spacing: .5px; }
+    .lang { display: inline-flex; gap: 6px; }
+    .lang button { border: 1px solid var(--border); background: var(--card); color: var(--text); border-radius: 999px; padding: 6px 10px; cursor: pointer; }
+    .lang button.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 16px; margin: 12px 0; }
+    h1 { font-size: 1.4rem; margin: 0 0 4px; }
+    h2 { font-size: 1.1rem; margin: 0 0 10px; }
+    p { line-height: 1.65; color: var(--text); }
+    ul { line-height: 1.7; margin: 8px 0 0 18px; }
+    code, kbd { background: #f3f4f6; border: 1px solid #e5e7eb; border-radius: 6px; padding: 1px 6px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size: .95em; }
+    .muted { color: var(--muted); }
+    .inline-badges { display: inline-flex; gap: 8px; flex-wrap: wrap; }
+    .badge { background: #eef2ff; color: #3730a3; border-radius: 999px; padding: 2px 10px; font-weight: 700; font-size: .9em; border: 1px solid #e0e7ff; }
+    .links { display: flex; gap: 8px; flex-wrap: wrap; }
+    .links a { text-decoration: none; border: 1px solid var(--border); background: var(--card); color: var(--text); padding: 6px 10px; border-radius: 999px; }
+    /* Romaji section enhancements */
+    #romaji .code-pairs { display: grid; grid-template-columns: 1fr; gap: 6px; margin-left: 0; padding-left: 0; list-style: none; }
+    #romaji .code-pairs li { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    #romaji .arrow { color: var(--muted); }
+    #romaji code { font-weight: 700; }
+    #romaji .hint { color: var(--muted); font-size: .95em; }
+
+    footer {
+      padding: 20px 0 50px 0;
+      color: var(--muted);
+      font-size: 1em;
+      text-align: center;
+      background: transparent;
+      letter-spacing: 0.02em;
+    }
+    footer a {
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+    footer a:hover, footer a:focus {
+      color: #4338ca;
+      text-decoration: underline;
+    }
+    @media (max-width: 600px) {
+      footer {
+        font-size: 0.9em;
+        padding: 16px 0 7px 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="brand">
+        <a href="/" >
+          <img src="/static/logo.svg" alt="Kotoba" width="42" height="42">
+        </a>
+      </div>
+      <nav class="lang" aria-label="language switcher">
+        <button data-lang="zh" class="active">中文</button>
+        <button data-lang="en">English</button>
+        <button data-lang="ja">日本語</button>
+      </nav>
+    </header>
+
+    <section class="card">
+      <h1 data-i18n="hdr_overview">帮助</h1>
+      <p data-i18n="desc_overview">Kotoba 是一款帮助大家背日语单词、练习假名和罗马音的小型游戏，支持拼写练习、语音播放与排行榜等功能，让学习更有趣。</p>
+    </section>
+
+    <section id="scoring" class="card">
+      <h2 data-i18n="hdr_scoring">计分规则 / Scoring</h2>
+      <p data-i18n="desc_scoring_1">本游戏的总分按以下公式计算：</p>
+      <p><span class="inline-badges">
+        <span class="badge" data-i18n="score_correct">正解: +10/题</span>
+        <span class="badge" data-i18n="score_combo">连击: +5/每连续正解1次</span>
+        <span class="badge" data-i18n="score_total">题量奖励: +2/题</span>
+        <span class="badge" data-i18n="score_penalty_wrong">错误惩罚: 等级相关（下限0）</span>
+        <span class="badge" data-i18n="score_penalty_skip">跳过惩罚: 等级相关（下限0）</span>
+      </span></p>
+      <p><code data-i18n="score_formula">总分 = 正确×10 + 连击×5 + 总题×2 − 惩罚（不低于0）</code></p>
+      <p class="muted" data-i18n="score_note">注：惩罚包含“答错 -6”和“跳过 -4”。</p>
+      <ul class="code-pairs">
+        <li><code>Lv.1–5</code>：<code>誤 -6</code> / <code>ｽｷｯﾌﾟ -4</code></li>
+        <li><code>Lv.6–10</code>：<code>誤 -8</code> / <code>ｽｷｯﾌﾟ -5</code></li>
+        <li><code>Lv.11+</code>：<code>誤 -10</code> / <code>ｽｷｯﾌﾟ -6</code></li>
+      </ul>
+    </section>
+
+    <section id="keyboard" class="card">
+      <h2 data-i18n="hdr_keyboard">内置键盘与输入技巧</h2>
+      <p data-i18n="desc_keyboard_1">支持罗马音输入，Katakana 模式下提供“长音符号”快捷键。</p>
+      <ul>
+        <li data-i18n="key_l">使用键盘 <kbd>L</kbd> 输入长音符号「ー」，效果等同 <kbd>-</kbd>（减号）。这样在手机键盘上也更方便。</li>
+        <li data-i18n="key_minus">原有的 <kbd>-</kbd> 输入方式仍然可用。</li>
+      </ul>
+      <p data-i18n="example_title">使用示例（Katakana 模式）：</p>
+      <ul>
+        <li><code>ko + L → コー</code></li>
+        <li><code>ta + L → ター</code></li>
+        <li><code>su + L → スー</code></li>
+      </ul>
+      <p class="muted" data-i18n="example_note">提示：L 键仅在需要长音时使用，其他输入与常规罗马音一致。</p>
+    </section>
+
+    <section id="romaji" class="card">
+      <h2 data-i18n="romaji_hdr">Romaji（罗马音）标准与输入</h2>
+      <p data-i18n="romaji_intro">...</p>
+      <h3 data-i18n="romaji_rules_title">输入规则</h3>
+      <ul>
+        <li data-i18n="romaji_rule1"></li>
+        <li data-i18n="romaji_rule2"></li>
+        <li data-i18n="romaji_rule3"></li>
+      </ul>
+      <h3 data-i18n="romaji_examples_title">浊音/拗音/长音示例</h3>
+      <ul class="code-pairs">
+        <li><code>ありがとう</code> <span class="arrow">→</span> <code>arigatō</code> <span class="hint">(arigatou 也可)</span></li>
+        <li><code>とうきょう</code> <span class="arrow">→</span> <code>Tōkyō</code> <span class="hint">(toukyou 可)</span></li>
+        <li><code>スーパー</code> <span class="arrow">→</span> <code>sūpā</code> <span class="hint">(su + L → スー)</span></li>
+        <li><code>が/ぎ/ぐ/げ/ご</code> <span class="arrow">→</span> <code>ga/gi/gu/ge/go</code></li>
+        <li><code>きゃ/きゅ/きょ</code> <span class="arrow">→</span> <code>kya/kyu/kyo</code></li>
+        <li><code>しゃ/しゅ/しょ</code> <span class="arrow">→</span> <code>sha/shu/sho</code> <span class="hint">(sya/syu/syo 亦可)</span></li>
+        <li><code>ちゃ/ちゅ/ちょ</code> <span class="arrow">→</span> <code>cha/chu/cho</code> <span class="hint">(tya/tyu/tyo 亦可)</span></li>
+      </ul>
+      <h3 data-i18n="romaji_katakana_title">片假名长音快捷</h3>
+      <ul class="code-pairs">
+        <li><code>ko</code> + <kbd>L</kbd> <span class="arrow">→</span> <code>コー</code>；<code>ta</code> + <kbd>L</kbd> <span class="arrow">→</span> <code>ター</code>；<code>su</code> + <kbd>L</kbd> <span class="arrow">→</span> <code>スー</code></li>
+      </ul>
+      <h3 data-i18n="romaji_why_title">Why long vowels?</h3>
+      <ul>
+        <li data-i18n="romaji_why1"></li>
+        <li data-i18n="romaji_why2"></li>
+      </ul>
+      <h3 data-i18n="romaji_adv_title">Advanced</h3>
+      <ul class="code-pairs">
+        <li><code>まって</code> <span class="arrow">→</span> <code>matte</code>；<code>がっこう</code> <span class="arrow">→</span> <code>gakkō</code></li>
+        <li data-i18n-html="romaji_adv2_html"></li>
+      </ul>
+    </section>
+
+    <section id="clean" class="card">
+      <h2 data-i18n="hdr_clean">环境清理（缓存重置）</h2>
+      <p data-i18n="desc_clean_1">一键清除本地缓存，防止旧版本资源干扰，可快速更新至最新版本。</p>
+      <ul>
+        <li data-i18n="clean_nav">页面顶部的「清理」链接进入，或直接访问 <code>/clear.html</code></li>
+        <li data-i18n="clean_scope">会清除 Service Worker 缓存与本地存储（不包含云端数据）。</li>
+      </ul>
+    </section>
+
+    <section class="card">
+      <h2 data-i18n="hdr_tips">常见问题 / 提示</h2>
+      <ul>
+        <li data-i18n="tip_progress">进度与去重：本地会记录已掌握单词，正常出题会跳过已掌握项；错题本模式下也会去重。</li>
+        <li data-i18n="tip_sync">云同步：为节省流量，仅同步聚合统计（正确/错误/连击/题量/计数），明细保存在本地。</li>
+        <li data-i18n="tip_offline">离线：支持 PWA 安装与离线使用，可在设置或离线下载面板中查看缓存状态。</li>
+      </ul>
+    </section>
+
+    <footer class="footer">
+        © <a href="https://iamcheyan.com/" target="_blank" rel="noreferrer noopener">Cheyan</a> All Rights Reserved ·
+        <a href="https://github.com/iamcheyan/kotoba" target="_blank" rel="noreferrer noopener">GitHub</a>
+    </footer>
+  </div>
+
+  <script>
+    const i18n = {
+      zh: {
+        romaji_hdr: 'Romaji（罗马音）标准与输入',
+        romaji_intro: '本应用采用基于 Hepburn 的常用罗马音方案。长音使用 ō/ū 显示（片假名对应 ー）。',
+        romaji_rules_title: '输入规则',
+        romaji_rule1: '长音：按 L（等同 -）输入片假名长音「ー」。',
+        romaji_rule2: '显示：罗马音中长音显示为 ō/ū；无需直接输入带长音的字母。',
+        romaji_rule3: '兼容：可输入 ou/uu 记法，系统按假名正误判定。',
+        romaji_examples_title: '浊音/拗音/长音示例',
+        romaji_ex1: 'ありがとう → arigatō（也可 arigatou）',
+        romaji_ex2: '東京（とうきょう）→ Tōkyō（toukyou 可输入）',
+        romaji_ex3: 'スーパー → sūpā（输入 su + L → スー）',
+        romaji_ex4: 'が/ぎ/ぐ/げ/ご → ga/gi/gu/ge/go',
+        romaji_ex5: 'きゃ/きゅ/きょ → kya/kyu/kyo',
+        romaji_ex6: 'しゃ/しゅ/しょ → sha/shu/sho（sya/syu/syo 亦可）',
+        romaji_ex7: 'ちゃ/ちゅ/ちょ → cha/chu/cho（tya/tyu/tyo 亦可）',
+        romaji_katakana_title: '片假名长音快捷',
+        romaji_katakana_ex: 'Katakana 模式下：ko + L → コー；ta + L → ター；su + L → スー。',
+        romaji_why_title: '为什么使用这个标准?',
+        romaji_why1: '更接近实际发音长度，便于区分单元音与长音。',
+        romaji_why2: '与多数教材、词典标注一致，便于对照学习。',
+        romaji_adv_title: '其他',
+        romaji_adv1: '小促音「っ」推荐写双辅音：まって→matte；がっこう→gakkō。',
+        romaji_adv2: '长音显示使用 ō/ū，输入时可继续 ou/uu 习惯；系统按假名正确性判定。',
+        romaji_adv2_html: '显示使用 <code>ō/ū</code>；输入 <code>ou/uu</code> 亦可，按假名正确性判定',
+        title: 'Kotoba 帮助 / Help / ヘルプ',
+        hdr_overview: '帮助',
+        desc_overview: 'Kotoba 是一款帮助大家背日语单词、练习假名和罗马音的小型游戏，支持拼写练习、语音播放与排行榜等功能，让学习更有趣。',
+        link_scoring: '计分规则', link_keyboard: '键盘输入', link_clean: '环境清理',
+        hdr_scoring: '计分规则 / Scoring',
+        desc_scoring_1: '本游戏的总分按以下公式计算：',
+        score_correct: '正解: +10/题', score_combo: '连击: +5/每连续正解1次', score_total: '题量奖励: +2/题',
+        score_penalty_wrong: '错误惩罚: 等级相关（下限0）', score_penalty_skip: '跳过惩罚: 等级相关（下限0）',
+        score_formula: '总分 = 正确×10 + 连击×5 + 总题×2 − 惩罚（不低于0）', score_note: '注：惩罚随等级提升而增加：Lv1–5: -6/-4；Lv6–10: -8/-5；Lv11+: -10/-6。',
+        hdr_keyboard: '内置键盘与输入技巧', desc_keyboard_1: '支持罗马音输入，Katakana 模式下提供“长音符号”快捷键。',
+        key_l: '使用键盘 L 输入长音符号「ー」，效果等同 -（减号）。这样在手机键盘上也更方便。', key_minus: '原有的 - 输入方式仍然可用。',
+        example_title: '使用示例（Katakana 模式）：', example_note: '提示：L 键仅在需要长音时使用，其他输入与常规罗马音一致。',
+        hdr_clean: '环境清理（缓存重置）', desc_clean_1: '一键清除本地缓存，防止旧版本资源干扰，可快速更新至最新版本。',
+        clean_nav: '页面顶部的「清理」链接进入，或直接访问 /clear.html', clean_scope: '会清除 Service Worker 缓存与本地存储（不包含云端数据）。',
+        hdr_tips: '常见问题 / 提示', tip_progress: '进度与去重：本地会记录已掌握单词，正常出题会跳过已掌握项；错题本模式下也会去重。',
+        tip_sync: '云同步：为节省流量，仅同步聚合统计（正确/错误/连击/题量/计数），明细保存在本地。', tip_offline: '离线：支持 PWA 安装与离线使用，可在设置或离线下载面板中查看缓存状态。',
+        hdr_links: '链接', link_home: '返回首页', link_clear: '清理环境（/clear.html）', link_scoring_jump: '打开首页并查看「計算ルール」'
+      },
+      en: {
+        romaji_hdr: 'Romaji — Standard & Input',
+        romaji_intro: 'We use a Hepburn-based scheme. Long vowels are shown as ō/ū (Katakana long mark ー).',
+        romaji_rules_title: 'Input rules',
+        romaji_rule1: 'Long vowel in Katakana: press L (same as -) to input ー.',
+        romaji_rule2: 'Display uses ō/ū; you don’t need to type macrons.',
+        romaji_rule3: 'ou/uu spelling is accepted; correctness is judged by Kana.',
+        romaji_examples_title: 'Examples (voiced/youon/long vowel)',
+        romaji_ex1: 'ありがとう → arigatō (also arigatou)',
+        romaji_ex2: '東京（とうきょう）→ Tōkyō (toukyou acceptable)',
+        romaji_ex3: 'スーパー → sūpā (type su + L → スー)',
+        romaji_ex4: 'が/ぎ/ぐ/げ/ご → ga/gi/gu/ge/go',
+        romaji_ex5: 'きゃ/きゅ/きょ → kya/kyu/kyo',
+        romaji_ex6: 'しゃ/しゅ/しょ → sha/shu/sho (sya/syu/syo also OK)',
+        romaji_ex7: 'ちゃ/ちゅ/ちょ → cha/chu/cho (tya/tyu/tyo also OK)',
+        romaji_katakana_title: 'Katakana long vowel shortcut',
+        romaji_katakana_ex: 'ko + L → コー; ta + L → ター; su + L → スー.',
+        romaji_why_title: 'Why long vowels?',
+        romaji_why1: 'Closer to actual pronunciation; easy to distinguish long vowels.',
+        romaji_why2: 'Consistent with many textbooks/dictionaries.',
+        romaji_adv_title: 'Other',
+        romaji_adv1: 'Sokuon っ: write double consonant (matte / gakkō).',
+        romaji_adv2: 'Display uses ō/ū; you may still input ou/uu; judged by Kana.',
+        romaji_adv2_html: 'Display uses <code>ō/ū</code>; input <code>ou/uu</code> is also accepted; judged by Kana',
+        title: 'Kotoba Help / Help / ヘルプ', hdr_overview: 'Help',
+        desc_overview: 'Kotoba is a small game that helps you learn Japanese words, practice hiragana and romaji, and supports spelling practice, voice playback, and leaderboard functions, making learning more fun.',
+        link_scoring: 'Scoring', link_keyboard: 'Keyboard', link_clean: 'Cache',
+        hdr_scoring: 'Scoring Rules', desc_scoring_1: 'The total score is calculated as:',
+        score_correct: 'Correct: +10 each', score_combo: 'Combo: +5 per streak', score_total: 'Volume bonus: +2 per question',
+        score_penalty_wrong: 'Penalty (wrong): scaled by level (floor 0)', score_penalty_skip: 'Penalty (skip): scaled by level (floor 0)',
+        score_formula: 'Total = Correct×10 + Combo×5 + TotalQs×2 − Penalty (≥0)', score_note: 'Penalty grows with level: Lv1–5: -6/-4; Lv6–10: -8/-5; Lv11+: -10/-6.',
+        hdr_keyboard: 'Built-in keyboard & tips', desc_keyboard_1: 'Romaji input is supported. In Katakana mode, use the long vowel shortcut.',
+        key_l: 'Use key L to input 「ー」 (same as hyphen -). Handy on mobile keyboards.', key_minus: 'Hyphen - still works.',
+        example_title: 'Examples (Katakana mode):', example_note: 'Tip: Use L only when long vowel is needed.',
+        hdr_clean: 'Cache Cleaning', desc_clean_1: 'Clear local cache to avoid old assets and refresh quickly.',
+        clean_nav: 'Open from header link or visit /clear.html', clean_scope: 'SW cache and localStorage are cleared (cloud data untouched).',
+        hdr_tips: 'Tips / FAQ', tip_progress: 'Progress & dedupe: mastered words are stored locally and skipped; wrong list is deduped.',
+        tip_sync: 'Cloud sync: only aggregated stats are synced; details stay local.', tip_offline: 'Offline: PWA install and offline supported.',
+        hdr_links: 'Links', link_home: 'Home', link_clear: 'Clear env (/clear.html)', link_scoring_jump: 'Open home and see “計算ルール”'
+      },
+      ja: {
+        romaji_hdr: 'ローマ字 — 規格と入力',
+        romaji_intro: 'Hepburn 系。長音は ō/ū で表示（カタカナは長音記号 ー）。',
+        romaji_rules_title: '入力ルール',
+        romaji_rule1: '長音：L キー（ハイフン - と同等）で「ー」を入力。',
+        romaji_rule2: '表示：長音は ō/ū。マクロン付き文字を直接入力する必要はありません。',
+        romaji_rule3: 'ou/uu 表記も許容。判定は仮名の正誤に基づきます。',
+        romaji_examples_title: '例（濁音/拗音/長音）',
+        romaji_ex1: 'ありがとう → arigatō（arigatou も可）',
+        romaji_ex2: '東京（とうきょう）→ Tōkyō（toukyou 可）',
+        romaji_ex3: 'スーパー → sūpā（su + L → スー）',
+        romaji_ex4: 'が/ぎ/ぐ/げ/ご → ga/gi/gu/ge/go',
+        romaji_ex5: 'きゃ/きゅ/きょ → kya/kyu/kyo',
+        romaji_ex6: 'しゃ/しゅ/しょ → sha/shu/sho（sya/syu/syo も可）',
+        romaji_ex7: 'ちゃ/ちゅ/ちょ → cha/chu/cho（tya/tyu/tyo も可）',
+        romaji_katakana_title: 'カタカナ長音ショートカット',
+        romaji_katakana_ex: 'ko + L → コー、ta + L → ター、su + L → スー。',
+        romaji_why_title: 'なぜこの標準を使用するのか?',
+        romaji_why1: '実際の発音長さに近く、区別しやすい。',
+        romaji_why2: '多くの教材・辞書表記と一致し、学習しやすい。',
+        romaji_adv_title: 'その他',
+        romaji_adv1: '促音「っ」は子音重ね推奨（matte / gakkō）。',
+        romaji_adv2: '表示は ō/ū、入力は ou/uu でも可。判定は仮名に基づく。',
+        romaji_adv2_html: '表示は <code>ō/ū</code>、入力は <code>ou/uu</code> でも可。判定は仮名に基づく。',
+        title: 'Kotoba ヘルプ / Help', hdr_overview: 'ヘルプ',
+        desc_overview: 'Kotoba は、日本語の単語を覚えたり、ひらがなとローマ字を練習したり、スペル練習、音声再生、ランキング機能をサポートする小型ゲームです。',
+        link_scoring: '計算ルール', link_keyboard: 'キーボード', link_clean: '環境クリア',
+        hdr_scoring: '計算ルール', desc_scoring_1: '合計スコアは次の式で計算します：',
+        score_correct: '正解: +10/問', score_combo: 'コンボ: +5/連続正解1回', score_total: '問題数ボーナス: +2/問',
+        score_penalty_wrong: '誤答ペナルティ: レベル連動（下限0）', score_penalty_skip: 'スキップペナルティ: レベル連動（下限0）',
+        score_formula: '合計 = 正解×10 + コンボ×5 + 総問題数×2 − ペナルティ（0未満にならない）', score_note: 'ペナルティはレベルで増加：Lv1–5: -6/-4、Lv6–10: -8/-5、Lv11+: -10/-6。',
+        hdr_keyboard: '内蔵キーボードと入力のコツ', desc_keyboard_1: 'ローマ字入力対応。カタカナモードでは長音「ー」のショートカットがあります。',
+        key_l: 'キーボードの <kbd>L</kbd> で「ー」を入力。ハイフン <kbd>-</kbd> と同等。モバイルでも便利。', key_minus: '従来の <kbd>-</kbd> も利用可能。',
+        example_title: '使用例（カタカナモード）:', example_note: '長音が必要な時だけ L を使ってください。',
+        hdr_clean: '環境クリア（キャッシュリセット）', desc_clean_1: 'ローカルキャッシュを一括削除し、最新バージョンへ素早く更新します。',
+        clean_nav: 'ページ上部のリンクから、または /clear.html に直接アクセスします。', clean_scope: 'SW キャッシュと localStorage を削除（クラウドは削除しません）。',
+        hdr_tips: 'よくある質問 / ヒント', tip_progress: '進捗と重複排除：習得済み語はローカルで記録し、通常出題ではスキップ。誤答ノートも重複を排除します。',
+        tip_sync: 'クラウド同期：通信量節約のため集計データのみ同期。詳細はローカルに保存。', tip_offline: 'オフライン：PWA インストールとオフライン動作に対応。',
+        hdr_links: 'リンク', link_home: 'ホームへ', link_clear: '環境クリア（/clear.html）', link_scoring_jump: 'ホームを開いて「計算ルール」を表示'
+      }
+    };
+
+    function applyLang(lang) {
+      const dict = i18n[lang] || i18n.zh;
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (dict[key]) el.textContent = dict[key];
+      });
+      document.querySelectorAll('[data-i18n-html]').forEach(el => {
+        const key = el.getAttribute('data-i18n-html');
+        if (dict[key]) el.innerHTML = dict[key];
+      });
+      document.documentElement.lang = lang === 'zh' ? 'zh-CN' : (lang === 'ja' ? 'ja' : 'en');
+      localStorage.setItem('help.lang', lang);
+    }
+
+    document.querySelectorAll('.lang button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.lang button').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const selected = btn.getAttribute('data-lang');
+        applyLang(selected);
+        // 更新 URL 参数
+        const u = new URL(location.href);
+        u.searchParams.set('lang', selected === 'ja' ? 'jp' : selected);
+        history.replaceState(null, '', u.toString());
+      });
+    });
+
+    // 初始化语言：优先 URL 参数 ?lang=zh|jp|en，其次本地记录；默认 zh
+    const params = new URLSearchParams(location.search);
+    let paramLang = (params.get('lang') || '').toLowerCase();
+    if (paramLang === 'jp') paramLang = 'ja';
+    const saved = localStorage.getItem('help.lang');
+    const initLang = ['zh','en','ja'].includes(paramLang)
+      ? paramLang
+      : (['zh','en','ja'].includes(saved) ? saved : 'zh');
+    document.querySelectorAll('.lang button').forEach(b => b.classList.remove('active'));
+    document.querySelector(`.lang button[data-lang="${initLang}"]`)?.classList.add('active');
+    applyLang(initLang);
+  </script>
+</body>
+</html>
+

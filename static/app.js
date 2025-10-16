@@ -816,6 +816,39 @@
         const next = Math.max(0, current + delta);
         try { localStorage.setItem('penalty', String(next)); } catch (_) {}
     }
+
+    function getDynamicPenalty(type /* 'wrong'|'skip' */) {
+        const correct = parseInt(localStorage.getItem('correct') || '0', 10) || 0;
+        const level = calculateLevel(correct);
+        let wrong = 6, skip = 4;
+        if (level >= 6 && level <= 10) { wrong = 8; skip = 5; }
+        else if (level >= 11) { wrong = 10; skip = 6; }
+        return type === 'skip' ? skip : wrong;
+    }
+
+    function computeScoreRaw(correct, wrong, combo, penalty) {
+        const total = correct + wrong;
+        return Math.max(0, correct * 10 + combo * 5 + total * 2 - penalty);
+    }
+
+    function getCurrentStats() {
+        const correct = parseInt(localStorage.getItem('correct') || '0', 10) || 0;
+        const wrong = parseInt(localStorage.getItem('wrong') || '0', 10) || 0;
+        const penalty = getPenalty();
+        return { correct, wrong, combo: currentCombo || 0, penalty };
+    }
+
+    function showScoreDelta(text, type, target = 'answer') {
+        const container = target === 'answer' ? document.getElementById('answer-form') : document.querySelector('.exp-bar-wrapper');
+        if (!container) return;
+        const tag = document.createElement('div');
+        tag.className = `score-delta ${type === 'loss' ? 'loss' : 'gain'} ${target === 'answer' ? 'at-answer' : ''}`;
+        tag.textContent = text;
+        container.appendChild(tag);
+        setTimeout(() => {
+            if (tag && tag.parentNode) tag.parentNode.removeChild(tag);
+        }, 900);
+    }
     
     function incrementCombo() {
         currentCombo++;
@@ -2871,6 +2904,10 @@
 
         setLoading(true);
         try {
+            // 计算答题前的总分
+            const before = getCurrentStats();
+            const scoreBefore = computeScoreRaw(before.correct, before.wrong, before.combo, before.penalty);
+
             const result = await evaluateAnswer(value);
             if (result.correct) {
                 markEntryMastered(state.currentEntry);
@@ -2886,6 +2923,11 @@
                     wrapper.classList.add('exp-gain');
                     setTimeout(() => wrapper.classList.remove('exp-gain'), 650);
                 }
+                // 计算并显示实时分差
+                const after = getCurrentStats();
+                const scoreAfter = computeScoreRaw(after.correct, after.wrong, after.combo, after.penalty);
+                const diff = Math.max(0, scoreAfter - scoreBefore);
+                if (diff !== 0) showScoreDelta(`+${diff}`, 'gain', 'answer');
                 
                 // 只触发彩带动画，不显示toast
                 triggerCelebration();
@@ -2905,8 +2947,8 @@
                 }, 800);
             } else {
                 incrementCounter('wrong');
-                // 扣分：答错扣 6 分（不低于 0）
-                addPenalty(6);
+                // 动态扣分：随等级提高而增加
+                addPenalty(getDynamicPenalty('wrong'));
                 resetCombo(); // 重置连击
                 updateScoreboard();
                 // 经验条动画：失去（虽然正确经验不减少，这里用于扣分时的视觉反馈）
@@ -2917,6 +2959,11 @@
                     wrapper.classList.add('exp-loss');
                     setTimeout(() => wrapper.classList.remove('exp-loss'), 650);
                 }
+                // 计算并显示实时分差
+                const after = getCurrentStats();
+                const scoreAfter = computeScoreRaw(after.correct, after.wrong, after.combo, after.penalty);
+                const diff = scoreAfter - scoreBefore;
+                if (diff !== 0) showScoreDelta(`${diff}`, 'loss', 'answer');
                 showIncorrectFeedback(value, state.currentEntry);
                 setButtonToNext();
                 
@@ -3013,8 +3060,11 @@
                 } catch (error) {
                     showAlert('error', error.message || String(error));
                 } finally {
-                    // 扣分：跳过扣 4 分（不低于 0）
-                    addPenalty(4);
+                    // 计算并显示实时分差（跳过后）
+                    const before = getCurrentStats();
+                    const scoreBefore = computeScoreRaw(before.correct, before.wrong, before.combo, before.penalty);
+                    // 动态扣分：随等级提高而增加
+                    addPenalty(getDynamicPenalty('skip'));
                     updateScoreboard();
                     // 经验条动画：失去
                     const wrapper = document.querySelector('.exp-bar-wrapper');
@@ -3024,6 +3074,10 @@
                         wrapper.classList.add('exp-loss');
                         setTimeout(() => wrapper.classList.remove('exp-loss'), 650);
                     }
+                    const after = getCurrentStats();
+                    const scoreAfter = computeScoreRaw(after.correct, after.wrong, after.combo, after.penalty);
+                    const diff = scoreAfter - scoreBefore;
+                    if (diff !== 0) showScoreDelta(`${diff}`, 'loss', 'answer');
                     setLoading(false);
                 }
             });
