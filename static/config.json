@@ -11,7 +11,7 @@
         },
         {
             "path": "dictionaries/beginner.json",
-            "name": "入門（单字/N5）"
+            "name": "入門单字"
         },
         {
             "path": "dictionaries/grammar.json",
@@ -19,7 +19,7 @@
         },
         {
             "path": "dictionaries/base.json",
-            "name": "N5-N1単語"
+            "name": "基本単語"
         },
         {
             "path": "dictionaries/jlpt_n5.json",

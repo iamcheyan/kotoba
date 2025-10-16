@@ -2141,6 +2141,10 @@
         const isOnlyRomanChars = /^[a-zA-Z0-9\s\-._,!?'"()]+$/.test(entry.reading);
         if (isOnlyRomanChars) return false;
         
+        // 若读音中包含汉字（CJK统一表意文字），则视为错误的读音来源，不显示
+        const hasKanji = /[\u3400-\u4DBF\u4E00-\u9FFF\uF900-\uFAFF]/.test(entry.reading);
+        if (hasKanji) return false;
+        
         return true;
     }
 
