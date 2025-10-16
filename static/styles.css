@@ -3413,6 +3413,26 @@ ruby rt {
     animation: comboAppear 1.2s ease-out forwards;
 }
 
+/* 连击背后的高斯模糊遮罩 */
+.combo-backdrop {
+    position: fixed;
+    inset: 0;
+    /* 升级动画同款：外围变暗、中心微亮的径向渐变 */
+    background: radial-gradient(
+        circle at 50% 50%,
+        rgba(255, 255, 255, 0.28) 0%,
+        rgba(255, 255, 255, 0.12) 20%,
+        rgba(0, 0, 0, 0.55) 70%,
+        rgba(0, 0, 0, 0.7) 100%
+    );
+    opacity: 0;
+    transition: opacity 0.25s ease;
+    z-index: 9998; /* 位于连击层之下 */
+    pointer-events: none;
+}
+.combo-backdrop.show { opacity: 1; }
+/* 直接出现/消失，无需过渡 */
+
 .combo-text {
     font-size: 4rem;
     font-weight: 900;

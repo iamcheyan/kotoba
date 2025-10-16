@@ -1157,6 +1157,11 @@
         }
         
         
+        // 创建连击背后遮罩（无淡入）
+        const comboBackdrop = document.createElement('div');
+        comboBackdrop.className = 'combo-backdrop';
+        document.body.appendChild(comboBackdrop);
+
         // 创建连击通知容器
         const notification = document.createElement('div');
         notification.className = `combo-notification ${comboClass}`;
@@ -1197,6 +1202,8 @@
         // 自动移除
         setTimeout(() => {
             notification.remove();
+            // 直接移除遮罩
+            comboBackdrop.remove();
         }, 1200);
     }
     
