@@ -102,7 +102,7 @@
                     </button>
                 </div>
                 <!-- 排行榜入口按钮（放在 user-account 右侧） -->
-                <button id="headerLeaderboardBtn" class="header-leaderboard-btn" title="ランキング">
+                <button id="headerLeaderboardBtn" class="header-leaderboard-btn" title="ランキング" style="display:none;">
                     <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M8 21h8"/>
                         <path d="M12 17v4"/>
@@ -935,14 +935,19 @@
 
         // Header leaderboard entry
         if (headerLeaderboardBtn) {
-            headerLeaderboardBtn.addEventListener('click', function() {
+            headerLeaderboardBtn.addEventListener('click', async function() {
+                // 打开前先提交当前分数，确保排行榜存的是最新数据
+                try {
+                    await submitScoreToLeaderboard({ silent: true });
+                } catch (e) { console.warn('预提交失败', e); }
+
                 const leaderboardModal = document.getElementById('leaderboard-modal');
                 const backdrop = document.getElementById('modal-backdrop');
                 if (leaderboardModal) leaderboardModal.classList.remove('hidden');
                 if (backdrop) backdrop.classList.remove('hidden');
                 if (guestMenu) guestMenu.classList.remove('show');
                 if (userMenu) userMenu.classList.remove('show');
-                loadLeaderboard();
+                await loadLeaderboard();
             });
         }
 
@@ -967,6 +972,8 @@
                 await loadLeaderboard();
             });
         }
+
+        // cleanup-leaderboard removed
 
         // Leaderboard pagination
         const prevLeaderboardPage = document.getElementById('prev-leaderboard-page');
@@ -1265,6 +1272,9 @@
                 
                 const gameProgressPanel = document.querySelector('.game-progress-panel');
                 if (gameProgressPanel) gameProgressPanel.style.display = 'block';
+
+                // 显示排行榜入口按钮
+                if (headerLeaderboardBtn) headerLeaderboardBtn.style.display = 'inline-flex';
             } else {
                 console.log('User is signed out');
                 sessionStorage.removeItem('dataLoaded');
@@ -1301,6 +1311,9 @@
                 
                 const gameProgressPanel = document.querySelector('.game-progress-panel');
                 if (gameProgressPanel) gameProgressPanel.style.display = 'none';
+
+                // 隐藏排行榜入口按钮
+                if (headerLeaderboardBtn) headerLeaderboardBtn.style.display = 'none';
             }
         });
 
@@ -1332,8 +1345,8 @@
                     return;
                 }
 
-                // 提交到排行榜集合
-                await addDoc(collection(db, 'leaderboard'), {
+                // 以 uid 作为文档 ID，覆盖该用户的排行榜记录
+                await setDoc(doc(db, 'leaderboard', user.uid), {
                     uid: user.uid,
                     displayName: user.displayName || 'Anonymous',
                     photoURL: user.photoURL || '',
@@ -1344,6 +1357,19 @@
                     total: total,
                     submittedAt: serverTimestamp()
                 });
+
+                // 提交后立即读取验证（确认写入到本项目/本集合）
+                try {
+                    const meRef = doc(db, 'leaderboard', user.uid);
+                    const meSnap = await getDoc(meRef);
+                    console.log('✅ 提交后读取验证:', {
+                        exists: meSnap.exists(),
+                        id: meSnap.id,
+                        data: meSnap.exists() ? meSnap.data() : null
+                    });
+                } catch (verifyErr) {
+                    console.warn('提交后读取验证失败:', verifyErr);
+                }
 
                 if (!silent) showNotification('ランキングにスコアを送信しました！', 'success');
                 
@@ -1384,19 +1410,27 @@
                         ...doc.data()
                     });
                 });
+                
+                console.log('📊 查询到的原始数据:', leaderboardData.length, '条记录');
+                console.log('📊 用户分布:', leaderboardData.map(entry => ({ uid: entry.uid, displayName: entry.displayName, score: entry.score })));
 
-                // 去重：每个用户只保留最高分
-                const userScores = new Map();
+                // 兼容历史数据：按 uid 去重，仅保留每个用户“最新提交”的一条
+                const byUserLatest = new Map();
                 leaderboardData.forEach(entry => {
-                    const existing = userScores.get(entry.uid);
-                    if (!existing || entry.score > existing.score) {
-                        userScores.set(entry.uid, entry);
+                    const current = byUserLatest.get(entry.uid);
+                    const ts = (entry.submittedAt && entry.submittedAt.toMillis) ? entry.submittedAt.toMillis() : 0;
+                    const curTs = current && current.submittedAt && current.submittedAt.toMillis ? current.submittedAt.toMillis() : -1;
+                    if (!current || ts >= curTs) {
+                        byUserLatest.set(entry.uid, entry);
                     }
                 });
-                
-                leaderboardData = Array.from(userScores.values())
+
+                leaderboardData = Array.from(byUserLatest.values())
                     .sort((a, b) => b.score - a.score)
-                    .slice(0, 10); // 只展示前10位唯一用户
+                    .slice(0, 10);
+                
+                console.log('📊 去重后的数据:', leaderboardData.length, '个唯一用户');
+                console.log('📊 最终排行榜:', leaderboardData.map(entry => ({ uid: entry.uid, displayName: entry.displayName, score: entry.score })));
 
                 // 更新统计信息
                 updateLeaderboardStats();
