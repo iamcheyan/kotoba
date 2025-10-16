@@ -1084,11 +1084,9 @@
                     combo: parseInt(localStorage.getItem('combo') || '0', 10),
                     total: parseInt(localStorage.getItem('total') || '0', 10),
                     
-                    // 已掌握的词汇
-                    masteredEntries: JSON.parse(localStorage.getItem('masteredEntries') || '{}'),
-                    
-                    // 错题本
-                    wrongWords: JSON.parse(localStorage.getItem('wrongWords') || '[]'),
+                    // 仅上报计数，避免超出 1MB 文档限制
+                    masteredCount: (() => { try { return Object.keys(JSON.parse(localStorage.getItem('masteredEntries') || '{}')).length; } catch { return 0; } })(),
+                    wrongWordsCount: (() => { try { return (JSON.parse(localStorage.getItem('wrongWords') || '[]') || []).length; } catch { return 0; } })(),
                     
                     // 用户偏好
                     lastSelectedDictionary: localStorage.getItem('lastSelectedDictionary'),
@@ -1113,8 +1111,8 @@
                         誤答: localData.wrong,
                         連撃: localData.combo,
                         総問題数: localData.total,
-                        習得済み: Object.keys(localData.masteredEntries).length,
-                        錯題本: localData.wrongWords.length
+                        習得済み: localData.masteredCount,
+                        錯題本: localData.wrongWordsCount
                     });
 
                 // 同步成功后也轻量更新排行榜（静默）
@@ -1159,18 +1157,10 @@
                         localStorage.setItem('total', String(cloudData.total));
                     }
                     
-                    // 同步已掌握的词汇
-                    if (cloudData.masteredEntries) {
-                        localStorage.setItem('masteredEntries', JSON.stringify(cloudData.masteredEntries));
-                    }
+                    // 不再从云端覆盖 masteredEntries 具体列表（避免大对象），仅保留本地
                     
                     // 同步错题本 - 合并去重
-                    if (cloudData.wrongWords && Array.isArray(cloudData.wrongWords)) {
-                        const localWrongWords = JSON.parse(localStorage.getItem('wrongWords') || '[]');
-                        const mergedWrongWords = [...new Set([...cloudData.wrongWords, ...localWrongWords])];
-                        localStorage.setItem('wrongWords', JSON.stringify(mergedWrongWords));
-                        console.log('✅ 错题本已同步:', mergedWrongWords.length, '个单词');
-                    }
+                    // 不再从云端同步 wrongWords 列表，避免膨胀；仍可使用计数
                     
                     // 同步用户偏好
                     if (cloudData.lastSelectedDictionary) {

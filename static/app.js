@@ -757,6 +757,7 @@
         const correct = parseInt(localStorage.getItem('correct') || '0', 10) || 0;
         const wrong = parseInt(localStorage.getItem('wrong') || '0', 10) || 0;
         const total = correct + wrong;
+        const penalty = getPenalty();
         
         // 更新等级徽章
         const level = calculateLevel(correct);
@@ -798,10 +799,22 @@
             elements.totalStat.textContent = total;
         }
         
-        // 保持旧的score元素更新（如果存在）
+        // 保持旧的score元素更新（如果存在）。这里展示“总分-扣分”的结果
         if (elements.score) {
-            elements.score.textContent = `正解: ${correct}`;
+            const computedScore = Math.max(0, correct * 10 + currentCombo * 5 + total * 2 - penalty);
+            elements.score.textContent = `${computedScore}`;
         }
+    }
+
+    // ===== Penalty helpers =====
+    function getPenalty() {
+        return parseInt(localStorage.getItem('penalty') || '0', 10) || 0;
+    }
+    function addPenalty(points) {
+        const delta = Math.max(0, Number(points) || 0);
+        const current = getPenalty();
+        const next = Math.max(0, current + delta);
+        try { localStorage.setItem('penalty', String(next)); } catch (_) {}
     }
     
     function incrementCombo() {
@@ -1157,10 +1170,12 @@
         }
         
         
-        // 创建连击背后遮罩（无淡入）
+        // 创建连击背后遮罩（淡入）
         const comboBackdrop = document.createElement('div');
         comboBackdrop.className = 'combo-backdrop';
         document.body.appendChild(comboBackdrop);
+        // 下一帧添加 show 触发淡入
+        requestAnimationFrame(() => comboBackdrop.classList.add('show'));
 
         // 创建连击通知容器
         const notification = document.createElement('div');
@@ -1202,8 +1217,9 @@
         // 自动移除
         setTimeout(() => {
             notification.remove();
-            // 直接移除遮罩
-            comboBackdrop.remove();
+            // 遮罩淡出后移除
+            comboBackdrop.classList.remove('show');
+            setTimeout(() => comboBackdrop.remove(), 250);
         }, 1200);
     }
     
@@ -2880,6 +2896,8 @@
                 }, 800);
             } else {
                 incrementCounter('wrong');
+                // 扣分：答错扣 6 分（不低于 0）
+                addPenalty(6);
                 resetCombo(); // 重置连击
                 updateScoreboard();
                 showIncorrectFeedback(value, state.currentEntry);
@@ -2978,6 +2996,9 @@
                 } catch (error) {
                     showAlert('error', error.message || String(error));
                 } finally {
+                    // 扣分：跳过扣 4 分（不低于 0）
+                    addPenalty(4);
+                    updateScoreboard();
                     setLoading(false);
                 }
             });
@@ -3984,7 +4005,21 @@
             // 恢复UI状态到保存的模式
             switchToMode(savedMode);
         } catch (error) {
-            showAlert('error', error.message || String(error));
+            console.warn('[Init] loadConfig failed, fallback to default dictionary:', error);
+            // 回退到内置默认词典（避免空白）
+            try {
+                state.dictionaries = [
+                    { id: 'beginner', path: '/static/dictionaries/beginner.json', name: '入門（N5）', isWrongWords: false }
+                ];
+                state.dictionaryId = 'beginner';
+                updateDictionaryLabel();
+                populateDictionarySelect();
+                await loadRandomEntry();
+                switchToMode(savedMode);
+                showAlert('設定の読み込みに失敗しました。デフォルト辞書で続行します。', 'info');
+            } catch (fallbackErr) {
+                showAlert('error', fallbackErr.message || String(fallbackErr));
+            }
         } finally {
             hideLoading();
         }
