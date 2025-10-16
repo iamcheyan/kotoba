@@ -318,6 +318,12 @@
                 <p id="question-meaning" class="meaning"></p>
                 <p id="question-reading" class="reading"></p>
                 <div class="romaji-line"><p id="question-romaji" class="romaji"></p><a href="/help.html#romaji" target="_blank" title="Romaji Help" aria-label="Romaji Help" class="romaji-help">?</a></div>
+                <div id="empty-wrong-words" class="empty-state hidden" aria-live="polite">
+                    <div class="empty-illustration" aria-hidden="true">🫧</div>
+                    <h3>まだ間違いがありません</h3>
+                    <p>現在の錯題本は空です。まずは通常の辞書で練習してみましょう。</p>
+                    <button id="backToDefaultDict" class="primary-button" type="button">既定の辞書へ</button>
+                </div>
                 <form id="answer-form" class="answer-form" autocomplete="off">
                     <!-- 输入模式 -->
                     <div id="input-mode-container" class="mode-container">

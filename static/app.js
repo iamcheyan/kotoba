@@ -2239,12 +2239,7 @@
     async function loadWrongWordsDict() {
         try {
             const wrongWords = JSON.parse(localStorage.getItem('wrongWords') || '[]');
-            
-            if (wrongWords.length === 0) {
-                throw new Error('錯題本に単語がありません。まず問題を解いてみましょう！');
-            }
-            
-            // 将错题本转换为标准词典格式
+            // 将错题本转换为标准词典格式（允许为空）
             const entries = wrongWords.map(word => ({
                 kanji: word.kanji,
                 meaning: word.meaning || '',
@@ -2276,7 +2271,37 @@
         
         if (!dictionary.entries.length) {
             if (state.dictionaryId === 'wrong-words') {
-                throw new Error('錯題本に単語がありません。まず問題を解いてみましょう！');
+                // 错题本为空：进入空视图，不弹窗
+                state.totalWords = 0;
+                state.currentEntry = null;
+                state.masteredEntries = new Set();
+                state.dictionaryCompleted = false;
+                state.progressDictionaryId = state.dictionaryId;
+                updateProgressUI();
+                // 显示空视图
+                const empty = document.getElementById('empty-wrong-words');
+                if (empty) empty.classList.remove('hidden');
+                // 隐藏输入与按钮区及 TTS/romaji 区域
+                if (elements.answerForm) elements.answerForm.classList.add('hidden');
+                const ttsBtnEl = document.getElementById('tts-button');
+                if (ttsBtnEl) ttsBtnEl.classList.add('hidden');
+                const romajiLine = document.querySelector('.romaji-line');
+                if (romajiLine) romajiLine.classList.add('hidden');
+                if (elements.questionWord) elements.questionWord.textContent = '';
+                if (elements.questionMeaning) elements.questionMeaning.textContent = '';
+                if (elements.questionReading) elements.questionReading.textContent = '';
+                if (elements.questionRomaji) elements.questionRomaji.textContent = '';
+                // 绑定返回按钮
+                const backBtn = document.getElementById('backToDefaultDict');
+                if (backBtn) {
+                    backBtn.onclick = () => {
+                        const params = new URLSearchParams(window.location.search);
+                        params.delete('dict');
+                        window.history.replaceState({}, '', `${window.location.pathname}?${params}`);
+                        window.location.reload();
+                    };
+                }
+                return;
             } else {
                 throw new Error('辞書に単語が登録されていません');
             }
@@ -2695,7 +2720,11 @@
         const wrongWords = JSON.parse(localStorage.getItem('wrongWords') || '[]');
         
         if (wrongWords.length === 0) {
-            alert('錯題本に単語がありません。まず問題を解いてみましょう！');
+            // 直接切换到错题本空视图
+            const params = new URLSearchParams(window.location.search);
+            params.set('dict', 'wrong-words');
+            window.history.replaceState({}, '', `${window.location.pathname}?${params}`);
+            window.location.reload();
             return;
         }
         
