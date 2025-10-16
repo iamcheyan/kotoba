@@ -2877,6 +2877,15 @@
                 incrementCounter('correct');
                 incrementCombo(); // 增加连击
                 updateScoreboard();
+                // 经验条动画：获得
+                const wrapper = document.querySelector('.exp-bar-wrapper');
+                if (wrapper) {
+                    wrapper.classList.remove('exp-loss','exp-gain');
+                    // 触发重排以重启动画
+                    void wrapper.offsetWidth;
+                    wrapper.classList.add('exp-gain');
+                    setTimeout(() => wrapper.classList.remove('exp-gain'), 650);
+                }
                 
                 // 只触发彩带动画，不显示toast
                 triggerCelebration();
@@ -2900,6 +2909,14 @@
                 addPenalty(6);
                 resetCombo(); // 重置连击
                 updateScoreboard();
+                // 经验条动画：失去（虽然正确经验不减少，这里用于扣分时的视觉反馈）
+                const wrapper = document.querySelector('.exp-bar-wrapper');
+                if (wrapper) {
+                    wrapper.classList.remove('exp-gain','exp-loss');
+                    void wrapper.offsetWidth;
+                    wrapper.classList.add('exp-loss');
+                    setTimeout(() => wrapper.classList.remove('exp-loss'), 650);
+                }
                 showIncorrectFeedback(value, state.currentEntry);
                 setButtonToNext();
                 
@@ -2999,6 +3016,14 @@
                     // 扣分：跳过扣 4 分（不低于 0）
                     addPenalty(4);
                     updateScoreboard();
+                    // 经验条动画：失去
+                    const wrapper = document.querySelector('.exp-bar-wrapper');
+                    if (wrapper) {
+                        wrapper.classList.remove('exp-gain','exp-loss');
+                        void wrapper.offsetWidth;
+                        wrapper.classList.add('exp-loss');
+                        setTimeout(() => wrapper.classList.remove('exp-loss'), 650);
+                    }
                     setLoading(false);
                 }
             });

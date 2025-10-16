@@ -624,6 +624,57 @@ a:hover {
     position: relative;
 }
 
+/* 经验值变动动画：闪光扫过 + 轻微脉冲 */
+.exp-bar-wrapper.exp-gain .exp-bar-fill {
+    animation: expGainPulse 0.6s ease-out;
+}
+.exp-bar-wrapper.exp-gain::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -30%;
+    height: 100%;
+    width: 30%;
+    background: linear-gradient(90deg, rgba(255,255,255,0.0), rgba(255,255,255,0.5), rgba(255,255,255,0));
+    filter: blur(2px);
+    animation: expSweep 0.6s ease-out;
+    pointer-events: none;
+}
+
+.exp-bar-wrapper.exp-loss .exp-bar-fill {
+    animation: expLossPulse 0.6s ease-out;
+}
+.exp-bar-wrapper.exp-loss::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 100%;
+    height: 100%;
+    width: 30%;
+    background: linear-gradient(90deg, rgba(0,0,0,0), rgba(0,0,0,0.2), rgba(0,0,0,0));
+    animation: expSweepBack 0.6s ease-out;
+    pointer-events: none;
+}
+
+@keyframes expGainPulse {
+    0% { transform: scaleY(1); filter: brightness(1); }
+    50% { transform: scaleY(1.05); filter: brightness(1.2); }
+    100% { transform: scaleY(1); filter: brightness(1); }
+}
+@keyframes expLossPulse {
+    0% { transform: scaleY(1); filter: brightness(1); }
+    50% { transform: scaleY(0.98); filter: brightness(0.9); }
+    100% { transform: scaleY(1); filter: brightness(1); }
+}
+@keyframes expSweep {
+    from { left: -30%; opacity: 0.0; }
+    to { left: 130%; opacity: 0.0; }
+}
+@keyframes expSweepBack {
+    from { left: 130%; opacity: 0.0; }
+    to { left: -30%; opacity: 0.0; }
+}
+
 .exp-bar {
     height: 24px;
     background: rgba(79, 70, 229, 0.12);
