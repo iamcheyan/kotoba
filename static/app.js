@@ -2,12 +2,9 @@
     'use strict';
 
     const KUROMOJI_DICT_PATHS = ['/static/kuromoji-dict/'];
-    const DEFAULT_THEME = 'classic';
+    const DEFAULT_THEME = 'magic';
     const THEMES = {
-        classic: { name: 'Classic' },
-        sakura: { name: 'Sakura Blossom' },
-        gaming: { name: 'Gaming' },
-        dark: { name: 'Dark' },
+        magic: { name: 'Magic Book' },
     };
     const THEME_STORAGE_KEY = 'kotoba.theme';
 
@@ -268,8 +265,11 @@
         } catch (error) {
             console.warn('[Theme] Failed to read stored selection', error);
         }
-        const initialTheme = isSupportedTheme(savedTheme) ? savedTheme : DEFAULT_THEME;
-        applyTheme(initialTheme, { persist: false });
+        if (isSupportedTheme(savedTheme)) {
+            applyTheme(savedTheme, { persist: false });
+        } else {
+            applyTheme(DEFAULT_THEME);
+        }
     }
 
     function setButtonToAnswer() {
