@@ -28,7 +28,7 @@
 ### 方法 1: 使用在线工具
 
 1. 访问 [RealFaviconGenerator](https://realfavicongenerator.net/)
-2. 上传项目的 SVG 图标（`static/favicon.svg`）
+2. 上传项目的 SVG 图标（`static/logo.svg`）
 3. 生成 192x192 的 PNG 图标
 4. 下载并保存为 `/Users/tetsuya/Dev/Kotoba/static/icon-192.png`
 
@@ -39,12 +39,12 @@
 ```bash
 cd /Users/tetsuya/Dev/Kotoba
 # 将 SVG 转换为 PNG
-convert static/favicon.svg -resize 192x192 static/icon-192.png
+convert static/logo.svg -resize 192x192 static/icon-192.png
 ```
 
 ### 方法 3: 临时解决方案
 
-暂时使用 favicon.svg，但 iOS 可能无法正确显示。建议尽快创建 PNG 版本。
+暂时使用 logo.svg，但 iOS 可能无法正确显示。建议尽快创建 PNG 版本。
 
 ## 🚀 部署检查清单
 
@@ -109,7 +109,7 @@ convert static/favicon.svg -resize 192x192 static/icon-192.png
   '/static/app.js',
   '/static/styles.css',
   '/static/config.json',
-  '/static/favicon.svg'
+  '/static/logo.svg'
 ]
 ```
 

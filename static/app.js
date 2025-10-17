@@ -3875,7 +3875,7 @@
         const link = document.querySelector('link[rel="icon"]') || document.createElement('link');
         link.setAttribute('rel', 'icon');
         link.setAttribute('type', 'image/svg+xml');
-        link.setAttribute('href', '/static/favicon.svg?v=1');
+        link.setAttribute('href', '/static/logo.svg?v=1');
         if (!link.parentNode) {
             document.head.appendChild(link);
         }

@@ -22,7 +22,7 @@
       "purpose": "any maskable"
     },
     {
-      "src": "/static/favicon.svg",
+      "src": "/static/logo.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any"

@@ -9,7 +9,7 @@ const CORE_RESOURCES = [
     '/static/styles.css',
     '/static/config.json',
     '/manifest.json',
-    '/static/favicon.svg',
+    '/static/logo.svg',
     '/static/icon-192.png'
 ];
 
