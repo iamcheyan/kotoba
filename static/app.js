@@ -2512,18 +2512,25 @@
         
         if (uniqueWords.length === 0) {
             listContainer.innerHTML = `
-                <div class="empty-wrong-words">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
-                        <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
-                    </svg>
-                    <div class="empty-wrong-words-title">錯題本は空です</div>
-                    <div class="empty-wrong-words-desc">間違えた単語がここに記録されます</div>
+                <div id="wrong-words-list" class="wrong-words-list">
+                    <div class="empty-wrong-words">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                            <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+                        </svg>
+                        <div class="empty-wrong-words-title">錯題本は空です</div>
+                        <div class="empty-wrong-words-desc">間違えた単語がここに記録されます</div>
+                    </div>
                 </div>
             `;
-            // 隐藏分页
+            // 隐藏分页和操作按钮
             if (paginationElement) {
                 paginationElement.classList.add('hidden');
+            }
+            // 隐藏错题操作按钮
+            const wrongWordsActions = document.querySelector('.wrong-words-actions');
+            if (wrongWordsActions) {
+                wrongWordsActions.style.display = 'none';
             }
             return;
         }
@@ -2547,6 +2554,12 @@
             } else {
                 paginationElement.classList.add('hidden');
             }
+        }
+        
+        // 显示错题操作按钮（有错题时）
+        const wrongWordsActions = document.querySelector('.wrong-words-actions');
+        if (wrongWordsActions) {
+            wrongWordsActions.style.display = 'flex';
         }
         
         currentPageWords.forEach((word, index) => {
