@@ -86,8 +86,21 @@
                 <button id="keyboard-toggle" class="ghost-button" type="button" title="Virtual Keyboard">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
-                        <line x1="8" y1="21" x2="16" y2="21"></line>
-                        <line x1="12" y1="17" x2="12" y2="21"></line>
+                        <rect x="4" y="6" width="2" height="2" rx="0.5"></rect>
+                        <rect x="7" y="6" width="2" height="2" rx="0.5"></rect>
+                        <rect x="10" y="6" width="2" height="2" rx="0.5"></rect>
+                        <rect x="13" y="6" width="2" height="2" rx="0.5"></rect>
+                        <rect x="16" y="6" width="2" height="2" rx="0.5"></rect>
+                        <rect x="4" y="9" width="2" height="2" rx="0.5"></rect>
+                        <rect x="7" y="9" width="2" height="2" rx="0.5"></rect>
+                        <rect x="10" y="9" width="2" height="2" rx="0.5"></rect>
+                        <rect x="13" y="9" width="2" height="2" rx="0.5"></rect>
+                        <rect x="16" y="9" width="2" height="2" rx="0.5"></rect>
+                        <rect x="4" y="12" width="2" height="2" rx="0.5"></rect>
+                        <rect x="7" y="12" width="2" height="2" rx="0.5"></rect>
+                        <rect x="10" y="12" width="2" height="2" rx="0.5"></rect>
+                        <rect x="13" y="12" width="2" height="2" rx="0.5"></rect>
+                        <rect x="16" y="12" width="2" height="2" rx="0.5"></rect>
                     </svg>
                 </button>
                 <!-- 模式切换器 -->
@@ -2116,6 +2129,10 @@
         // 处理键盘按键点击
         function handleKeyboardKey(key) {
             console.log('键盘按键被点击:', key);
+            
+            // 播放按键音效
+            playKeySound();
+            
             const input = document.getElementById('answer-input');
             if (!input) return;
             
@@ -2296,6 +2313,38 @@
         // 虚拟键盘状态管理
         let katakanaMode = false; // 片假名模式
         
+        // 按键音效
+        function playKeySound() {
+            try {
+                // 创建音频上下文
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                
+                // 创建振荡器
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                // 连接节点
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                // 设置音效参数
+                oscillator.frequency.setValueAtTime(800, audioContext.currentTime); // 800Hz
+                oscillator.type = 'sine';
+                
+                // 设置音量包络
+                gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+                gainNode.gain.linearRampToValueAtTime(0.1, audioContext.currentTime + 0.01);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+                
+                // 播放音效
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.1);
+                
+            } catch (error) {
+                console.log('音效播放失败:', error);
+            }
+        }
+        
         // 更新平假名/片假名切换键样式
         function updateKanaToggleButton() {
             const kanaButton = document.querySelector('.key-kana-toggle');
@@ -2304,6 +2353,27 @@
                 kanaButton.classList.toggle('katakana-mode', katakanaMode);
                 kanaIndicator.textContent = katakanaMode ? 'カタ' : 'ひら';
             }
+            
+            // 更新虚拟键盘上的字母显示
+            updateKeyboardLetterDisplay();
+        }
+        
+        // 更新虚拟键盘字母显示
+        function updateKeyboardLetterDisplay() {
+            const letterKeys = document.querySelectorAll('.key[data-key]');
+            letterKeys.forEach(key => {
+                const keyValue = key.getAttribute('data-key');
+                // 只处理字母键（a-z）
+                if (keyValue && keyValue.length === 1 && keyValue >= 'a' && keyValue <= 'z') {
+                    if (katakanaMode) {
+                        // 片假名模式：显示大写字母
+                        key.textContent = keyValue.toUpperCase();
+                    } else {
+                        // 平假名模式：显示小写字母
+                        key.textContent = keyValue.toLowerCase();
+                    }
+                }
+            });
         }
         
         // 页面加载完成后添加键盘按键事件
@@ -2336,6 +2406,9 @@
                 answerInput.addEventListener('pointerdown', forcePreventFocus, { passive: false, capture: true });
                 answerInput.addEventListener('pointerup', forcePreventFocus, { passive: false, capture: true });
             }
+            
+            // 初始化虚拟键盘字母显示
+            updateKeyboardLetterDisplay();
             const keyboard = document.getElementById('virtual-keyboard');
             if (keyboard) {
                 keyboard.addEventListener('click', function(e) {
@@ -2368,6 +2441,9 @@
                         if (!input) return;
                         
                         console.log('删除键额外监听器被触发');
+                        
+                        // 播放按键音效
+                        playKeySound();
                         
                         try {
                             // 强制焦点
@@ -2422,6 +2498,9 @@
                         
                         console.log('平假名/片假名切换键被点击，当前模式:', katakanaMode);
                         
+                        // 播放按键音效
+                        playKeySound();
+                        
                         // 切换模式
                         katakanaMode = !katakanaMode;
                         
@@ -2448,6 +2527,9 @@
                         e.stopImmediatePropagation();
                         
                         console.log('回车键专门监听器被触发');
+                        
+                        // 播放按键音效
+                        playKeySound();
                         
                         const submitBtn = document.getElementById('answer-submit');
                         if (submitBtn && !submitBtn.disabled) {

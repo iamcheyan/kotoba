@@ -121,9 +121,11 @@
 }
 
 .key:active {
-    transform: translateY(0);
-    background: #555555;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    background: #d1d5db;
+    transform: scale(0.9);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+    border-color: #9ca3af;
+    transition: all 0.05s ease;
 }
 
 /* 平假名/片假名切换键样式 */
@@ -138,9 +140,10 @@
 }
 
 .key-kana-toggle:active {
-    background: #357abd;
-    transform: scale(1.05);
-    box-shadow: 0 0 8px rgba(74, 144, 226, 0.6);
+    background: #2c5aa0;
+    transform: scale(0.9);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+    transition: all 0.05s ease;
 }
 
 .key-kana-toggle.katakana-mode {
@@ -168,6 +171,13 @@
     flex: 1.2;
     max-width: 60px;
     background: #444444;
+}
+
+.key-backspace:active {
+    background: #2d2d2d;
+    transform: scale(0.9);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4);
+    transition: all 0.05s ease;
 }
 
 .keyboard-skip-button {
@@ -204,9 +214,10 @@
 }
 
 .keyboard-skip-button:active {
-    transform: translateY(0);
-    background: #e55a2b;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    background: #cc4a22;
+    transform: scale(0.9);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+    transition: all 0.05s ease;
 }
 
 .key-space {
@@ -214,6 +225,13 @@
     max-width: 200px;
     position: relative;
     background: #333333;
+}
+
+.key-space:active {
+    background: #1f1f1f;
+    transform: scale(0.95);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4);
+    transition: all 0.05s ease;
 }
 
 .space-text {
@@ -238,6 +256,13 @@
 
 .key-enter:hover {
     background: #0056CC;
+}
+
+.key-enter:active {
+    background: #003d82;
+    transform: scale(0.9);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+    transition: all 0.05s ease;
 }
 
 
