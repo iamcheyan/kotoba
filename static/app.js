@@ -2901,10 +2901,441 @@
         // 键盘现在只能通过keyboard-toggle按钮控制，不会因为点击其他元素而隐藏
     }
 
+    // 初始化フリック键盘
+    function initFlickKeyboard() {
+        const flickKeyboard = document.getElementById('flick-keyboard');
+        const flickToggle = document.querySelector('[data-key="flick-toggle"]');
+        const flickBack = document.querySelector('[data-key="flick-back"]');
+        const virtualKeyboard = document.getElementById('virtual-keyboard');
+        
+        if (!flickKeyboard || !flickToggle) {
+            console.error('フリック键盘元素未找到');
+            return;
+        }
+        
+        // フリック切换按钮事件
+        flickToggle.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            // 隐藏普通键盘，显示フリック键盘
+            if (virtualKeyboard) {
+                virtualKeyboard.classList.add('hidden');
+                virtualKeyboard.classList.remove('show');
+            }
+            flickKeyboard.classList.remove('hidden');
+            flickKeyboard.classList.add('show');
+            
+            console.log('切换到フリック键盘');
+        });
+        
+        // フリック返回按钮事件
+        if (flickBack) {
+            flickBack.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                // 隐藏フリック键盘，显示普通键盘
+                flickKeyboard.classList.add('hidden');
+                flickKeyboard.classList.remove('show');
+                if (virtualKeyboard) {
+                    virtualKeyboard.classList.remove('hidden');
+                    virtualKeyboard.classList.add('show');
+                }
+                
+                console.log('切换到普通键盘');
+            });
+        }
+        
+        // フリック键事件处理
+        const flickKeys = flickKeyboard.querySelectorAll('.flick-key');
+        const flickFunctionKeys = flickKeyboard.querySelectorAll('.flick-function-key');
+        let longPressTimer = null;
+        let currentFlickKey = null;
+        let flickIndicators = [];
+        let isExpanded = false;
+        
+        // 处理功能键点击
+        flickFunctionKeys.forEach(key => {
+            key.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const keyType = key.getAttribute('data-key');
+                handleFlickFunctionKey(keyType);
+            });
+        });
+        
+        // 处理フリック键
+        flickKeys.forEach(key => {
+            // 单击事件
+            key.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                console.log('=== フリック键单击调试 ===');
+                console.log('点击的键:', key);
+                console.log('键的字符:', key.getAttribute('data-flick'));
+                console.log('是否已展开:', isExpanded);
+                
+                // 如果已经展开，不处理单击（由选项处理）
+                if (isExpanded) {
+                    console.log('已展开状态，不处理单击');
+                    return;
+                }
+                
+                // 单击输入基础字符
+                const baseChar = key.getAttribute('data-flick');
+                if (baseChar) {
+                    console.log('单击输入基础字符:', baseChar);
+                    handleFlickInput(baseChar);
+                } else {
+                    console.log('未找到基础字符');
+                }
+                console.log('=== 单击调试结束 ===');
+            });
+            
+            // 长按开始
+            key.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                startLongPress(key);
+            });
+            
+            key.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                startLongPress(key);
+            });
+            
+            // 长按结束
+            key.addEventListener('mouseup', (e) => {
+                e.preventDefault();
+                endLongPress(key);
+            });
+            
+            key.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                endLongPress(key);
+            });
+            
+            // 鼠标离开
+            key.addEventListener('mouseleave', (e) => {
+                e.preventDefault();
+                cancelLongPress(key);
+            });
+            
+            key.addEventListener('touchcancel', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                cancelLongPress(key);
+            });
+            
+            // 阻止右键菜单
+            key.addEventListener('contextmenu', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+            });
+        });
+        
+        function startLongPress(key) {
+            console.log('=== 长按开始调试 ===');
+            console.log('长按的键:', key);
+            console.log('键的字符:', key.getAttribute('data-flick'));
+            console.log('当前展开状态:', isExpanded);
+            console.log('当前展开的键:', currentFlickKey);
+            
+            // 如果已经有其他键在展开状态，先清理
+            if (isExpanded && currentFlickKey && currentFlickKey !== key) {
+                console.log('清理之前的展开状态');
+                cleanupFlickInteraction(currentFlickKey);
+            }
+            
+            currentFlickKey = key;
+            key.classList.add('flick-expanded');
+            
+            // 设置长按定时器
+            longPressTimer = setTimeout(() => {
+                console.log('长按时间到达，显示选项');
+                // 长按后显示フリック选项
+                showFlickOptions(key);
+                isExpanded = true;
+                console.log('选项已展开，isExpanded =', isExpanded);
+            }, 500);
+            console.log('=== 长按开始调试结束 ===');
+        }
+        
+        function endLongPress(key) {
+            console.log('=== 长按结束调试 ===');
+            console.log('结束长按的键:', key);
+            console.log('当前展开的键:', currentFlickKey);
+            console.log('是否已展开:', isExpanded);
+            
+            if (longPressTimer) {
+                clearTimeout(longPressTimer);
+                longPressTimer = null;
+                console.log('已清除长按定时器');
+            }
+            
+            // 如果当前键不是展开的键，直接清理
+            if (currentFlickKey !== key) {
+                console.log('不是当前展开的键，直接清理');
+                cleanupFlickInteraction(key);
+                return;
+            }
+            
+            // 如果没有展开，说明是短按，不处理（由click事件处理）
+            if (!isExpanded) {
+                console.log('未展开状态，清理当前键');
+                cleanupFlickInteraction(key);
+            } else {
+                console.log('已展开状态，保持展开');
+            }
+            
+            console.log('=== 长按结束调试结束 ===');
+        }
+        
+        function cancelLongPress(key) {
+            console.log('=== 长按取消调试 ===');
+            console.log('取消长按的键:', key);
+            console.log('当前展开的键:', currentFlickKey);
+            
+            if (longPressTimer) {
+                clearTimeout(longPressTimer);
+                longPressTimer = null;
+                console.log('已清除长按定时器');
+            }
+            
+            // 如果当前键不是展开的键，直接清理
+            if (currentFlickKey !== key) {
+                console.log('不是当前展开的键，直接清理');
+                cleanupFlickInteraction(key);
+                return;
+            }
+            
+            cleanupFlickInteraction(key);
+            console.log('=== 长按取消调试结束 ===');
+        }
+        
+        function showFlickOptions(key) {
+            const directions = ['up', 'down', 'left', 'right'];
+            directions.forEach(dir => {
+                const flickChar = key.getAttribute(`data-flick-${dir}`);
+                if (flickChar) {
+                    const indicator = document.createElement('div');
+                    indicator.className = `flick-indicator ${dir}`;
+                    indicator.textContent = flickChar;
+                    indicator.style.position = 'absolute';
+                    indicator.style.zIndex = '1001';
+                    indicator.style.cursor = 'pointer';
+                    
+                    console.log('=== 创建フリック指示器 ===');
+                    console.log('方向:', dir);
+                    console.log('字符:', flickChar);
+                    console.log('指示器元素:', indicator);
+                    console.log('父键:', key);
+                    console.log('父键位置:', key.getBoundingClientRect());
+                    
+                    // 添加点击事件
+                    indicator.addEventListener('click', (e) => {
+                        console.log('🔥 指示器点击事件触发！');
+                        e.preventDefault();
+                        e.stopPropagation();
+                        
+                        console.log('=== 选项点击调试 ===');
+                        console.log('🎯 点击的选项:', flickChar);
+                        console.log('📍 方向:', dir);
+                        console.log('🔑 所属键:', key);
+                        console.log('🎯 事件目标:', e.target);
+                        console.log('🎯 指示器元素:', indicator);
+                        console.log('🎯 指示器类名:', indicator.className);
+                        console.log('🎯 指示器样式:', indicator.style.cssText);
+                        
+                        // 添加高亮效果
+                        indicator.classList.add('highlighted');
+                        console.log('✨ 已添加高亮效果');
+                        console.log('🎯 高亮后类名:', indicator.className);
+                        
+                        // 立即输入字符，不使用延迟
+                        console.log('🚀 立即调用handleFlickInput...');
+                        handleFlickInput(flickChar);
+                        
+                        console.log('🧹 准备清理状态...');
+                        cleanupFlickInteraction(key);
+                        
+                        console.log('✅ 选项点击调试结束');
+                    });
+                    
+                    // 添加鼠标事件调试
+                    indicator.addEventListener('mousedown', (e) => {
+                        console.log('🖱️ 指示器mousedown事件');
+                    });
+                    
+                    indicator.addEventListener('mouseup', (e) => {
+                        console.log('🖱️ 指示器mouseup事件');
+                    });
+                    
+                    indicator.addEventListener('touchstart', (e) => {
+                        console.log('👆 指示器touchstart事件');
+                        e.preventDefault();
+                        e.stopPropagation();
+                    });
+                    
+                    indicator.addEventListener('touchend', (e) => {
+                        console.log('👆 指示器touchend事件');
+                        e.preventDefault();
+                        e.stopPropagation();
+                        
+                        console.log('🔥 指示器触摸点击事件触发！');
+                        console.log('=== 选项触摸点击调试 ===');
+                        console.log('🎯 触摸的选项:', flickChar);
+                        console.log('📍 方向:', dir);
+                        console.log('🔑 所属键:', key);
+                        console.log('🎯 事件目标:', e.target);
+                        console.log('🎯 指示器元素:', indicator);
+                        
+                        // 添加高亮效果
+                        indicator.classList.add('highlighted');
+                        console.log('✨ 已添加高亮效果');
+                        
+                        // 立即输入字符
+                        console.log('🚀 立即调用handleFlickInput...');
+                        handleFlickInput(flickChar);
+                        
+                        console.log('🧹 准备清理状态...');
+                        cleanupFlickInteraction(key);
+                        
+                        console.log('✅ 选项触摸点击调试结束');
+                    });
+                    
+                    key.appendChild(indicator);
+                    flickIndicators.push(indicator);
+                }
+            });
+            
+            // 添加点击外部区域关闭选项的功能
+            setTimeout(() => {
+                document.addEventListener('click', closeFlickOptions);
+            }, 100);
+        }
+        
+        function closeFlickOptions(e) {
+            // 如果点击的不是フリック键或指示器，关闭选项
+            if (!e.target.closest('.flick-key') && !e.target.closest('.flick-indicator')) {
+                if (currentFlickKey) {
+                    cleanupFlickInteraction(currentFlickKey);
+                }
+                document.removeEventListener('click', closeFlickOptions);
+            }
+        }
+        
+        
+        function handleFlickInput(char) {
+            console.log('=== フリック输入调试 ===');
+            console.log('🎯 选择的字符:', char);
+            
+            const answerInput = document.getElementById('answer-input');
+            console.log('📝 输入框存在:', !!answerInput);
+            console.log('🔒 输入框只读:', answerInput?.readOnly);
+            console.log('📝 输入前的内容:', answerInput?.value);
+            
+            if (answerInput && !answerInput.readOnly) {
+                // 简单直接的方法
+                const oldValue = answerInput.value;
+                answerInput.value = oldValue + char;
+                console.log('✅ 输入后的内容:', answerInput.value);
+                
+                // 触发input事件
+                const inputEvent = new Event('input', { bubbles: true });
+                answerInput.dispatchEvent(inputEvent);
+                console.log('🚀 已触发input事件');
+                
+                // 聚焦输入框
+                answerInput.focus();
+                console.log('🎯 已聚焦输入框');
+                
+                console.log('🎉 成功输入字符:', char);
+            } else {
+                console.log('❌ 输入失败 - 输入框不存在或为只读状态');
+            }
+            console.log('=== 调试结束 ===');
+        }
+        
+        function handleFlickFunctionKey(keyType) {
+            const answerInput = document.getElementById('answer-input');
+            if (!answerInput || answerInput.readOnly) return;
+            
+            switch (keyType) {
+                case 'flick-backspace':
+                    if (answerInput.value.length > 0) {
+                        answerInput.value = answerInput.value.slice(0, -1);
+                        answerInput.dispatchEvent(new Event('input', { bubbles: true }));
+                    }
+                    break;
+                case 'flick-enter':
+                    // 提交答案
+                    const submitButton = document.getElementById('answer-submit');
+                    if (submitButton) {
+                        submitButton.click();
+                    }
+                    break;
+                case 'flick-abc':
+                    // 切换到普通键盘
+                    flickKeyboard.classList.add('hidden');
+                    flickKeyboard.classList.remove('show');
+                    if (virtualKeyboard) {
+                        virtualKeyboard.classList.remove('hidden');
+                        virtualKeyboard.classList.add('show');
+                    }
+                    break;
+                case 'flick-undo':
+                    // 撤销功能（可以扩展）
+                    console.log('撤销功能');
+                    break;
+                case 'flick-next':
+                    // 下一个候补（可以扩展）
+                    console.log('下一个候补');
+                    break;
+                case 'flick-shift':
+                    // 大小写切换（可以扩展）
+                    console.log('大小写切换');
+                    break;
+                case 'flick-globe':
+                    // 语言切换（可以扩展）
+                    console.log('语言切换');
+                    break;
+                case 'flick-mic':
+                    // 语音输入（可以扩展）
+                    console.log('语音输入');
+                    break;
+                default:
+                    console.log('未知功能键:', keyType);
+            }
+        }
+        
+        function cleanupFlickInteraction(key) {
+            key.classList.remove('flick-expanded');
+            flickIndicators.forEach(indicator => {
+                if (indicator.parentNode) {
+                    indicator.parentNode.removeChild(indicator);
+                }
+            });
+            flickIndicators = [];
+            currentFlickKey = null;
+            isExpanded = false;
+            
+            // 移除外部点击监听器
+            document.removeEventListener('click', closeFlickOptions);
+        }
+    }
+
     // 初始化错题本按钮事件
     document.addEventListener('DOMContentLoaded', function() {
         // 初始化虚拟键盘
         initVirtualKeyboard();
+        
+        // 初始化フリック键盘
+        initFlickKeyboard();
         
         // 测试代码已移除，键盘切换功能已在initVirtualKeyboard中实现
         

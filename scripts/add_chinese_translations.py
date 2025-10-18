@@ -97,14 +97,17 @@ def call_google_translate(text: str) -> str:
 def translate_phrases(phrases: List[str]) -> Dict[str, str]:
     """Translate phrases sequentially with retries."""
     translations: Dict[str, str] = {}
-    for phrase in phrases:
+    total = len(phrases)
+    for index, phrase in enumerate(phrases, 1):
         success = False
         for attempt in range(5):
             try:
                 translated = call_google_translate(phrase).strip()
                 translations[phrase] = translated
                 success = True
-                time.sleep(0.2)  # be gentle with the endpoint
+                if index % 200 == 0:
+                    print(f"Translated {index}/{total}", file=sys.stderr)
+                time.sleep(0.05)  # be gentle with the endpoint
                 break
             except (urlerror.URLError, json.JSONDecodeError) as exc:  # pragma: no cover - defensive retry
                 wait = 2 ** attempt

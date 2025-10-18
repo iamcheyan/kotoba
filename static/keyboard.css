@@ -78,7 +78,6 @@
 .keyboard-body {
     padding: 16px 0;
     max-height: 60vh;
-    overflow-y: auto;
     background: #000000;
 }
 
@@ -87,7 +86,7 @@
     justify-content: center;
     gap: 4px;
     margin-bottom: 4px;
-}
+}   
 
 .keyboard-row:last-child {
     margin-bottom: 0;
@@ -112,6 +111,7 @@
     flex: 1;
     max-width: 50px;
     user-select: none;
+    white-space: nowrap;
 }
 
 .key:hover {
@@ -199,7 +199,6 @@
     justify-content: center;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
     user-select: none;
-    white-space: nowrap;
     touch-action: manipulation;
     -webkit-touch-callout: none;
     -webkit-user-select: none;
@@ -311,5 +310,363 @@
     
     .key-enter {
         max-width: 70px;
+    }
+}
+
+/* === フリック键盘样式 === */
+.flick-keyboard {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: #000000;
+    border-top: 1px solid #333333;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    transform: translateY(100%);
+    transition: transform 0.3s ease;
+    touch-action: none;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+.flick-keyboard.show {
+    transform: translateY(0) !important;
+}
+
+.flick-keyboard.hidden {
+    display: none !important;
+}
+
+/* フリック键盘主体 */
+.flick-keyboard-body {
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+/* フリック键盘行 */
+.flick-row {
+    display: flex;
+    gap: 4px;
+    justify-content: center;
+    align-items: center;
+}
+
+/* フリック切换按钮样式 */
+.key-flick-toggle {
+    flex: 1;
+    max-width: 80px;
+    background: #4a5568;
+    color: #ffffff;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.key-flick-toggle:hover {
+    background: #5a6578;
+}
+
+.key-flick-toggle:active {
+    background: #3a4558;
+    transform: scale(0.95);
+}
+
+/* フリック键样式 */
+.flick-key {
+    position: relative;
+    background: #ffffff;
+    color: #000000;
+    border: 1px solid #cccccc;
+    border-radius: 8px;
+    font-size: 18px;
+    font-weight: 500;
+    min-height: 50px;
+    min-width: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.1s ease;
+    z-index: 1;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    flex: 1;
+    max-width: 60px;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    touch-action: none;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+.flick-key:hover {
+    background: #f0f0f0;
+    transform: scale(1.02);
+}
+
+.flick-key:active {
+    background: #e0e0e0;
+    transform: scale(0.98);
+}
+
+/* フリック功能键样式 */
+.flick-function-key {
+    position: relative;
+    background: #6b7280;
+    color: #ffffff;
+    border: 1px solid #9ca3af;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 500;
+    min-height: 50px;
+    min-width: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.1s ease;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    flex: 1;
+    max-width: 60px;
+}
+
+.flick-function-key:hover {
+    background: #7b8280;
+    transform: scale(1.02);
+}
+
+.flick-function-key:active {
+    background: #5b6280;
+    transform: scale(0.98);
+}
+
+/* フリック展开效果 */
+.flick-key.flick-expanded {
+    background: #4a90e2;
+    color: #ffffff;
+    transform: scale(1.1);
+    z-index: 10;
+    box-shadow: 0 4px 20px rgba(74, 144, 226, 0.4);
+}
+
+.flick-key.flick-expanded::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    background: linear-gradient(45deg, #4a90e2, #5ba0f2);
+    border-radius: 10px;
+    z-index: -1;
+}
+
+/* フリック方向指示器 */
+.flick-indicator {
+    position: absolute;
+    background: rgba(74, 144, 226, 0.95);
+    color: #ffffff;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 18px;
+    font-weight: 500;
+    pointer-events: auto;
+    z-index: 1001;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    min-width: 50px;
+    min-height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(74, 144, 226, 0.3);
+    animation: flickSlideIn 0.2s ease-out;
+    cursor: pointer;
+}
+
+/* フリック指示器高亮效果 */
+.flick-indicator.highlighted {
+    background: #ffcc00 !important;
+    color: #333333 !important;
+    box-shadow: 0 0 15px rgba(255, 204, 0, 0.8) !important;
+    transform: scale(1.1) !important;
+    transition: all 0.1s ease-out;
+    z-index: 1002 !important;
+}
+
+.flick-indicator.up {
+    top: -45px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-10px);
+    animation: flickSlideInUp 0.2s ease-out;
+}
+
+.flick-indicator.down {
+    bottom: -45px;
+    left: 50%;
+    transform: translateX(-50%) translateY(10px);
+    animation: flickSlideInDown 0.2s ease-out;
+}
+
+.flick-indicator.left {
+    left: -45px;
+    top: 50%;
+    transform: translateY(-50%) translateX(-10px);
+    animation: flickSlideInLeft 0.2s ease-out;
+}
+
+.flick-indicator.right {
+    right: -45px;
+    top: 50%;
+    transform: translateY(-50%) translateX(10px);
+    animation: flickSlideInRight 0.2s ease-out;
+}
+
+/* フリック指示器动画 */
+@keyframes flickSlideIn {
+    0% {
+        opacity: 0;
+        transform: scale(0.7);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes flickSlideInUp {
+    0% {
+        opacity: 0;
+        transform: translateX(-50%) translateY(0px) scale(0.7);
+    }
+    100% {
+        opacity: 1;
+        transform: translateX(-50%) translateY(-10px) scale(1);
+    }
+}
+
+@keyframes flickSlideInDown {
+    0% {
+        opacity: 0;
+        transform: translateX(-50%) translateY(0px) scale(0.7);
+    }
+    100% {
+        opacity: 1;
+        transform: translateX(-50%) translateY(10px) scale(1);
+    }
+}
+
+@keyframes flickSlideInLeft {
+    0% {
+        opacity: 0;
+        transform: translateY(-50%) translateX(0px) scale(0.7);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(-50%) translateX(-10px) scale(1);
+    }
+}
+
+@keyframes flickSlideInRight {
+    0% {
+        opacity: 0;
+        transform: translateY(-50%) translateX(0px) scale(0.7);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(-50%) translateX(10px) scale(1);
+    }
+}
+
+/* フリック返回按钮 */
+.key-flick-back {
+    flex: 1;
+    max-width: 80px;
+    background: #6b7280;
+    color: #ffffff;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.key-flick-back:hover {
+    background: #7b8280;
+}
+
+.key-flick-back:active {
+    background: #5b6280;
+    transform: scale(0.95);
+}
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+    .flick-keyboard-body {
+        padding: 6px;
+        gap: 3px;
+    }
+    
+    .flick-row {
+        gap: 3px;
+    }
+    
+    .flick-key {
+        min-height: 45px;
+        min-width: 45px;
+        font-size: 16px;
+        max-width: 55px;
+    }
+    
+    .flick-function-key {
+        min-height: 45px;
+        min-width: 45px;
+        font-size: 10px;
+        max-width: 55px;
+    }
+    
+    .flick-indicator {
+        font-size: 16px;
+        padding: 6px 10px;
+        min-width: 45px;
+        min-height: 45px;
+    }
+    
+    .flick-indicator.up {
+        top: -40px;
+        transform: translateX(-50%) translateY(-8px);
+    }
+    
+    .flick-indicator.down {
+        bottom: -40px;
+        transform: translateX(-50%) translateY(8px);
+    }
+    
+    .flick-indicator.left {
+        left: -40px;
+        transform: translateY(-50%) translateX(-8px);
+    }
+    
+    .flick-indicator.right {
+        right: -40px;
+        transform: translateY(-50%) translateX(8px);
     }
 }

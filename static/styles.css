@@ -4780,7 +4780,6 @@ ease;
 
     /* 顶部工具区紧凑排列 */
     .header-actions { gap: 8px; }
-    .mode-switcher { gap: 6px; }
     .mode-btn { padding: 8px 10px; }
     #autoPronounceBtn { padding: 8px 10px; }
 
