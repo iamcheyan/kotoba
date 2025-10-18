@@ -2755,6 +2755,28 @@
     }
 
     // 初始化虚拟键盘功能
+    // 阻止input获取焦点的函数
+    function preventFocus(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+        console.log('阻止input获取焦点:', e.type);
+        return false;
+    }
+    
+    // 更强制性的焦点阻止函数
+    function forcePreventFocus(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+        console.log('强制阻止input获取焦点:', e.type);
+        // 立即移除焦点
+        if (e.target && e.target.blur) {
+            e.target.blur();
+        }
+        return false;
+    }
+
     function initVirtualKeyboard() {
         const keyboardToggle = document.getElementById('keyboard-toggle');
         const keyboardClose = document.getElementById('keyboard-close');
@@ -2774,15 +2796,50 @@
             e.stopPropagation();
             console.log('键盘切换按钮被点击');
             
-            // 移除hidden类，添加show类
-            virtualKeyboard.classList.remove('hidden');
-            virtualKeyboard.classList.add('show');
+            // 检查当前状态并切换
+            if (virtualKeyboard.classList.contains('show')) {
+                // 当前显示，切换为隐藏
+                virtualKeyboard.classList.remove('show');
+                virtualKeyboard.classList.add('hidden');
+                console.log('键盘隐藏');
+                
+                // 恢复input的正常状态
+                if (answerInput) {
+                    answerInput.readOnly = false;
+                    // 移除所有焦点阻止事件监听器
+                    answerInput.removeEventListener('focus', forcePreventFocus);
+                    answerInput.removeEventListener('click', forcePreventFocus);
+                    answerInput.removeEventListener('touchstart', forcePreventFocus);
+                    answerInput.removeEventListener('touchend', forcePreventFocus);
+                    answerInput.removeEventListener('mousedown', forcePreventFocus);
+                    answerInput.removeEventListener('mouseup', forcePreventFocus);
+                    answerInput.removeEventListener('pointerdown', forcePreventFocus);
+                    answerInput.removeEventListener('pointerup', forcePreventFocus);
+                }
+            } else {
+                // 当前隐藏，切换为显示
+                virtualKeyboard.classList.remove('hidden');
+                virtualKeyboard.classList.add('show');
+                console.log('键盘显示');
+                
+                // 当虚拟键盘显示时，设置input为readonly并永远禁止获取焦点
+                if (answerInput) {
+                    answerInput.readOnly = true;
+                    answerInput.blur(); // 移除焦点，防止手机输入法弹出
+                    
+                    // 添加全面的焦点阻止事件监听器
+                    answerInput.addEventListener('focus', forcePreventFocus, { passive: false, capture: true });
+                    answerInput.addEventListener('click', forcePreventFocus, { passive: false, capture: true });
+                    answerInput.addEventListener('touchstart', forcePreventFocus, { passive: false, capture: true });
+                    answerInput.addEventListener('touchend', forcePreventFocus, { passive: false, capture: true });
+                    answerInput.addEventListener('mousedown', forcePreventFocus, { passive: false, capture: true });
+                    answerInput.addEventListener('mouseup', forcePreventFocus, { passive: false, capture: true });
+                    answerInput.addEventListener('pointerdown', forcePreventFocus, { passive: false, capture: true });
+                    answerInput.addEventListener('pointerup', forcePreventFocus, { passive: false, capture: true });
+                }
+            }
             
             console.log('键盘状态:', virtualKeyboard.classList.toString());
-            
-            if (answerInput) {
-                answerInput.focus();
-            }
         });
         
         // 添加双击事件作为备用
@@ -2791,8 +2848,39 @@
             e.stopPropagation();
             console.log('键盘切换按钮被双击');
             
-            virtualKeyboard.classList.remove('hidden');
-            virtualKeyboard.classList.add('show');
+            // 检查当前状态并切换
+            if (virtualKeyboard.classList.contains('show')) {
+                virtualKeyboard.classList.remove('show');
+                virtualKeyboard.classList.add('hidden');
+                console.log('键盘隐藏（双击）');
+                
+                if (answerInput) {
+                    answerInput.readOnly = false;
+                    // 移除焦点阻止事件监听器
+                    answerInput.removeEventListener('focus', preventFocus);
+                    answerInput.removeEventListener('click', preventFocus);
+                    answerInput.removeEventListener('touchstart', preventFocus);
+                }
+            } else {
+                virtualKeyboard.classList.remove('hidden');
+                virtualKeyboard.classList.add('show');
+                console.log('键盘显示（双击）');
+                
+                if (answerInput) {
+                    answerInput.readOnly = true;
+                    answerInput.blur();
+                    
+                    // 添加全面的焦点阻止事件监听器
+                    answerInput.addEventListener('focus', forcePreventFocus, { passive: false, capture: true });
+                    answerInput.addEventListener('click', forcePreventFocus, { passive: false, capture: true });
+                    answerInput.addEventListener('touchstart', forcePreventFocus, { passive: false, capture: true });
+                    answerInput.addEventListener('touchend', forcePreventFocus, { passive: false, capture: true });
+                    answerInput.addEventListener('mousedown', forcePreventFocus, { passive: false, capture: true });
+                    answerInput.addEventListener('mouseup', forcePreventFocus, { passive: false, capture: true });
+                    answerInput.addEventListener('pointerdown', forcePreventFocus, { passive: false, capture: true });
+                    answerInput.addEventListener('pointerup', forcePreventFocus, { passive: false, capture: true });
+                }
+            }
         });
         
         // 关闭键盘
@@ -2802,6 +2890,15 @@
             console.log('关闭键盘按钮被点击');
             virtualKeyboard.classList.remove('show');
             virtualKeyboard.classList.add('hidden');
+            
+            // 恢复input的正常状态
+            if (answerInput) {
+                answerInput.readOnly = false;
+                // 移除焦点阻止事件监听器
+                answerInput.removeEventListener('focus', preventFocus);
+                answerInput.removeEventListener('click', preventFocus);
+                answerInput.removeEventListener('touchstart', preventFocus);
+            }
         });
         
         // 点击键盘按钮 - 移除重复的事件监听器，由HTML中的代码处理
@@ -2813,6 +2910,20 @@
             if (!virtualKeyboard.contains(e.target) && !keyboardToggle.contains(e.target)) {
                 virtualKeyboard.classList.remove('show');
                 virtualKeyboard.classList.add('hidden');
+                
+                // 恢复input的正常状态
+                if (answerInput) {
+                    answerInput.readOnly = false;
+                    // 移除所有焦点阻止事件监听器
+                    answerInput.removeEventListener('focus', forcePreventFocus);
+                    answerInput.removeEventListener('click', forcePreventFocus);
+                    answerInput.removeEventListener('touchstart', forcePreventFocus);
+                    answerInput.removeEventListener('touchend', forcePreventFocus);
+                    answerInput.removeEventListener('mousedown', forcePreventFocus);
+                    answerInput.removeEventListener('mouseup', forcePreventFocus);
+                    answerInput.removeEventListener('pointerdown', forcePreventFocus);
+                    answerInput.removeEventListener('pointerup', forcePreventFocus);
+                }
             }
         });
     }

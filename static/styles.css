@@ -3769,7 +3769,7 @@ ruby rt {
         justify-content: space-between;
         align-items: center;
         padding: 8px 0;
-        margin-bottom: 12px;
+        margin-bottom: 0;
         gap: 8px;
     }
     
