@@ -2789,13 +2789,31 @@
             return;
         }
         
-        // 设置初始状态：根据虚拟键盘的显示状态设置按钮状态
+        // 设置初始状态：根据虚拟键盘的显示状态设置按钮和input状态
         if (virtualKeyboard.classList.contains('show')) {
             keyboardToggle.setAttribute('aria-pressed', 'true');
-            console.log('键盘初始状态：显示，按钮设置为激活状态');
+            // 键盘显示时，设置input为readonly
+            if (answerInput) {
+                answerInput.readOnly = true;
+                answerInput.blur();
+                // 添加焦点阻止事件监听器
+                answerInput.addEventListener('focus', forcePreventFocus, { passive: false, capture: true });
+                answerInput.addEventListener('click', forcePreventFocus, { passive: false, capture: true });
+                answerInput.addEventListener('touchstart', forcePreventFocus, { passive: false, capture: true });
+                answerInput.addEventListener('touchend', forcePreventFocus, { passive: false, capture: true });
+                answerInput.addEventListener('mousedown', forcePreventFocus, { passive: false, capture: true });
+                answerInput.addEventListener('mouseup', forcePreventFocus, { passive: false, capture: true });
+                answerInput.addEventListener('pointerdown', forcePreventFocus, { passive: false, capture: true });
+                answerInput.addEventListener('pointerup', forcePreventFocus, { passive: false, capture: true });
+            }
+            console.log('键盘初始状态：显示，按钮设置为激活状态，input设置为readonly');
         } else {
             keyboardToggle.setAttribute('aria-pressed', 'false');
-            console.log('键盘初始状态：隐藏，按钮设置为未激活状态');
+            // 键盘隐藏时，恢复input的正常状态
+            if (answerInput) {
+                answerInput.readOnly = false;
+            }
+            console.log('键盘初始状态：隐藏，按钮设置为未激活状态，input恢复正常');
         }
         
         // 切换键盘显示/隐藏
@@ -2818,14 +2836,15 @@
                 if (answerInput) {
                     answerInput.readOnly = false;
                     // 移除所有焦点阻止事件监听器
-                    answerInput.removeEventListener('focus', forcePreventFocus);
-                    answerInput.removeEventListener('click', forcePreventFocus);
-                    answerInput.removeEventListener('touchstart', forcePreventFocus);
-                    answerInput.removeEventListener('touchend', forcePreventFocus);
-                    answerInput.removeEventListener('mousedown', forcePreventFocus);
-                    answerInput.removeEventListener('mouseup', forcePreventFocus);
-                    answerInput.removeEventListener('pointerdown', forcePreventFocus);
-                    answerInput.removeEventListener('pointerup', forcePreventFocus);
+                    answerInput.removeEventListener('focus', forcePreventFocus, { passive: false, capture: true });
+                    answerInput.removeEventListener('click', forcePreventFocus, { passive: false, capture: true });
+                    answerInput.removeEventListener('touchstart', forcePreventFocus, { passive: false, capture: true });
+                    answerInput.removeEventListener('touchend', forcePreventFocus, { passive: false, capture: true });
+                    answerInput.removeEventListener('mousedown', forcePreventFocus, { passive: false, capture: true });
+                    answerInput.removeEventListener('mouseup', forcePreventFocus, { passive: false, capture: true });
+                    answerInput.removeEventListener('pointerdown', forcePreventFocus, { passive: false, capture: true });
+                    answerInput.removeEventListener('pointerup', forcePreventFocus, { passive: false, capture: true });
+                    console.log('已移除所有焦点阻止事件监听器');
                 }
             } else {
                 // 当前隐藏，切换为显示

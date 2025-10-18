@@ -2310,34 +2310,7 @@
         
         // 页面加载完成后添加键盘按键事件
         document.addEventListener('DOMContentLoaded', function() {
-            // 虚拟键盘默认开启，设置input为readonly并阻止焦点
-            const answerInput = document.getElementById('answer-input');
-            if (answerInput) {
-                answerInput.readOnly = true;
-                answerInput.blur();
-                
-                // 添加全面的焦点阻止事件监听器
-                function forcePreventFocus(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    e.stopImmediatePropagation();
-                    console.log('强制阻止input获取焦点:', e.type);
-                    // 立即移除焦点
-                    if (e.target && e.target.blur) {
-                        e.target.blur();
-                    }
-                    return false;
-                }
-                
-                answerInput.addEventListener('focus', forcePreventFocus, { passive: false, capture: true });
-                answerInput.addEventListener('click', forcePreventFocus, { passive: false, capture: true });
-                answerInput.addEventListener('touchstart', forcePreventFocus, { passive: false, capture: true });
-                answerInput.addEventListener('touchend', forcePreventFocus, { passive: false, capture: true });
-                answerInput.addEventListener('mousedown', forcePreventFocus, { passive: false, capture: true });
-                answerInput.addEventListener('mouseup', forcePreventFocus, { passive: false, capture: true });
-                answerInput.addEventListener('pointerdown', forcePreventFocus, { passive: false, capture: true });
-                answerInput.addEventListener('pointerup', forcePreventFocus, { passive: false, capture: true });
-            }
+            // 焦点管理已移至app.js的initVirtualKeyboard函数中处理
             
             // 初始化虚拟键盘字母显示
             updateKeyboardLetterDisplay();
