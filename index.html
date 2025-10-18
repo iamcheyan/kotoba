@@ -351,7 +351,7 @@
                     </div>
                     
                     <div class="actions">
-                        <button type="submit" id="answer-submit">回答</button>
+                        <button type="submit" id="answer-submit">答える</button>
                         <button type="button" id="skip-button" class="skip-button" title="この問題をスキップ">スキップ</button>
                         <button type="button" id="replay-button" class="hidden">重听</button>
                         <button type="button" id="next-button" class="hidden">次へ</button>
@@ -2121,12 +2121,13 @@
             
             const currentValue = input.value;
             const cursorPos = input.selectionStart;
-            console.log('处理前 - 当前值:', currentValue, '光标位置:', cursorPos);
             
             switch (key) {
                 case 'backspace':
                     console.log('删除键被点击 - 当前值:', currentValue, '长度:', currentValue.length, '光标位置:', cursorPos);
-                    if (currentValue.length > 0) {
+                    
+                    // 多重备用机制确保删除键永远不会失效
+                    try {
                         // 强制让input获得焦点
                         input.focus();
                         
@@ -2134,24 +2135,54 @@
                         const wasReadonly = input.readOnly;
                         input.readOnly = false;
                         
-                        // 如果光标位置无效或为0，则删除最后一个字符
-                        let actualCursorPos = cursorPos;
-                        if (actualCursorPos <= 0 || actualCursorPos > currentValue.length) {
-                            actualCursorPos = currentValue.length;
+                        // 重新获取当前值，防止值不同步
+                        const freshValue = input.value || '';
+                        console.log('重新获取的当前值:', freshValue);
+                        
+                        if (freshValue.length > 0) {
+                            // 如果光标位置无效或为0，则删除最后一个字符
+                            let actualCursorPos = cursorPos;
+                            if (actualCursorPos <= 0 || actualCursorPos > freshValue.length) {
+                                actualCursorPos = freshValue.length;
+                            }
+                            
+                            // 计算删除后的新值
+                            const newValue = freshValue.slice(0, actualCursorPos - 1) + freshValue.slice(actualCursorPos);
+                            console.log('删除后新值:', newValue, '删除位置:', actualCursorPos - 1);
+                            
+                            // 直接设置新值
+                            input.value = newValue;
+                            
+                            // 设置光标位置到删除后的位置
+                            const newCursorPos = Math.max(0, actualCursorPos - 1);
+                            input.setSelectionRange(newCursorPos, newCursorPos);
+                            
+                            // 触发input事件，确保WanaKana等库能检测到变化
+                            input.dispatchEvent(new Event('input', { bubbles: true }));
+                            input.dispatchEvent(new Event('change', { bubbles: true }));
+                            
+                            console.log('删除成功 - 新值:', input.value, '新光标位置:', newCursorPos);
+                        } else {
+                            console.log('输入框为空，无需删除');
                         }
-                        
-                        const newValue = currentValue.slice(0, actualCursorPos - 1) + currentValue.slice(actualCursorPos);
-                        console.log('删除后新值:', newValue, '删除位置:', actualCursorPos - 1);
-                        input.value = newValue;
-                        
-                        // 设置光标位置到删除后的位置
-                        const newCursorPos = Math.max(0, actualCursorPos - 1);
-                        input.setSelectionRange(newCursorPos, newCursorPos);
                         
                         // 恢复readonly状态
                         input.readOnly = wasReadonly;
                         
-                        console.log('删除完成 - 新值:', input.value, '新光标位置:', newCursorPos);
+                    } catch (error) {
+                        console.error('删除键处理出错:', error);
+                        
+                        // 备用方案：直接删除最后一个字符
+                        try {
+                            const currentVal = input.value || '';
+                            if (currentVal.length > 0) {
+                                input.value = currentVal.slice(0, -1);
+                                input.dispatchEvent(new Event('input', { bubbles: true }));
+                                console.log('备用删除方案执行成功');
+                            }
+                        } catch (backupError) {
+                            console.error('备用删除方案也失败:', backupError);
+                        }
                     }
                     break;
                 case 'clear':
@@ -2198,33 +2229,32 @@
                         skipBtn.click();
                     }
                     break;
-                case 'shift':
-                    // Shift键 - 切换大小写
-                    console.log('Shift键被点击');
+                case 'kana-toggle':
+                    // 平假名/片假名切换键
+                    katakanaMode = !katakanaMode;
+                    updateKanaToggleButton();
+                    break;
+                case 'l':
+                    // l键 - 输入长音符号（ー）
+                    input.focus();
                     
-                    // 清除之前的超时
-                    if (shiftTimeout) {
-                        clearTimeout(shiftTimeout);
+                    // 临时移除readonly以允许修改
+                    const wasReadonlyL = input.readOnly;
+                    input.readOnly = false;
+                    
+                    // 确保光标位置有效
+                    let actualCursorPosL = cursorPos;
+                    if (actualCursorPosL < 0 || actualCursorPosL > currentValue.length) {
+                        actualCursorPosL = currentValue.length;
                     }
                     
-                    // 如果当前是Caps Lock模式，则关闭
-                    if (capsLock) {
-                        capsLock = false;
-                        shiftPressed = false;
-                        console.log('关闭Caps Lock模式');
-                    } else {
-                        // 设置Shift为按下状态
-                        shiftPressed = true;
-                        console.log('Shift键按下，下一个字母将大写');
-                        
-                        // 设置超时，如果1秒内没有其他按键，则自动释放Shift
-                        shiftTimeout = setTimeout(() => {
-                            if (shiftPressed && !capsLock) {
-                                shiftPressed = false;
-                                console.log('Shift键自动释放');
-                            }
-                        }, 1000);
-                    }
+                    // 插入长音符号
+                    const longVowel = 'ー';
+                    const newValueWithLongVowel = currentValue.slice(0, actualCursorPosL) + longVowel + currentValue.slice(actualCursorPosL);
+                    console.log('插入长音符号 - 新值:', newValueWithLongVowel, '插入位置:', actualCursorPosL);
+                    input.value = newValueWithLongVowel;
+                    input.setSelectionRange(actualCursorPosL + 1, actualCursorPosL + 1);
+                    input.readOnly = wasReadonlyL;
                     break;
                 default:
                     // 字母字符 - 直接插入到光标位置
@@ -2241,22 +2271,8 @@
                         actualCursorPosChar = currentValue.length;
                     }
                     
-                    // 处理大小写
-                    let charToInsert = key;
-                    if (shiftPressed || capsLock) {
-                        charToInsert = key.toUpperCase();
-                        console.log('大写字符:', charToInsert);
-                        
-                        // 如果只是临时Shift（不是Caps Lock），则释放Shift
-                        if (shiftPressed && !capsLock) {
-                            shiftPressed = false;
-                            if (shiftTimeout) {
-                                clearTimeout(shiftTimeout);
-                                shiftTimeout = null;
-                            }
-                            console.log('Shift键释放');
-                        }
-                    }
+                    // 处理片假名/平假名模式
+                    let charToInsert = katakanaMode ? key.toUpperCase() : key.toLowerCase();
                     
                     const newValueWithChar = currentValue.slice(0, actualCursorPosChar) + charToInsert + currentValue.slice(actualCursorPosChar);
                     console.log('插入字符后 - 新值:', newValueWithChar, '插入位置:', actualCursorPosChar);
@@ -2278,9 +2294,17 @@
         }
         
         // 虚拟键盘状态管理
-        let shiftPressed = false;
-        let capsLock = false;
-        let shiftTimeout = null;
+        let katakanaMode = false; // 片假名模式
+        
+        // 更新平假名/片假名切换键样式
+        function updateKanaToggleButton() {
+            const kanaButton = document.querySelector('.key-kana-toggle');
+            const kanaIndicator = document.querySelector('.kana-indicator');
+            if (kanaButton && kanaIndicator) {
+                kanaButton.classList.toggle('katakana-mode', katakanaMode);
+                kanaIndicator.textContent = katakanaMode ? 'カタ' : 'ひら';
+            }
+        }
         
         // 页面加载完成后添加键盘按键事件
         document.addEventListener('DOMContentLoaded', function() {
@@ -2317,66 +2341,13 @@
                 keyboard.addEventListener('click', function(e) {
                     if (e.target.classList.contains('key')) {
                         const key = e.target.getAttribute('data-key');
-                        handleKeyboardKey(key);
-                    }
-                });
-                
-                // 添加长按检测（用于Caps Lock）
-                let longPressTimer = null;
-                let isLongPress = false;
-                
-                keyboard.addEventListener('touchstart', function(e) {
-                    if (e.target.classList.contains('key') && e.target.getAttribute('data-key') === 'shift') {
-                        isLongPress = false;
-                        longPressTimer = setTimeout(() => {
-                            isLongPress = true;
-                            capsLock = true;
-                            shiftPressed = false;
-                            console.log('长按Shift键，开启Caps Lock模式');
-                        }, 500); // 500ms长按
-                    }
-                }, { passive: true });
-                
-                keyboard.addEventListener('touchend', function(e) {
-                    if (e.target.classList.contains('key') && e.target.getAttribute('data-key') === 'shift') {
-                        if (longPressTimer) {
-                            clearTimeout(longPressTimer);
-                            longPressTimer = null;
-                        }
-                        
-                        if (!isLongPress) {
-                            // 短按，处理正常的Shift逻辑
-                            handleKeyboardKey('shift');
-                        }
-                    }
-                }, { passive: true });
-                
-                // 鼠标事件（桌面端）
-                keyboard.addEventListener('mousedown', function(e) {
-                    if (e.target.classList.contains('key') && e.target.getAttribute('data-key') === 'shift') {
-                        isLongPress = false;
-                        longPressTimer = setTimeout(() => {
-                            isLongPress = true;
-                            capsLock = true;
-                            shiftPressed = false;
-                            console.log('长按Shift键，开启Caps Lock模式');
-                        }, 500);
-                    }
-                });
-                
-                keyboard.addEventListener('mouseup', function(e) {
-                    if (e.target.classList.contains('key') && e.target.getAttribute('data-key') === 'shift') {
-                        if (longPressTimer) {
-                            clearTimeout(longPressTimer);
-                            longPressTimer = null;
-                        }
-                        
-                        if (!isLongPress) {
-                            // 短按，处理正常的Shift逻辑
-                            handleKeyboardKey('shift');
+                        // 排除平假名/片假名切换键，它有专门的事件处理
+                        if (key !== 'kana-toggle') {
+                            handleKeyboardKey(key);
                         }
                     }
                 });
+                
                 
                 // 防止移动端误触放大
                 keyboard.addEventListener('touchstart', function(e) {
@@ -2384,6 +2355,89 @@
                         e.preventDefault();
                     }
                 }, { passive: false });
+                
+                // 为删除键添加额外的点击事件监听器，确保永远不会失效
+                const backspaceButton = document.querySelector('.key-backspace');
+                if (backspaceButton) {
+                    // 添加多重事件监听器
+                    const handleBackspaceClick = function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        
+                        const input = document.getElementById('answer-input');
+                        if (!input) return;
+                        
+                        console.log('删除键额外监听器被触发');
+                        
+                        try {
+                            // 强制焦点
+                            input.focus();
+                            
+                            // 临时移除readonly
+                            const wasReadonly = input.readOnly;
+                            input.readOnly = false;
+                            
+                            // 获取当前值
+                            const currentVal = input.value || '';
+                            console.log('删除键额外监听器 - 当前值:', currentVal);
+                            
+                            if (currentVal.length > 0) {
+                                // 删除最后一个字符
+                                const newVal = currentVal.slice(0, -1);
+                                input.value = newVal;
+                                
+                                // 设置光标位置
+                                input.setSelectionRange(newVal.length, newVal.length);
+                                
+                                // 触发事件
+                                input.dispatchEvent(new Event('input', { bubbles: true }));
+                                input.dispatchEvent(new Event('change', { bubbles: true }));
+                                
+                                console.log('删除键额外监听器 - 删除成功，新值:', newVal);
+                            }
+                            
+                            // 恢复readonly
+                            input.readOnly = wasReadonly;
+                            
+                        } catch (error) {
+                            console.error('删除键额外监听器出错:', error);
+                        }
+                    };
+                    
+                    // 添加多种事件监听器
+                    backspaceButton.addEventListener('click', handleBackspaceClick, { passive: false });
+                    backspaceButton.addEventListener('touchstart', handleBackspaceClick, { passive: false });
+                    backspaceButton.addEventListener('mousedown', handleBackspaceClick, { passive: false });
+                    
+                    console.log('删除键额外监听器已添加');
+                }
+                
+                // 为平假名/片假名切换键添加专门的事件监听器，确保不会被其他事件干扰
+                const kanaToggleButton = document.querySelector('.key-kana-toggle');
+                if (kanaToggleButton) {
+                    const handleKanaToggleClick = function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        e.stopImmediatePropagation();
+                        
+                        console.log('平假名/片假名切换键被点击，当前模式:', katakanaMode);
+                        
+                        // 切换模式
+                        katakanaMode = !katakanaMode;
+                        
+                        // 更新按钮样式
+                        updateKanaToggleButton();
+                        
+                        console.log('切换后模式:', katakanaMode);
+                    };
+                    
+                    // 添加多种事件监听器，确保响应
+                    kanaToggleButton.addEventListener('click', handleKanaToggleClick, { passive: false });
+                    kanaToggleButton.addEventListener('touchstart', handleKanaToggleClick, { passive: false });
+                    kanaToggleButton.addEventListener('mousedown', handleKanaToggleClick, { passive: false });
+                    
+                    console.log('平假名/片假名切换键专门监听器已添加');
+                }
                 
                 keyboard.addEventListener('touchend', function(e) {
                     if (e.touches.length > 1) {
@@ -2453,10 +2507,8 @@
             </div>
             <!-- QWERTY 第三行 -->
             <div class="keyboard-row">
-                <button class="key key-shift" data-key="shift">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M12 3v18M8 7l4-4 4 4"/>
-                    </svg>
+                <button class="key key-kana-toggle" data-key="kana-toggle">
+                    <span class="kana-indicator">ひら</span>
                 </button>
                 <button class="key" data-key="z">z</button>
                 <button class="key" data-key="x">x</button>

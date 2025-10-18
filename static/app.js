@@ -240,7 +240,7 @@
         state.awaitingNext = false;
         if (elements.answerSubmit) {
             elements.answerSubmit.disabled = false;
-            elements.answerSubmit.textContent = '回答';
+            elements.answerSubmit.textContent = '答える';
         }
         if (elements.answerInput) {
             elements.answerInput.readOnly = false;
@@ -288,7 +288,7 @@
         }
         if (elements.answerSubmit) {
             elements.answerSubmit.disabled = state.awaitingNext;
-            elements.answerSubmit.textContent = state.awaitingNext ? '次へ' : '回答';
+            elements.answerSubmit.textContent = state.awaitingNext ? '次へ' : '答える';
         }
         if (elements.answerInput) {
             elements.answerInput.readOnly = state.awaitingNext;
@@ -2203,7 +2203,7 @@
         if (isLoading) {
             elements.answerSubmit.textContent = '送信中…';
         } else {
-            elements.answerSubmit.textContent = state.awaitingNext ? '次へ' : '回答';
+            elements.answerSubmit.textContent = state.awaitingNext ? '次へ' : '答える';
         }
     }
 
@@ -2779,11 +2779,10 @@
 
     function initVirtualKeyboard() {
         const keyboardToggle = document.getElementById('keyboard-toggle');
-        const keyboardClose = document.getElementById('keyboard-close');
         const virtualKeyboard = document.getElementById('virtual-keyboard');
         const answerInput = document.getElementById('answer-input');
         
-        console.log('初始化虚拟键盘:', { keyboardToggle, keyboardClose, virtualKeyboard, answerInput });
+        console.log('初始化虚拟键盘:', { keyboardToggle, virtualKeyboard, answerInput });
         
         if (!keyboardToggle || !virtualKeyboard || !answerInput) {
             console.error('虚拟键盘元素未找到');
@@ -2883,31 +2882,18 @@
             }
         });
         
-        // 关闭键盘
-        keyboardClose.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            console.log('关闭键盘按钮被点击');
-            virtualKeyboard.classList.remove('show');
-            virtualKeyboard.classList.add('hidden');
-            
-            // 恢复input的正常状态
-            if (answerInput) {
-                answerInput.readOnly = false;
-                // 移除焦点阻止事件监听器
-                answerInput.removeEventListener('focus', preventFocus);
-                answerInput.removeEventListener('click', preventFocus);
-                answerInput.removeEventListener('touchstart', preventFocus);
-            }
-        });
+        // 键盘关闭功能已移除，现在通过点击外部区域关闭
         
         // 点击键盘按钮 - 移除重复的事件监听器，由HTML中的代码处理
         
         // 处理键盘输入 - 移除重复的函数，由HTML中的代码处理
         
-        // 点击键盘外部关闭键盘
+        // 点击键盘外部关闭键盘（排除答える按钮）
         document.addEventListener('click', (e) => {
-            if (!virtualKeyboard.contains(e.target) && !keyboardToggle.contains(e.target)) {
+            const answerSubmit = document.getElementById('answer-submit');
+            if (!virtualKeyboard.contains(e.target) && 
+                !keyboardToggle.contains(e.target) && 
+                !answerSubmit.contains(e.target)) {
                 virtualKeyboard.classList.remove('show');
                 virtualKeyboard.classList.add('hidden');
                 
