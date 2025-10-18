@@ -1,4 +1,5 @@
 .hidden { display: none !important; }
+
 :root {
     color-scheme: light dark;
     font-family: "Noto Sans JP", "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
@@ -3771,6 +3772,7 @@ ruby rt {
         margin-bottom: 12px;
         gap: 8px;
     }
+    
 
     .header-left {
         flex-direction: row;
@@ -4736,6 +4738,10 @@ ruby rt {
    全局移动端适配（<=480px）
    ============================= */
 @media (max-width: 480px) {
+    body.theme-magic {
+        padding: 0;
+    }
+
     body.theme-magic .app { margin: 0; border-radius: 0; padding: 10px 20px;}
 
     /* 标题缩放 */

@@ -21,6 +21,7 @@
     <meta name="theme-color" content="#667eea">
     
     <link rel="stylesheet" href="/static/styles.css">
+    <link rel="stylesheet" href="/static/keyboard.css">
     <script>
         (function () {
             function prepareModuleEnv() {
@@ -330,6 +331,14 @@
                     <div id="input-mode-container" class="mode-container">
                         <label class="sr-only" for="answer-input">答えを入力してください</label>
                         <input id="answer-input" type="text" inputmode="text" autocomplete="off" placeholder="">
+                        <!-- 虚拟键盘切换按钮 -->
+                        <button id="keyboard-toggle" class="keyboard-toggle" type="button" title="Virtual Keyboard" onclick="toggleVirtualKeyboard()">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                                <line x1="8" y1="21" x2="16" y2="21"></line>
+                                <line x1="12" y1="17" x2="12" y2="21"></line>
+                            </svg>
+                        </button>
                     </div>
                     
                     <!-- 拼词模式 -->
@@ -2050,5 +2059,146 @@
             if (installPWAUser) installPWAUser.style.display = 'none';
         });
     </script>
+    
+    <script>
+        // 简单的虚拟键盘切换函数
+        function toggleVirtualKeyboard() {
+            console.log('toggleVirtualKeyboard 被调用');
+            const keyboard = document.getElementById('virtual-keyboard');
+            if (keyboard) {
+                console.log('找到键盘元素');
+                keyboard.classList.remove('hidden');
+                keyboard.classList.add('show');
+                console.log('键盘状态:', keyboard.classList.toString());
+            } else {
+                console.error('未找到键盘元素');
+            }
+        }
+        
+        // 关闭键盘函数
+        function closeVirtualKeyboard() {
+            const keyboard = document.getElementById('virtual-keyboard');
+            if (keyboard) {
+                keyboard.classList.remove('show');
+                keyboard.classList.add('hidden');
+            }
+        }
+        
+        // 处理键盘按键点击
+        function handleKeyboardKey(key) {
+            console.log('键盘按键被点击:', key);
+            const input = document.getElementById('answer-input');
+            if (!input) return;
+            
+            const currentValue = input.value;
+            const cursorPos = input.selectionStart;
+            console.log('处理前 - 当前值:', currentValue, '光标位置:', cursorPos);
+            
+            switch (key) {
+                case 'backspace':
+                    if (currentValue.length > 0 && cursorPos > 0) {
+                        const newValue = currentValue.slice(0, cursorPos - 1) + currentValue.slice(cursorPos);
+                        input.value = newValue;
+                        input.setSelectionRange(cursorPos - 1, cursorPos - 1);
+                    }
+                    break;
+                case 'clear':
+                    input.value = '';
+                    input.focus();
+                    break;
+                case 'space':
+                    const newValue = currentValue.slice(0, cursorPos) + ' ' + currentValue.slice(cursorPos);
+                    input.value = newValue;
+                    input.setSelectionRange(cursorPos + 1, cursorPos + 1);
+                    break;
+                default:
+                    // 字母字符 - 直接插入到光标位置
+                    const newValueWithChar = currentValue.slice(0, cursorPos) + key + currentValue.slice(cursorPos);
+                    console.log('插入字符后 - 新值:', newValueWithChar);
+                    input.value = newValueWithChar;
+                    input.setSelectionRange(cursorPos + 1, cursorPos + 1);
+                    break;
+            }
+            
+            // 统一触发一次input事件让WanaKana处理
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+            
+            // 等待WanaKana处理后再检查结果
+            setTimeout(() => {
+                console.log('WanaKana处理后，当前值:', input.value);
+            }, 100);
+            
+            input.focus();
+        }
+        
+        // 页面加载完成后添加键盘按键事件
+        document.addEventListener('DOMContentLoaded', function() {
+            const keyboard = document.getElementById('virtual-keyboard');
+            if (keyboard) {
+                keyboard.addEventListener('click', function(e) {
+                    if (e.target.classList.contains('key')) {
+                        const key = e.target.getAttribute('data-key');
+                        handleKeyboardKey(key);
+                    }
+                });
+            }
+        });
+    </script>
+    
+    <!-- 虚拟键盘 -->
+    <div id="virtual-keyboard" class="virtual-keyboard hidden">
+        <div class="keyboard-header">
+            <span class="keyboard-title">Virtual Keyboard</span>
+            <button id="keyboard-close" class="keyboard-close" type="button" title="閉じる" onclick="closeVirtualKeyboard()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+        </div>
+        <div class="keyboard-body">
+            <!-- QWERTY 第一行 -->
+            <div class="keyboard-row">
+                <button class="key" data-key="q">Q</button>
+                <button class="key" data-key="w">W</button>
+                <button class="key" data-key="e">E</button>
+                <button class="key" data-key="r">R</button>
+                <button class="key" data-key="t">T</button>
+                <button class="key" data-key="y">Y</button>
+                <button class="key" data-key="u">U</button>
+                <button class="key" data-key="i">I</button>
+                <button class="key" data-key="o">O</button>
+                <button class="key" data-key="p">P</button>
+            </div>
+            <!-- QWERTY 第二行 -->
+            <div class="keyboard-row">
+                <button class="key" data-key="a">A</button>
+                <button class="key" data-key="s">S</button>
+                <button class="key" data-key="d">D</button>
+                <button class="key" data-key="f">F</button>
+                <button class="key" data-key="g">G</button>
+                <button class="key" data-key="h">H</button>
+                <button class="key" data-key="j">J</button>
+                <button class="key" data-key="k">K</button>
+                <button class="key" data-key="l">L</button>
+            </div>
+            <!-- QWERTY 第三行 -->
+            <div class="keyboard-row">
+                <button class="key" data-key="z">Z</button>
+                <button class="key" data-key="x">X</button>
+                <button class="key" data-key="c">C</button>
+                <button class="key" data-key="v">V</button>
+                <button class="key" data-key="b">B</button>
+                <button class="key" data-key="n">N</button>
+                <button class="key" data-key="m">M</button>
+            </div>
+            <!-- 功能键 -->
+            <div class="keyboard-row keyboard-controls">
+                <button class="key key-wide" data-key="backspace">Backspace</button>
+                <button class="key key-wide" data-key="clear">Clear</button>
+                <button class="key key-wide" data-key="space">Space</button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

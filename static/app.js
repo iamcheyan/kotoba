@@ -2754,8 +2754,93 @@
         window.location.reload();
     }
 
+    // 初始化虚拟键盘功能
+    function initVirtualKeyboard() {
+        const keyboardToggle = document.getElementById('keyboard-toggle');
+        const keyboardClose = document.getElementById('keyboard-close');
+        const virtualKeyboard = document.getElementById('virtual-keyboard');
+        const answerInput = document.getElementById('answer-input');
+        
+        console.log('初始化虚拟键盘:', { keyboardToggle, keyboardClose, virtualKeyboard, answerInput });
+        
+        if (!keyboardToggle || !virtualKeyboard || !answerInput) {
+            console.error('虚拟键盘元素未找到');
+            return;
+        }
+        
+        // 切换键盘显示/隐藏
+        keyboardToggle.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('键盘切换按钮被点击');
+            
+            // 移除hidden类，添加show类
+            virtualKeyboard.classList.remove('hidden');
+            virtualKeyboard.classList.add('show');
+            
+            console.log('键盘状态:', virtualKeyboard.classList.toString());
+            
+            if (answerInput) {
+                answerInput.focus();
+            }
+        });
+        
+        // 添加双击事件作为备用
+        keyboardToggle.addEventListener('dblclick', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('键盘切换按钮被双击');
+            
+            virtualKeyboard.classList.remove('hidden');
+            virtualKeyboard.classList.add('show');
+        });
+        
+        // 关闭键盘
+        keyboardClose.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('关闭键盘按钮被点击');
+            virtualKeyboard.classList.remove('show');
+            virtualKeyboard.classList.add('hidden');
+        });
+        
+        // 点击键盘按钮 - 移除重复的事件监听器，由HTML中的代码处理
+        
+        // 处理键盘输入 - 移除重复的函数，由HTML中的代码处理
+        
+        // 点击键盘外部关闭键盘
+        document.addEventListener('click', (e) => {
+            if (!virtualKeyboard.contains(e.target) && !keyboardToggle.contains(e.target)) {
+                virtualKeyboard.classList.remove('show');
+                virtualKeyboard.classList.add('hidden');
+            }
+        });
+    }
+
     // 初始化错题本按钮事件
     document.addEventListener('DOMContentLoaded', function() {
+        // 初始化虚拟键盘
+        initVirtualKeyboard();
+        
+        // 添加一个简单的测试，确保键盘按钮能被找到
+        setTimeout(() => {
+            const testBtn = document.getElementById('keyboard-toggle');
+            if (testBtn) {
+                console.log('键盘按钮找到，添加测试事件');
+                testBtn.onclick = function() {
+                    console.log('键盘按钮被点击（onclick方式）');
+                    const keyboard = document.getElementById('virtual-keyboard');
+                    if (keyboard) {
+                        keyboard.classList.remove('hidden');
+                        keyboard.classList.add('show');
+                        console.log('键盘应该显示了');
+                    }
+                };
+            } else {
+                console.error('键盘按钮未找到');
+            }
+        }, 1000);
+        
         const viewWrongWordsButton = document.getElementById('viewWrongWordsButton');
         const practiceButton = document.getElementById('practice-wrong-words');
         const practiceWrongWordsButton = document.getElementById('practiceWrongWordsButton');
