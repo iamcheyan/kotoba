@@ -19,6 +19,11 @@
     transform: translateY(-50%) scale(1.05);
 }
 
+.virtual-keyboard,
+.flick-keyboard {
+    height: 180px;
+}
+
 .virtual-keyboard {
     position: fixed;
     bottom: 0;
@@ -283,12 +288,12 @@
     }
     
     .keyboard-row {
-        gap: 3px;
-        margin-bottom: 3px;
+        gap: 4px;
+        margin-bottom: 6px;
     }
     
     .key {
-        padding: 10px 6px;
+        padding: 8px 6px;
         /* font-size: 0.9rem; */
         min-width: 32px;
         min-height: 32px;
@@ -300,16 +305,13 @@
         max-width: 55px;
     }
     
-    .keyboard-skip-button {
-        max-width: 70px;
-    }
     
     .key-space {
         max-width: 100%;
     }
     
     .key-enter {
-        max-width: 70px;
+        min-width: 79px;
     }
 }
 
@@ -349,7 +351,9 @@
 
 /* フリック键盘主体 */
 .flick-keyboard-body {
-    padding: 12px 16px;
+    padding: 16px 0;
+    max-height: 60vh;
+    background: #000000;
     display: flex;
     flex-direction: column;
     gap: 6px;
@@ -358,16 +362,17 @@
 /* フリック键盘布局 */
 .flick-keyboard-layout {
     display: flex;
-    gap: 12px;
+    gap: 8px;
     align-items: stretch;
+    /* padding: 0 16px; */
 }
 
 /* フリック键盘侧边栏 */
 .flick-sidebar {
     display: flex;
     flex-direction: column;
-    gap: 6px;
-    width: 80px;
+    gap: 4px;
+    width: 70px;
 }
 
 /* フリック键盘字符键区域 */
@@ -375,21 +380,21 @@
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 2px;
 }
 
 /* フリック键盘右侧边栏 */
 .flick-right-sidebar {
     display: flex;
     flex-direction: column;
-    gap: 6px;
-    width: 80px;
+    gap: 4px;
+    width: 70px;
 }
 
 /* フリック键盘行 */
 .flick-row {
     display: flex;
-    gap: 6px;
+    gap: 4px;
     justify-content: center;
     align-items: center;
     margin: 0;
@@ -398,7 +403,7 @@
 /* フリック切换按钮样式 */
 .key-flick-toggle {
     flex: 1;
-    max-width: 80px;
+    min-width: 78px;
     background: #4a5568;
     color: #ffffff;
     font-size: 12px;
@@ -420,11 +425,11 @@
     background: #2d3748;
     color: #ffffff;
     border: 1px solid #4a5568;
-    border-radius: 8px;
-    font-size: 16px;
+    border-radius: 6px;
+    font-size: 14px;
     font-weight: 500;
-    min-height: 48px;
-    min-width: 48px;
+    min-height: 40px;
+    min-width: 40px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -435,7 +440,7 @@
     -moz-user-select: none;
     -ms-user-select: none;
     flex: 1;
-    max-width: 60px;
+    max-width: 65px;
     -webkit-touch-callout: none;
     -webkit-user-select: none;
     -khtml-user-select: none;
@@ -653,7 +658,7 @@
 /* 移动端适配 */
 @media (max-width: 768px) {
     .flick-keyboard-body {
-        padding: 6px;
+        padding: 6px 10px;
         gap: 3px;
     }
     
@@ -661,12 +666,12 @@
         gap: 3px;
     }
     
-    .flick-key {
+    /* .flick-key {
         min-height: 45px;
         min-width: 45px;
         font-size: 16px;
         max-width: 55px;
-    }
+    } */
     
     .flick-function-key {
         min-height: 45px;
@@ -677,28 +682,28 @@
     
     .flick-indicator {
         font-size: 16px;
-        padding: 6px 10px;
-        min-width: 45px;
-        min-height: 45px;
+        padding: 5px 10px;
+        min-width: 64px;
+        min-height: 36px;
     }
     
     .flick-indicator.up {
-        top: -40px;
+        top: -29px;
         transform: translateX(-50%) translateY(-8px);
     }
     
     .flick-indicator.down {
-        bottom: -40px;
+        bottom: -29px;
         transform: translateX(-50%) translateY(8px);
     }
     
     .flick-indicator.left {
-        left: -40px;
+        left: -52px;
         transform: translateY(-50%) translateX(-8px);
     }
     
     .flick-indicator.right {
-        right: -40px;
+        right: -52px;
         transform: translateY(-50%) translateX(8px);
     }
 }
@@ -722,7 +727,7 @@
 /* フリック侧边栏按钮样式 */
 .flick-sidebar .flick-function-key {
     width: 100%;
-    min-height: 80px;
+    /* min-height: 60px; */
     max-width: none;
     font-size: 10px;
     flex-direction: column;
@@ -764,12 +769,33 @@
     text-align: center;
 }
 
+/* Esc按钮样式 */
+.flick-escape {
+    background: #dc3545;
+    border-color: #c82333;
+}
+
+.flick-escape:hover {
+    background: #c82333;
+}
+
+.flick-escape:active {
+    background: #bd2130;
+}
+
+/* Esc文字样式 */
+.escape-text {
+    font-size: 10px;
+    font-weight: 600;
+    text-align: center;
+}
+
 /* 右侧功能按钮样式 */
 .flick-right-sidebar .flick-function-key {
     width: 100%;
-    min-height: 60px;
+    min-height: 50px;
     max-width: none;
-    font-size: 12px;
+    font-size: 11px;
     flex-direction: column;
     gap: 4px;
 }
@@ -806,7 +832,7 @@
 .flick-submit {
     background: #28a745;
     border-color: #1e7e34;
-    min-height: 80px;
+    min-height: 60px;
 }
 
 .flick-submit:hover {

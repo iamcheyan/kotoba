@@ -167,7 +167,6 @@
         answerForm: document.getElementById('answer-form'),
         answerInput: document.getElementById('answer-input'),
         answerSubmit: document.getElementById('answer-submit'),
-        skipButton: document.getElementById('skip-button'),
         replayButton: document.getElementById('replay-button'),
         nextButton: document.getElementById('next-button'),
         alerts: document.getElementById('alerts'),
@@ -300,9 +299,6 @@
             }
             if (elements.answerInput) {
                 elements.answerInput.readOnly = true;
-            }
-            if (elements.skipButton) {
-                elements.skipButton.disabled = true;
             }
         }
     }
@@ -1492,9 +1488,6 @@
             elements.answerSubmit.disabled = true;
             elements.answerSubmit.textContent = '完了';
         }
-        if (elements.skipButton) {
-            elements.skipButton.disabled = true;
-        }
         updateProgressUI();
         if (!state.completionCelebrated) {
             showAlert('success', '🎉 コンプリート！おめでとうございます！', true);
@@ -2180,9 +2173,6 @@
             }
         }
         
-        if (elements.skipButton) {
-            elements.skipButton.disabled = false;
-        }
         setButtonToAnswer();
         
         // 如果启用了自动发音，则自动播放
@@ -2970,6 +2960,7 @@
         const flickFunctionKeys = flickKeyboard.querySelectorAll('.flick-function-key');
         
         // 获取侧边栏按钮
+        const flickEscape = flickKeyboard.querySelector('.flick-escape');
         const flickKatakana = flickKeyboard.querySelector('.flick-katakana');
         const flickBack = flickKeyboard.querySelector('.flick-back');
         
@@ -2984,6 +2975,24 @@
         
         // 片假名模式状态
         let isKatakanaMode = false;
+        
+        // Esc按钮事件
+        if (flickEscape) {
+            flickEscape.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                console.log('Esc按钮被点击');
+                
+                // 如果当前处于文字选择界面（フリック选项展开状态）
+                if (isExpanded && currentFlickKey) {
+                    console.log('取消文字选择界面');
+                    cleanupFlickInteraction(currentFlickKey);
+                } else {
+                    console.log('当前没有展开的文字选择界面');
+                }
+            });
+        }
         
         // 片假名按钮事件
         if (flickKatakana) {
@@ -3906,37 +3915,6 @@
         if (elements.answerForm) {
             elements.answerForm.addEventListener('submit', handleAnswerSubmit);
         }
-        if (elements.skipButton) {
-            elements.skipButton.addEventListener('click', async () => {
-                setButtonToAnswer();
-                setLoading(true);
-                try {
-                    await loadRandomEntry();
-                } catch (error) {
-                    showAlert('error', error.message || String(error));
-                } finally {
-                    // 计算并显示实时分差（跳过后）
-                    const before = getCurrentStats();
-                    const scoreBefore = computeScoreRaw(before.correct, before.wrong, before.combo, before.penalty);
-                    // 动态扣分：随等级提高而增加
-                    addPenalty(getDynamicPenalty('skip'));
-                    updateScoreboard();
-                    // 经验条动画：失去
-                    const wrapper = document.querySelector('.exp-bar-wrapper');
-                    if (wrapper) {
-                        wrapper.classList.remove('exp-gain','exp-loss');
-                        void wrapper.offsetWidth;
-                        wrapper.classList.add('exp-loss');
-                        setTimeout(() => wrapper.classList.remove('exp-loss'), 650);
-                    }
-                    const after = getCurrentStats();
-                    const scoreAfter = computeScoreRaw(after.correct, after.wrong, after.combo, after.penalty);
-                    const diff = scoreAfter - scoreBefore;
-                    if (diff !== 0) showScoreDelta(`${diff}`, 'loss', 'answer');
-                    setLoading(false);
-                }
-            });
-        }
         // 播放模式控制：重听/下一個
         if (elements.replayButton) {
             elements.replayButton.addEventListener('click', () => {
@@ -4187,7 +4165,6 @@
                 // 显示做题UI，隐藏播放控制
                 if (elements.answerInput) elements.answerInput.classList.remove('hidden');
                 if (elements.answerSubmit) elements.answerSubmit.classList.remove('hidden');
-                if (elements.skipButton) elements.skipButton.classList.remove('hidden');
                 if (elements.replayButton) elements.replayButton.classList.add('hidden');
                 if (elements.nextButton) elements.nextButton.classList.add('hidden');
             });
@@ -4198,7 +4175,6 @@
                 // 显示做题UI，隐藏播放控制
                 if (elements.answerInput) elements.answerInput.classList.remove('hidden');
                 if (elements.answerSubmit) elements.answerSubmit.classList.remove('hidden');
-                if (elements.skipButton) elements.skipButton.classList.remove('hidden');
                 if (elements.replayButton) elements.replayButton.classList.add('hidden');
                 if (elements.nextButton) elements.nextButton.classList.add('hidden');
             });
@@ -4212,7 +4188,6 @@
                 // 隐藏做题UI，显示播放控制
                 if (elements.answerInput) elements.answerInput.classList.add('hidden');
                 if (elements.answerSubmit) elements.answerSubmit.classList.add('hidden');
-                if (elements.skipButton) elements.skipButton.classList.add('hidden');
                 if (elements.replayButton) elements.replayButton.classList.remove('hidden');
                 if (elements.nextButton) elements.nextButton.classList.remove('hidden');
                 // 立即播放当前词
