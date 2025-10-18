@@ -2562,29 +2562,49 @@
     <!-- フリック键盘 -->
     <div id="flick-keyboard" class="flick-keyboard hidden">
         <div class="keyboard-body flick-keyboard-body">
-            <!-- 第一行 -->
-            <div class="keyboard-row flick-row">
-                <button class="key flick-key" data-flick="あ" data-flick-up="い" data-flick-left="う" data-flick-right="え" data-flick-down="お">あ</button>
-                <button class="key flick-key" data-flick="か" data-flick-up="き" data-flick-left="く" data-flick-right="け" data-flick-down="こ">か</button>
-                <button class="key flick-key" data-flick="さ" data-flick-up="し" data-flick-left="す" data-flick-right="せ" data-flick-down="そ">さ</button>
-            </div>
-            <!-- 第二行 -->
-            <div class="keyboard-row flick-row">
-                <button class="key flick-key" data-flick="た" data-flick-up="ち" data-flick-left="つ" data-flick-right="て" data-flick-down="と">た</button>
-                <button class="key flick-key" data-flick="な" data-flick-up="に" data-flick-left="ぬ" data-flick-right="ね" data-flick-down="の">な</button>
-                <button class="key flick-key" data-flick="は" data-flick-up="ひ" data-flick-left="ふ" data-flick-right="へ" data-flick-down="ほ">は</button>
-            </div>
-            <!-- 第三行 -->
-            <div class="keyboard-row flick-row">
-                <button class="key flick-key" data-flick="ま" data-flick-up="み" data-flick-left="む" data-flick-right="め" data-flick-down="も">ま</button>
-                <button class="key flick-key" data-flick="や" data-flick-up="ゆ" data-flick-left="よ">や</button>
-                <button class="key flick-key" data-flick="ら" data-flick-up="り" data-flick-left="る" data-flick-right="れ" data-flick-down="ろ">ら</button>
-            </div>
-            <!-- 第四行 -->
-            <div class="keyboard-row flick-row">
-                <button class="key flick-key" data-flick="ぷ" data-flick-up="゜">ぷ</button>
-                <button class="key flick-key" data-flick="わ" data-flick-up="を" data-flick-left="ん">わ</button>
-                <button class="key flick-key" data-flick="、">、</button>
+            <div class="flick-keyboard-layout">
+                <!-- 左侧功能按钮 -->
+                <div class="flick-sidebar">
+                    <!-- 片假名模式按钮 -->
+                    <button class="key flick-function-key flick-katakana" data-key="flick-katakana" title="片假名模式">
+                        <span class="katakana-text">カタカナ</span>
+                    </button>
+                    <!-- 返回默认键盘按钮 -->
+                    <button class="key flick-function-key flick-back" data-key="flick-back" title="返回默认键盘">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M19 12H5"/>
+                            <path d="M12 19l-7-7 7-7"/>
+                        </svg>
+                    </button>
+                </div>
+                
+                <!-- 右侧字符键区域 -->
+                <div class="flick-keys-area">
+                    <!-- 第一行 -->
+                    <div class="keyboard-row flick-row">
+                        <button class="key flick-key" data-flick="あ" data-flick-up="い" data-flick-left="う" data-flick-right="え" data-flick-down="お">あ</button>
+                        <button class="key flick-key" data-flick="か" data-flick-up="き" data-flick-left="く" data-flick-right="け" data-flick-down="こ">か</button>
+                        <button class="key flick-key" data-flick="さ" data-flick-up="し" data-flick-left="す" data-flick-right="せ" data-flick-down="そ">さ</button>
+                    </div>
+                    <!-- 第二行 -->
+                    <div class="keyboard-row flick-row">
+                        <button class="key flick-key" data-flick="た" data-flick-up="ち" data-flick-left="つ" data-flick-right="て" data-flick-down="と">た</button>
+                        <button class="key flick-key" data-flick="な" data-flick-up="に" data-flick-left="ぬ" data-flick-right="ね" data-flick-down="の">な</button>
+                        <button class="key flick-key" data-flick="は" data-flick-up="ひ" data-flick-left="ふ" data-flick-right="へ" data-flick-down="ほ">は</button>
+                    </div>
+                    <!-- 第三行 -->
+                    <div class="keyboard-row flick-row">
+                        <button class="key flick-key" data-flick="ま" data-flick-up="み" data-flick-left="む" data-flick-right="め" data-flick-down="も">ま</button>
+                        <button class="key flick-key" data-flick="や" data-flick-up="ゆ" data-flick-left="よ">や</button>
+                        <button class="key flick-key" data-flick="ら" data-flick-up="り" data-flick-left="る" data-flick-right="れ" data-flick-down="ろ">ら</button>
+                    </div>
+                    <!-- 第四行 -->
+                    <div class="keyboard-row flick-row">
+                        <button class="key flick-key" data-flick="ぷ" data-flick-up="゜">ぷ</button>
+                        <button class="key flick-key" data-flick="わ" data-flick-up="を" data-flick-left="ん">わ</button>
+                        <button class="key flick-key" data-flick="、">、</button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

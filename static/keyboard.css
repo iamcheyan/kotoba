@@ -355,6 +355,29 @@
     gap: 6px;
 }
 
+/* フリック键盘布局 */
+.flick-keyboard-layout {
+    display: flex;
+    gap: 12px;
+    align-items: stretch;
+}
+
+/* フリック键盘侧边栏 */
+.flick-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    width: 80px;
+}
+
+/* フリック键盘字符键区域 */
+.flick-keys-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
 /* フリック键盘行 */
 .flick-row {
     display: flex;
@@ -686,4 +709,49 @@
     -moz-user-select: none;
     -ms-user-select: none;
     user-select: none;
+}
+
+/* フリック侧边栏按钮样式 */
+.flick-sidebar .flick-function-key {
+    width: 100%;
+    min-height: 80px;
+    max-width: none;
+    font-size: 10px;
+    flex-direction: column;
+    gap: 4px;
+}
+
+/* 片假名按钮样式 */
+.flick-katakana {
+    background: #4a5568;
+    border-color: #718096;
+}
+
+.flick-katakana:hover {
+    background: #5a6578;
+}
+
+.flick-katakana:active {
+    background: #3a4558;
+}
+
+/* 返回按钮样式 */
+.flick-back {
+    background: #6b7280;
+    border-color: #9ca3af;
+}
+
+.flick-back:hover {
+    background: #7b8288;
+}
+
+.flick-back:active {
+    background: #5b6270;
+}
+
+/* 片假名文字样式 */
+.katakana-text {
+    font-size: 10px;
+    font-weight: 600;
+    text-align: center;
 }

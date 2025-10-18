@@ -2937,7 +2937,6 @@
     function initFlickKeyboard() {
         const flickKeyboard = document.getElementById('flick-keyboard');
         const flickToggle = document.querySelector('[data-key="flick-toggle"]');
-        const flickBack = document.querySelector('[data-key="flick-back"]');
         const virtualKeyboard = document.getElementById('virtual-keyboard');
         
         if (!flickKeyboard || !flickToggle) {
@@ -2964,11 +2963,53 @@
             console.log('切换到フリック键盘');
         });
         
-        // フリック返回按钮事件
+        // フリック返回按钮事件（已移动到侧边栏按钮处理中）
+        
+        // フリック键事件处理
+        const flickKeys = flickKeyboard.querySelectorAll('.flick-key');
+        const flickFunctionKeys = flickKeyboard.querySelectorAll('.flick-function-key');
+        
+        // 获取侧边栏按钮
+        const flickKatakana = flickKeyboard.querySelector('.flick-katakana');
+        const flickBack = flickKeyboard.querySelector('.flick-back');
+        let longPressTimer = null;
+        let currentFlickKey = null;
+        let flickIndicators = [];
+        let isExpanded = false;
+        
+        // 片假名模式状态
+        let isKatakanaMode = false;
+        
+        // 片假名按钮事件
+        if (flickKatakana) {
+            flickKatakana.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                isKatakanaMode = !isKatakanaMode;
+                console.log('片假名模式切换:', isKatakanaMode ? '开启' : '关闭');
+                
+                // 更新按钮状态
+                if (isKatakanaMode) {
+                    flickKatakana.classList.add('active');
+                    flickKatakana.style.background = '#4a90e2';
+                } else {
+                    flickKatakana.classList.remove('active');
+                    flickKatakana.style.background = '#4a5568';
+                }
+                
+                // 更新所有字符键显示
+                updateFlickKeysDisplay();
+            });
+        }
+        
+        // 返回按钮事件
         if (flickBack) {
             flickBack.addEventListener('click', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
+                
+                console.log('返回默认键盘');
                 
                 // 隐藏フリック键盘，显示普通键盘
                 flickKeyboard.classList.add('hidden');
@@ -2980,18 +3021,41 @@
                 
                 // 记住当前键盘类型
                 localStorage.setItem('keyboardType', 'virtual');
-                
-                console.log('切换到普通键盘');
             });
         }
         
-        // フリック键事件处理
-        const flickKeys = flickKeyboard.querySelectorAll('.flick-key');
-        const flickFunctionKeys = flickKeyboard.querySelectorAll('.flick-function-key');
-        let longPressTimer = null;
-        let currentFlickKey = null;
-        let flickIndicators = [];
-        let isExpanded = false;
+        // 更新フリック键显示的函数
+        function updateFlickKeysDisplay() {
+            flickKeys.forEach(key => {
+                const baseChar = key.getAttribute('data-flick');
+                if (baseChar && isKatakanaMode) {
+                    // 转换为片假名
+                    const katakanaChar = convertToKatakana(baseChar);
+                    key.textContent = katakanaChar;
+                } else if (baseChar && !isKatakanaMode) {
+                    // 恢复平假名
+                    key.textContent = baseChar;
+                }
+            });
+        }
+        
+        // 平假名转片假名的函数
+        function convertToKatakana(hiragana) {
+            const hiraganaToKatakana = {
+                'あ': 'ア', 'い': 'イ', 'う': 'ウ', 'え': 'エ', 'お': 'オ',
+                'か': 'カ', 'き': 'キ', 'く': 'ク', 'け': 'ケ', 'こ': 'コ',
+                'さ': 'サ', 'し': 'シ', 'す': 'ス', 'せ': 'セ', 'そ': 'ソ',
+                'た': 'タ', 'ち': 'チ', 'つ': 'ツ', 'て': 'テ', 'と': 'ト',
+                'な': 'ナ', 'に': 'ニ', 'ぬ': 'ヌ', 'ね': 'ネ', 'の': 'ノ',
+                'は': 'ハ', 'ひ': 'ヒ', 'ふ': 'フ', 'へ': 'ヘ', 'ほ': 'ホ',
+                'ま': 'マ', 'み': 'ミ', 'む': 'ム', 'め': 'メ', 'も': 'モ',
+                'や': 'ヤ', 'ゆ': 'ユ', 'よ': 'ヨ',
+                'ら': 'ラ', 'り': 'リ', 'る': 'ル', 'れ': 'レ', 'ろ': 'ロ',
+                'わ': 'ワ', 'を': 'ヲ', 'ん': 'ン',
+                'ぷ': 'プ', '゜': '゜', '、': '、', '。': '。'
+            };
+            return hiraganaToKatakana[hiragana] || hiragana;
+        }
         
         // 处理功能键点击
         flickFunctionKeys.forEach(key => {
@@ -3043,7 +3107,7 @@
                 longPressTimer = setTimeout(() => {
                     isLongPress = true;
                     startLongPress(key);
-                }, 500);
+                }, 200);
             });
             
             key.addEventListener('touchstart', (e) => {
@@ -3053,7 +3117,7 @@
                 longPressTimer = setTimeout(() => {
                     isLongPress = true;
                     startLongPress(key);
-                }, 500);
+                }, 200);
             });
             
             // 长按结束
@@ -3150,7 +3214,7 @@
                 showFlickOptions(key);
                 isExpanded = true;
                 console.log('选项已展开，isExpanded =', isExpanded);
-            }, 500);
+            }, 200);
             console.log('=== 长按开始调试结束 ===');
         }
         
