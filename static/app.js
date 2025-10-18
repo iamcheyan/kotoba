@@ -2923,6 +2923,38 @@
         // 键盘现在只能通过keyboard-toggle按钮控制，不会因为点击其他元素而隐藏
     }
 
+    // フリック键盘音效函数
+    function playFlickKeySound() {
+        // 检查音效是否开启
+        const soundEnabled = localStorage.getItem('sfxEnabled') !== 'false';
+        if (!soundEnabled) {
+            return;
+        }
+        
+        try {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            // 设置音效参数 - 清脆的按键音
+            oscillator.frequency.setValueAtTime(800, audioContext.currentTime); // A5
+            oscillator.type = 'sine';
+            
+            // 设置音量包络 - 快速衰减
+            gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+            gainNode.gain.linearRampToValueAtTime(0.3, audioContext.currentTime + 0.01);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.1);
+        } catch (error) {
+            console.log('フリック键盘音效播放失败:', error);
+        }
+    }
+
     // 初始化フリック键盘
     function initFlickKeyboard() {
         const flickKeyboard = document.getElementById('flick-keyboard');
@@ -3156,6 +3188,9 @@
                 e.preventDefault();
                 e.stopPropagation();
                 
+                // 播放按键音效
+                playFlickKeySound();
+                
                 const keyType = key.getAttribute('data-key');
                 handleFlickFunctionKey(keyType);
             });
@@ -3167,6 +3202,9 @@
             key.addEventListener('click', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
+                
+                // 播放按键音效
+                playFlickKeySound();
                 
                 console.log('=== フリック键单击调试 ===');
                 console.log('点击的键:', key);
@@ -3396,6 +3434,9 @@
                         e.preventDefault();
                         e.stopPropagation();
                         
+                        // 播放按键音效
+                        playFlickKeySound();
+                        
                         console.log('=== 选项点击调试 ===');
                         console.log('🎯 点击的选项:', flickChar);
                         console.log('📍 方向:', dir);
@@ -3439,6 +3480,9 @@
                         console.log('👆 指示器touchend事件');
                         e.preventDefault();
                         e.stopPropagation();
+                        
+                        // 播放按键音效
+                        playFlickKeySound();
                         
                         console.log('🔥 指示器触摸点击事件触发！');
                         console.log('=== 选项触摸点击调试 ===');
@@ -3495,6 +3539,12 @@
             console.log('📝 输入前的内容:', answerInput?.value);
             
             if (answerInput && !answerInput.readOnly) {
+                // 检查是否是浊音/半浊音/小假名切换
+                if (char === '゛' || char === '゜' || char === '小') {
+                    handleVoicingCycle(char);
+                    return;
+                }
+                
                 // 根据片假名模式决定输入字符
                 let inputChar = char;
                 if (isKatakanaMode) {
@@ -3522,6 +3572,229 @@
                 console.log('❌ 输入失败 - 输入框不存在或为只读状态');
             }
             console.log('=== 调试结束 ===');
+        }
+        
+        // 处理浊音/半浊音/小假名输入
+        function handleVoicingInput(voicingType) {
+            const answerInput = document.getElementById('answer-input');
+            if (!answerInput || answerInput.readOnly) return;
+            
+            const currentValue = answerInput.value;
+            if (currentValue.length === 0) {
+                console.log('输入框为空，无法应用浊音/半浊音/小假名');
+                return;
+            }
+            
+            // 获取最后一个字符
+            const lastChar = currentValue[currentValue.length - 1];
+            console.log('最后一个字符:', lastChar);
+            console.log('浊音/半浊音/小假名类型:', voicingType);
+            
+            let newChar = '';
+            
+            if (voicingType === '゛') {
+                // 浊音转换
+                newChar = convertToVoiced(lastChar);
+            } else if (voicingType === '゜') {
+                // 半浊音转换
+                newChar = convertToSemiVoiced(lastChar);
+            } else if (voicingType === '小') {
+                // 小假名转换
+                newChar = convertToSmall(lastChar);
+            }
+            
+            if (newChar && newChar !== lastChar) {
+                // 替换最后一个字符
+                const newValue = currentValue.slice(0, -1) + newChar;
+                answerInput.value = newValue;
+                console.log('✅ 浊音/半浊音/小假名转换成功:', lastChar, '->', newChar);
+                
+                // 触发input事件
+                const inputEvent = new Event('input', { bubbles: true });
+                answerInput.dispatchEvent(inputEvent);
+            } else {
+                console.log('❌ 无法应用浊音/半浊音/小假名转换');
+            }
+        }
+        
+        // 处理浊音/半浊音/小假名的循环切换
+        function handleVoicingCycle(voicingType) {
+            const answerInput = document.getElementById('answer-input');
+            if (!answerInput || answerInput.readOnly) return;
+            
+            const currentValue = answerInput.value;
+            if (currentValue.length === 0) {
+                console.log('输入框为空，无法应用浊音/半浊音/小假名');
+                return;
+            }
+            
+            // 获取最后一个字符
+            const lastChar = currentValue[currentValue.length - 1];
+            console.log('=== 循环切换调试 ===');
+            console.log('最后一个字符:', lastChar);
+            console.log('切换类型:', voicingType);
+            
+            // 根据切换类型进行循环转换
+            let newChar = '';
+            if (voicingType === '゛') {
+                // 浊音循环：原音 -> 浊音 -> 原音
+                newChar = cycleVoiced(lastChar);
+            } else if (voicingType === '゜') {
+                // 半浊音循环：原音 -> 半浊音 -> 原音
+                newChar = cycleSemiVoiced(lastChar);
+            } else if (voicingType === '小') {
+                // 小假名循环：原音 -> 小假名 -> 原音
+                newChar = cycleSmall(lastChar);
+            }
+            
+            if (newChar !== lastChar) {
+                // 替换最后一个字符
+                const newValue = currentValue.slice(0, -1) + newChar;
+                answerInput.value = newValue;
+                console.log('✅ 循环切换成功:', lastChar, '->', newChar);
+                
+                // 触发input事件
+                const inputEvent = new Event('input', { bubbles: true });
+                answerInput.dispatchEvent(inputEvent);
+            } else {
+                console.log('❌ 无法进行循环切换');
+            }
+            console.log('=== 循环切换调试结束 ===');
+        }
+        
+        // 浊音转换函数
+        function convertToVoiced(char) {
+            const voicedMap = {
+                'か': 'が', 'き': 'ぎ', 'く': 'ぐ', 'け': 'げ', 'こ': 'ご',
+                'さ': 'ざ', 'し': 'じ', 'す': 'ず', 'せ': 'ぜ', 'そ': 'ぞ',
+                'た': 'だ', 'ち': 'ぢ', 'つ': 'づ', 'て': 'で', 'と': 'ど',
+                'は': 'ば', 'ひ': 'び', 'ふ': 'ぶ', 'へ': 'べ', 'ほ': 'ぼ',
+                'カ': 'ガ', 'キ': 'ギ', 'ク': 'グ', 'ケ': 'ゲ', 'コ': 'ゴ',
+                'サ': 'ザ', 'シ': 'ジ', 'ス': 'ズ', 'セ': 'ゼ', 'ソ': 'ゾ',
+                'タ': 'ダ', 'チ': 'ヂ', 'ツ': 'ヅ', 'テ': 'デ', 'ト': 'ド',
+                'ハ': 'バ', 'ヒ': 'ビ', 'フ': 'ブ', 'ヘ': 'ベ', 'ホ': 'ボ'
+            };
+            return voicedMap[char] || char;
+        }
+        
+        // 半浊音转换函数
+        function convertToSemiVoiced(char) {
+            const semiVoicedMap = {
+                'は': 'ぱ', 'ひ': 'ぴ', 'ふ': 'ぷ', 'へ': 'ぺ', 'ほ': 'ぽ',
+                'ハ': 'パ', 'ヒ': 'ピ', 'フ': 'プ', 'ヘ': 'ペ', 'ホ': 'ポ'
+            };
+            return semiVoicedMap[char] || char;
+        }
+        
+        // 小假名转换函数
+        function convertToSmall(char) {
+            const smallMap = {
+                'や': 'ゃ', 'ゆ': 'ゅ', 'よ': 'ょ',
+                'つ': 'っ',
+                'あ': 'ぁ', 'い': 'ぃ', 'う': 'ぅ', 'え': 'ぇ', 'お': 'ぉ',
+                'ヤ': 'ャ', 'ユ': 'ュ', 'ヨ': 'ョ',
+                'ツ': 'ッ',
+                'ア': 'ァ', 'イ': 'ィ', 'ウ': 'ゥ', 'エ': 'ェ', 'オ': 'ォ'
+            };
+            return smallMap[char] || char;
+        }
+        
+        // 浊音循环切换函数
+        function cycleVoiced(char) {
+            // 原音 -> 浊音 -> 原音
+            const voicedMap = {
+                'か': 'が', 'き': 'ぎ', 'く': 'ぐ', 'け': 'げ', 'こ': 'ご',
+                'さ': 'ざ', 'し': 'じ', 'す': 'ず', 'せ': 'ぜ', 'そ': 'ぞ',
+                'た': 'だ', 'ち': 'ぢ', 'つ': 'づ', 'て': 'で', 'と': 'ど',
+                'は': 'ば', 'ひ': 'び', 'ふ': 'ぶ', 'へ': 'べ', 'ほ': 'ぼ',
+                'カ': 'ガ', 'キ': 'ギ', 'ク': 'グ', 'ケ': 'ゲ', 'コ': 'ゴ',
+                'サ': 'ザ', 'シ': 'ジ', 'ス': 'ズ', 'セ': 'ゼ', 'ソ': 'ゾ',
+                'タ': 'ダ', 'チ': 'ヂ', 'ツ': 'ヅ', 'テ': 'デ', 'ト': 'ド',
+                'ハ': 'バ', 'ヒ': 'ビ', 'フ': 'ブ', 'ヘ': 'ベ', 'ホ': 'ボ'
+            };
+            
+            // 浊音 -> 原音
+            const unvoicedMap = {
+                'が': 'か', 'ぎ': 'き', 'ぐ': 'く', 'げ': 'け', 'ご': 'こ',
+                'ざ': 'さ', 'じ': 'し', 'ず': 'す', 'ぜ': 'せ', 'ぞ': 'そ',
+                'だ': 'た', 'ぢ': 'ち', 'づ': 'つ', 'で': 'て', 'ど': 'と',
+                'ば': 'は', 'び': 'ひ', 'ぶ': 'ふ', 'べ': 'へ', 'ぼ': 'ほ',
+                'ガ': 'カ', 'ギ': 'キ', 'グ': 'ク', 'ゲ': 'ケ', 'ゴ': 'コ',
+                'ザ': 'サ', 'ジ': 'シ', 'ズ': 'ス', 'ゼ': 'セ', 'ゾ': 'ソ',
+                'ダ': 'タ', 'ヂ': 'チ', 'ヅ': 'ツ', 'デ': 'テ', 'ド': 'ト',
+                'バ': 'ハ', 'ビ': 'ヒ', 'ブ': 'フ', 'ベ': 'ヘ', 'ボ': 'ホ'
+            };
+            
+            // 如果已经是浊音，则返回原音
+            if (unvoicedMap[char]) {
+                return unvoicedMap[char];
+            }
+            // 如果是原音，则返回浊音
+            else if (voicedMap[char]) {
+                return voicedMap[char];
+            }
+            // 无法转换，返回原字符
+            return char;
+        }
+        
+        // 半浊音循环切换函数
+        function cycleSemiVoiced(char) {
+            // 原音 -> 半浊音 -> 原音
+            const semiVoicedMap = {
+                'は': 'ぱ', 'ひ': 'ぴ', 'ふ': 'ぷ', 'へ': 'ぺ', 'ほ': 'ぽ',
+                'ハ': 'パ', 'ヒ': 'ピ', 'フ': 'プ', 'ヘ': 'ペ', 'ホ': 'ポ'
+            };
+            
+            // 半浊音 -> 原音
+            const unSemiVoicedMap = {
+                'ぱ': 'は', 'ぴ': 'ひ', 'ぷ': 'ふ', 'ぺ': 'へ', 'ぽ': 'ほ',
+                'パ': 'ハ', 'ピ': 'ヒ', 'プ': 'フ', 'ペ': 'ヘ', 'ポ': 'ホ'
+            };
+            
+            // 如果已经是半浊音，则返回原音
+            if (unSemiVoicedMap[char]) {
+                return unSemiVoicedMap[char];
+            }
+            // 如果是原音，则返回半浊音
+            else if (semiVoicedMap[char]) {
+                return semiVoicedMap[char];
+            }
+            // 无法转换，返回原字符
+            return char;
+        }
+        
+        // 小假名循环切换函数
+        function cycleSmall(char) {
+            // 原音 -> 小假名 -> 原音
+            const smallMap = {
+                'や': 'ゃ', 'ゆ': 'ゅ', 'よ': 'ょ',
+                'つ': 'っ',
+                'あ': 'ぁ', 'い': 'ぃ', 'う': 'ぅ', 'え': 'ぇ', 'お': 'ぉ',
+                'ヤ': 'ャ', 'ユ': 'ュ', 'ヨ': 'ョ',
+                'ツ': 'ッ',
+                'ア': 'ァ', 'イ': 'ィ', 'ウ': 'ゥ', 'エ': 'ェ', 'オ': 'ォ'
+            };
+            
+            // 小假名 -> 原音
+            const unSmallMap = {
+                'ゃ': 'や', 'ゅ': 'ゆ', 'ょ': 'よ',
+                'っ': 'つ',
+                'ぁ': 'あ', 'ぃ': 'い', 'ぅ': 'う', 'ぇ': 'え', 'ぉ': 'お',
+                'ャ': 'ヤ', 'ュ': 'ユ', 'ョ': 'ヨ',
+                'ッ': 'ツ',
+                'ァ': 'ア', 'ィ': 'イ', 'ゥ': 'ウ', 'ェ': 'エ', 'ォ': 'オ'
+            };
+            
+            // 如果已经是小假名，则返回原音
+            if (unSmallMap[char]) {
+                return unSmallMap[char];
+            }
+            // 如果是原音，则返回小假名
+            else if (smallMap[char]) {
+                return smallMap[char];
+            }
+            // 无法转换，返回原字符
+            return char;
         }
         
         function handleFlickFunctionKey(keyType) {
