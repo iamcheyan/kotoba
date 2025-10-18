@@ -2341,8 +2341,8 @@
                 keyboard.addEventListener('click', function(e) {
                     if (e.target.classList.contains('key')) {
                         const key = e.target.getAttribute('data-key');
-                        // 排除平假名/片假名切换键，它有专门的事件处理
-                        if (key !== 'kana-toggle') {
+                        // 排除有专门事件处理的键
+                        if (key !== 'kana-toggle' && key !== 'enter') {
                             handleKeyboardKey(key);
                         }
                     }
@@ -2437,6 +2437,33 @@
                     kanaToggleButton.addEventListener('mousedown', handleKanaToggleClick, { passive: false });
                     
                     console.log('平假名/片假名切换键专门监听器已添加');
+                }
+                
+                // 为回车键添加专门的事件监听器，确保不会被其他事件干扰
+                const enterButton = document.querySelector('.key-enter');
+                if (enterButton) {
+                    const handleEnterClick = function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        e.stopImmediatePropagation();
+                        
+                        console.log('回车键专门监听器被触发');
+                        
+                        const submitBtn = document.getElementById('answer-submit');
+                        if (submitBtn && !submitBtn.disabled) {
+                            console.log('触发提交按钮点击');
+                            submitBtn.click();
+                        } else {
+                            console.log('提交按钮未找到或已禁用');
+                        }
+                    };
+                    
+                    // 添加多种事件监听器，确保响应
+                    enterButton.addEventListener('click', handleEnterClick, { passive: false });
+                    enterButton.addEventListener('touchstart', handleEnterClick, { passive: false });
+                    enterButton.addEventListener('mousedown', handleEnterClick, { passive: false });
+                    
+                    console.log('回车键专门监听器已添加');
                 }
                 
                 keyboard.addEventListener('touchend', function(e) {
