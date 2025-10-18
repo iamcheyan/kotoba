@@ -4,8 +4,9 @@ Add Chinese translations to JLPT dictionary entries.
 
 This script reads all JLPT JSON dictionaries located under static/dictionaries,
 detects entries that still lack Chinese text in their meaning, translates the
-English gloss into Simplified Chinese using googletrans, and appends the result
-after the original English gloss (separated by a full-width semicolon).
+English gloss into Simplified Chinese via the public Google Translate endpoint,
+and appends the result after the original English gloss (separated by a
+full-width semicolon).
 """
 
 import argparse
@@ -15,8 +16,8 @@ import time
 from collections import OrderedDict
 from pathlib import Path
 from typing import Dict, Iterable, List, Tuple
-
-from googletrans import Translator  # type: ignore
+from urllib import error as urlerror
+from urllib import parse, request
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -75,21 +76,47 @@ def collect_targets(files: Iterable[Path]) -> Tuple[Dict[Path, OrderedDict], Lis
     return dictionaries, english_segments
 
 
-def translate_phrases(translator: Translator, phrases: List[str]) -> Dict[str, str]:
+def call_google_translate(text: str) -> str:
+    """Translate a single phrase using Google's unofficial translate endpoint."""
+    params = parse.urlencode(
+        {
+            "client": "gtx",
+            "sl": "en",
+            "tl": "zh-CN",
+            "dt": "t",
+            "q": text,
+        }
+    )
+    url = f"https://translate.googleapis.com/translate_a/single?{params}"
+    req = request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+    with request.urlopen(req, timeout=10) as response:
+        data = json.loads(response.read().decode("utf-8"))
+    return "".join(part[0] for part in data[0] if part and part[0])
+
+
+def translate_phrases(phrases: List[str]) -> Dict[str, str]:
     """Translate phrases sequentially with retries."""
     translations: Dict[str, str] = {}
     for phrase in phrases:
         success = False
         for attempt in range(5):
             try:
-                result = translator.translate(phrase, src="en", dest="zh-CN")
-                translations[phrase] = result.text.strip()
+                translated = call_google_translate(phrase).strip()
+                translations[phrase] = translated
                 success = True
+                time.sleep(0.2)  # be gentle with the endpoint
                 break
-            except Exception as exc:  # pragma: no cover - defensive retry
+            except (urlerror.URLError, json.JSONDecodeError) as exc:  # pragma: no cover - defensive retry
                 wait = 2 ** attempt
                 print(
                     f"Translation failed for '{phrase}' (attempt {attempt + 1}/5): {exc}. Retrying in {wait}s...",
+                    file=sys.stderr,
+                )
+                time.sleep(wait)
+            except Exception as exc:  # pragma: no cover - defensive retry
+                wait = 2 ** attempt
+                print(
+                    f"Unexpected error for '{phrase}' (attempt {attempt + 1}/5): {exc}. Retrying in {wait}s...",
                     file=sys.stderr,
                 )
                 time.sleep(wait)
@@ -149,8 +176,7 @@ def main(argv: List[str]) -> int:
         print("All JLPT dictionary entries already contain Chinese text.")
         return 0
 
-    translator = Translator(service_urls=["translate.googleapis.com"])
-    translations = translate_phrases(translator, english_segments)
+    translations = translate_phrases(english_segments)
     update_dictionaries(dictionaries, translations, dry_run=args.dry_run)
     return 0
 
