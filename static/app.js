@@ -2972,6 +2972,11 @@
         // 获取侧边栏按钮
         const flickKatakana = flickKeyboard.querySelector('.flick-katakana');
         const flickBack = flickKeyboard.querySelector('.flick-back');
+        
+        // 获取右侧功能按钮
+        const flickDelete = flickKeyboard.querySelector('.flick-delete');
+        const flickSpace = flickKeyboard.querySelector('.flick-space');
+        const flickSubmit = flickKeyboard.querySelector('.flick-submit');
         let longPressTimer = null;
         let currentFlickKey = null;
         let flickIndicators = [];
@@ -3021,6 +3026,81 @@
                 
                 // 记住当前键盘类型
                 localStorage.setItem('keyboardType', 'virtual');
+            });
+        }
+        
+        // 删除按钮事件
+        if (flickDelete) {
+            flickDelete.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                console.log('删除字符');
+                
+                const answerInput = document.getElementById('answer-input');
+                if (answerInput && !answerInput.readOnly) {
+                    const currentValue = answerInput.value;
+                    if (currentValue.length > 0) {
+                        answerInput.value = currentValue.slice(0, -1);
+                        
+                        // 触发input事件
+                        const inputEvent = new Event('input', { bubbles: true });
+                        answerInput.dispatchEvent(inputEvent);
+                        
+                        console.log('已删除一个字符，当前内容:', answerInput.value);
+                    }
+                }
+            });
+        }
+        
+        // 空白按钮事件
+        if (flickSpace) {
+            flickSpace.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                console.log('输入空格');
+                
+                const answerInput = document.getElementById('answer-input');
+                if (answerInput && !answerInput.readOnly) {
+                    answerInput.value += ' ';
+                    
+                    // 触发input事件
+                    const inputEvent = new Event('input', { bubbles: true });
+                    answerInput.dispatchEvent(inputEvent);
+                    
+                    console.log('已输入空格，当前内容:', answerInput.value);
+                }
+            });
+        }
+        
+        // 提交按钮事件
+        if (flickSubmit) {
+            flickSubmit.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                console.log('提交答案');
+                
+                const answerInput = document.getElementById('answer-input');
+                if (answerInput && !answerInput.readOnly) {
+                    const answer = answerInput.value.trim();
+                    if (answer) {
+                        // 触发提交事件（模拟回车键）
+                        const submitEvent = new KeyboardEvent('keydown', {
+                            key: 'Enter',
+                            code: 'Enter',
+                            keyCode: 13,
+                            which: 13,
+                            bubbles: true
+                        });
+                        answerInput.dispatchEvent(submitEvent);
+                        
+                        console.log('已提交答案:', answer);
+                    } else {
+                        console.log('答案为空，无法提交');
+                    }
+                }
             });
         }
         

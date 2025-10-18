@@ -378,6 +378,14 @@
     gap: 6px;
 }
 
+/* フリック键盘右侧边栏 */
+.flick-right-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    width: 80px;
+}
+
 /* フリック键盘行 */
 .flick-row {
     display: flex;
@@ -752,6 +760,67 @@
 /* 片假名文字样式 */
 .katakana-text {
     font-size: 10px;
+    font-weight: 600;
+    text-align: center;
+}
+
+/* 右侧功能按钮样式 */
+.flick-right-sidebar .flick-function-key {
+    width: 100%;
+    min-height: 60px;
+    max-width: none;
+    font-size: 12px;
+    flex-direction: column;
+    gap: 4px;
+}
+
+/* 删除按钮样式 */
+.flick-delete {
+    background: #dc3545;
+    border-color: #c82333;
+}
+
+.flick-delete:hover {
+    background: #c82333;
+}
+
+.flick-delete:active {
+    background: #bd2130;
+}
+
+/* 空白按钮样式 */
+.flick-space {
+    background: #6c757d;
+    border-color: #5a6268;
+}
+
+.flick-space:hover {
+    background: #5a6268;
+}
+
+.flick-space:active {
+    background: #545b62;
+}
+
+/* 提交按钮样式 */
+.flick-submit {
+    background: #28a745;
+    border-color: #1e7e34;
+    min-height: 80px;
+}
+
+.flick-submit:hover {
+    background: #1e7e34;
+}
+
+.flick-submit:active {
+    background: #1c7430;
+}
+
+/* 功能按钮文字样式 */
+.space-text,
+.submit-text {
+    font-size: 12px;
     font-weight: 600;
     text-align: center;
 }
