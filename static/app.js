@@ -3000,6 +3000,12 @@
                 e.preventDefault();
                 e.stopPropagation();
                 
+                // 先执行Esc功能（取消当前的文字选择界面）
+                if (isExpanded && currentFlickKey) {
+                    console.log('片假名按钮点击：先取消文字选择界面');
+                    cleanupFlickInteraction(currentFlickKey);
+                }
+                
                 isKatakanaMode = !isKatakanaMode;
                 console.log('片假名模式切换:', isKatakanaMode ? '开启' : '关闭');
                 
@@ -3366,7 +3372,15 @@
                 if (flickChar) {
                     const indicator = document.createElement('div');
                     indicator.className = `flick-indicator ${dir}`;
-                    indicator.textContent = flickChar;
+                    
+                    // 根据片假名模式决定显示的字符
+                    let displayChar = flickChar;
+                    if (isKatakanaMode) {
+                        displayChar = convertToKatakana(flickChar);
+                        console.log('🔄 フリック指示器转换为片假名:', flickChar, '->', displayChar);
+                    }
+                    
+                    indicator.textContent = displayChar;
                     indicator.style.position = 'absolute';
                     indicator.style.zIndex = '1001';
                     indicator.style.cursor = 'pointer';
@@ -3475,6 +3489,7 @@
         function handleFlickInput(char) {
             console.log('=== フリック输入调试 ===');
             console.log('🎯 选择的字符:', char);
+            console.log('📱 片假名模式状态:', isKatakanaMode);
             
             const answerInput = document.getElementById('answer-input');
             console.log('📝 输入框存在:', !!answerInput);
@@ -3482,9 +3497,17 @@
             console.log('📝 输入前的内容:', answerInput?.value);
             
             if (answerInput && !answerInput.readOnly) {
+                // 根据片假名模式决定输入字符
+                let inputChar = char;
+                if (isKatakanaMode) {
+                    // 转换为片假名
+                    inputChar = convertToKatakana(char);
+                    console.log('🔄 转换为片假名:', char, '->', inputChar);
+                }
+                
                 // 简单直接的方法
                 const oldValue = answerInput.value;
-                answerInput.value = oldValue + char;
+                answerInput.value = oldValue + inputChar;
                 console.log('✅ 输入后的内容:', answerInput.value);
                 
                 // 触发input事件
@@ -3496,7 +3519,7 @@
                 // answerInput.focus();
                 console.log('🎯 跳过聚焦输入框（防止原生键盘弹出）');
                 
-                console.log('🎉 成功输入字符:', char);
+                console.log('🎉 成功输入字符:', inputChar);
             } else {
                 console.log('❌ 输入失败 - 输入框不存在或为只读状态');
             }
