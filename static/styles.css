@@ -2539,7 +2539,7 @@ ruby rt {
     text-align: center;
 }
 
-.modal-backdrop {
+image.png {
     position: fixed;
     inset: 0;
     background: rgba(15, 23, 42, 0.5);
@@ -2547,6 +2547,18 @@ ruby rt {
     -webkit-backdrop-filter: blur(8px);
     z-index: 998;
     transition: opacity 0.2s ease, backdrop-filter 0.2s ease;
+}
+
+.modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.5);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 9998;
+    transition: opacity 0.2s 
+ease, backdrop-filter 0.2s 
+ease;
 }
 
 .modal-backdrop.hidden {
@@ -4823,3 +4835,16 @@ ruby rt {
     .leaderboard-modal .summary-cards { grid-template-columns: 1fr; }
     .stats-grid { grid-template-columns: 1fr; }
 }
+
+
+/* 针对具有 role="dialog" 属性的元素 */
+[role="dialog"] {
+    z-index: 9999;
+}
+
+/* 隐藏状态 */
+/* [role="dialog"].hidden {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.95);
+    pointer-events: none;
+} */
