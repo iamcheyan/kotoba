@@ -349,18 +349,19 @@
 
 /* フリック键盘主体 */
 .flick-keyboard-body {
-    padding: 8px;
+    padding: 12px 16px;
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 6px;
 }
 
 /* フリック键盘行 */
 .flick-row {
     display: flex;
-    gap: 4px;
+    gap: 6px;
     justify-content: center;
     align-items: center;
+    margin: 0;
 }
 
 /* フリック切换按钮样式 */
@@ -385,14 +386,14 @@
 /* フリック键样式 */
 .flick-key {
     position: relative;
-    background: #ffffff;
-    color: #000000;
-    border: 1px solid #cccccc;
+    background: #2d3748;
+    color: #ffffff;
+    border: 1px solid #4a5568;
     border-radius: 8px;
-    font-size: 18px;
+    font-size: 16px;
     font-weight: 500;
-    min-height: 50px;
-    min-width: 50px;
+    min-height: 48px;
+    min-width: 48px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -420,12 +421,12 @@
 }
 
 .flick-key:hover {
-    background: #f0f0f0;
+    background: #4a5568;
     transform: scale(1.02);
 }
 
 .flick-key:active {
-    background: #e0e0e0;
+    background: #1a202c;
     transform: scale(0.98);
 }
 
@@ -669,4 +670,20 @@
         right: -40px;
         transform: translateY(-50%) translateX(8px);
     }
+}
+
+/* 防止输入框获得焦点时弹出原生键盘 */
+#answer-input:focus {
+    outline: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* 当フリック键盘显示时，禁用输入框焦点 */
+.flick-keyboard.show ~ * #answer-input,
+.flick-keyboard.show #answer-input {
+    pointer-events: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
 }

@@ -2789,6 +2789,38 @@
             return;
         }
         
+        // 恢复键盘状态
+        const savedKeyboardType = localStorage.getItem('keyboardType');
+        const flickKeyboard = document.getElementById('flick-keyboard');
+        
+        if (savedKeyboardType === 'flick' && flickKeyboard) {
+            console.log('恢复フリック键盘状态');
+            virtualKeyboard.classList.add('hidden');
+            virtualKeyboard.classList.remove('show');
+            flickKeyboard.classList.remove('hidden');
+            flickKeyboard.classList.add('show');
+        } else {
+            console.log('使用默认虚拟键盘状态');
+        }
+        
+        // 防止输入框获得焦点时弹出原生键盘
+        answerInput.addEventListener('focus', (e) => {
+            e.preventDefault();
+            e.target.blur();
+            console.log('阻止输入框获得焦点，防止原生键盘弹出');
+        });
+        
+        // 禁用输入框的触摸事件
+        answerInput.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+        });
+        
+        answerInput.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+        });
+        
         // 从localStorage读取保存的键盘状态，如果没有保存则默认为隐藏
         const savedKeyboardState = localStorage.getItem('keyboardVisible');
         const shouldShowKeyboard = savedKeyboardState === 'true';
@@ -2926,6 +2958,9 @@
             flickKeyboard.classList.remove('hidden');
             flickKeyboard.classList.add('show');
             
+            // 记住当前键盘类型
+            localStorage.setItem('keyboardType', 'flick');
+            
             console.log('切换到フリック键盘');
         });
         
@@ -2942,6 +2977,9 @@
                     virtualKeyboard.classList.remove('hidden');
                     virtualKeyboard.classList.add('show');
                 }
+                
+                // 记住当前键盘类型
+                localStorage.setItem('keyboardType', 'virtual');
                 
                 console.log('切换到普通键盘');
             });
@@ -2995,40 +3033,91 @@
                 console.log('=== 单击调试结束 ===');
             });
             
-            // 长按开始
+            // 长按开始 - 使用延迟来区分单击和长按
+            let longPressTimer = null;
+            let isLongPress = false;
+            
             key.addEventListener('mousedown', (e) => {
                 e.preventDefault();
-                startLongPress(key);
+                isLongPress = false;
+                longPressTimer = setTimeout(() => {
+                    isLongPress = true;
+                    startLongPress(key);
+                }, 500);
             });
             
             key.addEventListener('touchstart', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                startLongPress(key);
+                isLongPress = false;
+                longPressTimer = setTimeout(() => {
+                    isLongPress = true;
+                    startLongPress(key);
+                }, 500);
             });
             
             // 长按结束
             key.addEventListener('mouseup', (e) => {
                 e.preventDefault();
-                endLongPress(key);
+                if (longPressTimer) {
+                    clearTimeout(longPressTimer);
+                    longPressTimer = null;
+                }
+                if (isLongPress) {
+                    endLongPress(key);
+                } else {
+                    // 这是单击，不是长按
+                    console.log('=== 单击事件（非长按） ===');
+                    const baseChar = key.getAttribute('data-flick');
+                    if (baseChar) {
+                        console.log('单击输入基础字符:', baseChar);
+                        handleFlickInput(baseChar);
+                    }
+                }
             });
             
             key.addEventListener('touchend', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                endLongPress(key);
+                if (longPressTimer) {
+                    clearTimeout(longPressTimer);
+                    longPressTimer = null;
+                }
+                if (isLongPress) {
+                    endLongPress(key);
+                } else {
+                    // 这是单击，不是长按
+                    console.log('=== 单击事件（非长按） ===');
+                    const baseChar = key.getAttribute('data-flick');
+                    if (baseChar) {
+                        console.log('单击输入基础字符:', baseChar);
+                        handleFlickInput(baseChar);
+                    }
+                }
             });
             
             // 鼠标离开
             key.addEventListener('mouseleave', (e) => {
                 e.preventDefault();
-                cancelLongPress(key);
+                if (longPressTimer) {
+                    clearTimeout(longPressTimer);
+                    longPressTimer = null;
+                }
+                if (isLongPress) {
+                    cancelLongPress(key);
+                }
             });
             
             key.addEventListener('touchcancel', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                cancelLongPress(key);
+                if (longPressTimer) {
+                    clearTimeout(longPressTimer);
+                    longPressTimer = null;
+                }
+                if (isLongPress) {
+                    cancelLongPress(key);
+                }
             });
             
             // 阻止右键菜单
@@ -3250,9 +3339,9 @@
                 answerInput.dispatchEvent(inputEvent);
                 console.log('🚀 已触发input事件');
                 
-                // 聚焦输入框
-                answerInput.focus();
-                console.log('🎯 已聚焦输入框');
+                // 不聚焦输入框，防止弹出原生键盘
+                // answerInput.focus();
+                console.log('🎯 跳过聚焦输入框（防止原生键盘弹出）');
                 
                 console.log('🎉 成功输入字符:', char);
             } else {
