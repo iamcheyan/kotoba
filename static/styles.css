@@ -1618,6 +1618,23 @@ a:hover {
     flex-shrink: 0;
 }
 
+/* 键盘切换按钮样式 - 与自動発音按钮统一 */
+#keyboard-toggle[aria-pressed="true"] {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+}
+
+#keyboard-toggle {
+    display: inline-flex;
+    align-items: center;
+    /* padding: 2px 10px; */
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+}
+
 .ghost-button {
     background: linear-gradient(135deg, rgba(255, 255, 255, 0.8), rgba(248, 250, 252, 0.8));
     border: 1px solid rgba(255, 255, 255, 0.4);

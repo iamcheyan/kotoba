@@ -2789,17 +2789,29 @@
             return;
         }
         
+        // 设置初始状态：根据虚拟键盘的显示状态设置按钮状态
+        if (virtualKeyboard.classList.contains('show')) {
+            keyboardToggle.setAttribute('aria-pressed', 'true');
+            console.log('键盘初始状态：显示，按钮设置为激活状态');
+        } else {
+            keyboardToggle.setAttribute('aria-pressed', 'false');
+            console.log('键盘初始状态：隐藏，按钮设置为未激活状态');
+        }
+        
         // 切换键盘显示/隐藏
         keyboardToggle.addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
             console.log('键盘切换按钮被点击');
+            console.log('当前键盘状态:', virtualKeyboard.classList.toString());
+            console.log('当前按钮aria-pressed:', keyboardToggle.getAttribute('aria-pressed'));
             
             // 检查当前状态并切换
             if (virtualKeyboard.classList.contains('show')) {
                 // 当前显示，切换为隐藏
                 virtualKeyboard.classList.remove('show');
                 virtualKeyboard.classList.add('hidden');
+                keyboardToggle.setAttribute('aria-pressed', 'false');
                 console.log('键盘隐藏');
                 
                 // 恢复input的正常状态
@@ -2819,6 +2831,7 @@
                 // 当前隐藏，切换为显示
                 virtualKeyboard.classList.remove('hidden');
                 virtualKeyboard.classList.add('show');
+                keyboardToggle.setAttribute('aria-pressed', 'true');
                 console.log('键盘显示');
                 
                 // 当虚拟键盘显示时，设置input为readonly并永远禁止获取焦点
@@ -2838,49 +2851,11 @@
                 }
             }
             
-            console.log('键盘状态:', virtualKeyboard.classList.toString());
+            console.log('切换后键盘状态:', virtualKeyboard.classList.toString());
+            console.log('切换后按钮aria-pressed:', keyboardToggle.getAttribute('aria-pressed'));
         });
         
-        // 添加双击事件作为备用
-        keyboardToggle.addEventListener('dblclick', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            console.log('键盘切换按钮被双击');
-            
-            // 检查当前状态并切换
-            if (virtualKeyboard.classList.contains('show')) {
-                virtualKeyboard.classList.remove('show');
-                virtualKeyboard.classList.add('hidden');
-                console.log('键盘隐藏（双击）');
-                
-                if (answerInput) {
-                    answerInput.readOnly = false;
-                    // 移除焦点阻止事件监听器
-                    answerInput.removeEventListener('focus', preventFocus);
-                    answerInput.removeEventListener('click', preventFocus);
-                    answerInput.removeEventListener('touchstart', preventFocus);
-                }
-            } else {
-                virtualKeyboard.classList.remove('hidden');
-                virtualKeyboard.classList.add('show');
-                console.log('键盘显示（双击）');
-                
-                if (answerInput) {
-                    answerInput.readOnly = true;
-                    answerInput.blur();
-                    
-                    // 添加全面的焦点阻止事件监听器
-                    answerInput.addEventListener('focus', forcePreventFocus, { passive: false, capture: true });
-                    answerInput.addEventListener('click', forcePreventFocus, { passive: false, capture: true });
-                    answerInput.addEventListener('touchstart', forcePreventFocus, { passive: false, capture: true });
-                    answerInput.addEventListener('touchend', forcePreventFocus, { passive: false, capture: true });
-                    answerInput.addEventListener('mousedown', forcePreventFocus, { passive: false, capture: true });
-                    answerInput.addEventListener('mouseup', forcePreventFocus, { passive: false, capture: true });
-                    answerInput.addEventListener('pointerdown', forcePreventFocus, { passive: false, capture: true });
-                    answerInput.addEventListener('pointerup', forcePreventFocus, { passive: false, capture: true });
-                }
-            }
-        });
+        // 移除双击事件处理，只保留单击事件，避免混乱
         
         // 键盘关闭功能已移除，现在通过点击外部区域关闭
         
@@ -2897,24 +2872,7 @@
         // 初始化虚拟键盘
         initVirtualKeyboard();
         
-        // 添加一个简单的测试，确保键盘按钮能被找到
-        setTimeout(() => {
-            const testBtn = document.getElementById('keyboard-toggle');
-            if (testBtn) {
-                console.log('键盘按钮找到，添加测试事件');
-                testBtn.onclick = function() {
-                    console.log('键盘按钮被点击（onclick方式）');
-                    const keyboard = document.getElementById('virtual-keyboard');
-                    if (keyboard) {
-                        keyboard.classList.remove('hidden');
-                        keyboard.classList.add('show');
-                        console.log('键盘应该显示了');
-                    }
-                };
-            } else {
-                console.error('键盘按钮未找到');
-            }
-        }, 1000);
+        // 测试代码已移除，键盘切换功能已在initVirtualKeyboard中实现
         
         const viewWrongWordsButton = document.getElementById('viewWrongWordsButton');
         const practiceButton = document.getElementById('practice-wrong-words');

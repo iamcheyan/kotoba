@@ -83,19 +83,8 @@
                 <button id="autoPronounceBtn" class="ghost-button" title="自動発音（クリックで切替）" aria-pressed="false" aria-label="自動発音">
                     自動発音
                 </button>
-                <button id="keyboard-toggle" class="ghost-button" type="button" title="Virtual Keyboard" aria-label="虚拟键盘" style="padding: 0; border: none; background: none; display: flex; align-items: center; justify-content: center; width: 40px; height: 40px;">
-                    <svg width="16" height="16" viewBox="0 0 130 136" fill="none" xmlns="http://www.w3.org/2000/svg" style="display: block;">
-                        <!-- 外部圆角正方形（键帽轮廓） -->
-                        <rect x="20" y="20" width="90" height="90" rx="18" stroke="black" stroke-width="4" fill="white"/>
-                        <!-- 内部立体阴影感 -->
-                        <rect x="24" y="28" width="82" height="82" rx="15" stroke="black" stroke-width="1.8" fill="white" opacity="0.12"/>
-                        <!-- 居中的假名 あ -->
-                        <text x="65" y="69" text-anchor="middle" dominant-baseline="middle"
-                            font-family="Noto Sans JP, Hiragino Sans, Arial, sans-serif"
-                            font-size="64"
-                            font-weight="400"
-                            fill="black">あ</text>
-                    </svg>
+                <button id="keyboard-toggle" class="ghost-button" type="button" title="Virtual Keyboard" aria-label="虚拟键盘">
+                    あ
                 </button>
                 <!-- 模式切换器 -->
                 <div class="mode-switcher">
@@ -2067,58 +2056,7 @@
     </script>
     
     <script>
-        // 简单的虚拟键盘切换函数
-        function toggleVirtualKeyboard() {
-            console.log('toggleVirtualKeyboard 被调用');
-            const keyboard = document.getElementById('virtual-keyboard');
-            const answerInput = document.getElementById('answer-input');
-            if (keyboard) {
-                console.log('找到键盘元素');
-                
-                // 检查当前状态并切换
-                if (keyboard.classList.contains('show')) {
-                    // 当前显示，切换为隐藏
-                    keyboard.classList.remove('show');
-                    keyboard.classList.add('hidden');
-                    console.log('键盘隐藏');
-                    
-                    // 恢复input的正常状态
-                    if (answerInput) {
-                        answerInput.readOnly = false;
-                    }
-                } else {
-                    // 当前隐藏，切换为显示
-                    keyboard.classList.remove('hidden');
-                    keyboard.classList.add('show');
-                    console.log('键盘显示');
-                    
-                    // 当虚拟键盘显示时，设置input为readonly以防止手机输入法弹出
-                    if (answerInput) {
-                        answerInput.readOnly = true;
-                        answerInput.blur(); // 移除焦点，防止手机输入法弹出
-                    }
-                }
-                
-                console.log('键盘状态:', keyboard.classList.toString());
-            } else {
-                console.error('未找到键盘元素');
-            }
-        }
-        
-        // 关闭键盘函数
-        function closeVirtualKeyboard() {
-            const keyboard = document.getElementById('virtual-keyboard');
-            const answerInput = document.getElementById('answer-input');
-            if (keyboard) {
-                keyboard.classList.remove('show');
-                keyboard.classList.add('hidden');
-                
-                // 恢复input的正常状态
-                if (answerInput) {
-                    answerInput.readOnly = false;
-                }
-            }
-        }
+        // 虚拟键盘切换函数已移至app.js，此处不再需要
         
         // 处理键盘按键点击
         function handleKeyboardKey(key) {
