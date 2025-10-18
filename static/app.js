@@ -2888,30 +2888,8 @@
         
         // 处理键盘输入 - 移除重复的函数，由HTML中的代码处理
         
-        // 点击键盘外部关闭键盘（排除答える按钮）
-        document.addEventListener('click', (e) => {
-            const answerSubmit = document.getElementById('answer-submit');
-            if (!virtualKeyboard.contains(e.target) && 
-                !keyboardToggle.contains(e.target) && 
-                !answerSubmit.contains(e.target)) {
-                virtualKeyboard.classList.remove('show');
-                virtualKeyboard.classList.add('hidden');
-                
-                // 恢复input的正常状态
-                if (answerInput) {
-                    answerInput.readOnly = false;
-                    // 移除所有焦点阻止事件监听器
-                    answerInput.removeEventListener('focus', forcePreventFocus);
-                    answerInput.removeEventListener('click', forcePreventFocus);
-                    answerInput.removeEventListener('touchstart', forcePreventFocus);
-                    answerInput.removeEventListener('touchend', forcePreventFocus);
-                    answerInput.removeEventListener('mousedown', forcePreventFocus);
-                    answerInput.removeEventListener('mouseup', forcePreventFocus);
-                    answerInput.removeEventListener('pointerdown', forcePreventFocus);
-                    answerInput.removeEventListener('pointerup', forcePreventFocus);
-                }
-            }
-        });
+        // 移除全局点击监听器，改为只通过keyboard-toggle按钮控制键盘显示隐藏
+        // 键盘现在只能通过keyboard-toggle按钮控制，不会因为点击其他元素而隐藏
     }
 
     // 初始化错题本按钮事件
@@ -4328,7 +4306,53 @@
             hideLoading();
         }
 
-        // 绑定“自动发声”按钮
+        // 通知函数
+        function showNotification(message, type = 'info') {
+            // 创建通知元素
+            const notification = document.createElement('div');
+            notification.className = `notification notification-${type}`;
+            notification.textContent = message;
+            
+            // 设置样式
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#3b82f6'};
+                color: white;
+                padding: 12px 20px;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                z-index: 10000;
+                font-size: 14px;
+                font-weight: 500;
+                opacity: 0;
+                transform: translateX(100%);
+                transition: all 0.3s ease;
+            `;
+            
+            // 添加到页面
+            document.body.appendChild(notification);
+            
+            // 显示动画
+            setTimeout(() => {
+                notification.style.opacity = '1';
+                notification.style.transform = 'translateX(0)';
+            }, 10);
+            
+            // 自动隐藏
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                notification.style.transform = 'translateX(100%)';
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.parentNode.removeChild(notification);
+                    }
+                }, 300);
+            }, 3000);
+        }
+
+        // 绑定"自动发声"按钮
         const autoPronounceBtn = document.getElementById('autoPronounceBtn');
         if (autoPronounceBtn) {
             // 默认开启：如果本地没有记录，则设为开启
