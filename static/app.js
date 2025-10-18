@@ -3008,6 +3008,9 @@
         // 片假名模式状态
         let isKatakanaMode = false;
         
+        // 浊音/半浊音/小假名键点击计数
+        let voicingClickCount = 0;
+        
         // Esc按钮事件
         if (flickEscape) {
             flickEscape.addEventListener('click', (e) => {
@@ -3198,6 +3201,9 @@
         
         // 处理フリック键
         flickKeys.forEach(key => {
+            // 检查是否是浊音/半浊音/小假名键
+            const isVoicingKey = key.classList.contains('flick-voicing');
+            
             // 单击事件
             key.addEventListener('click', (e) => {
                 e.preventDefault();
@@ -3210,6 +3216,21 @@
                 console.log('点击的键:', key);
                 console.log('键的字符:', key.getAttribute('data-flick'));
                 console.log('是否已展开:', isExpanded);
+                console.log('是否是浊音键:', isVoicingKey);
+                
+                // 如果是浊音键，只处理重复点击，不处理长按フリック
+                if (isVoicingKey) {
+                    console.log('浊音键重复点击处理');
+                    const baseChar = key.getAttribute('data-flick');
+                    if (baseChar) {
+                        console.log('浊音键输入基础字符:', baseChar);
+                        handleFlickInput(baseChar);
+                    } else {
+                        console.log('浊音键未找到基础字符');
+                    }
+                    console.log('=== 浊音键单击调试结束 ===');
+                    return;
+                }
                 
                 // 如果已经展开，不处理单击（由选项处理）
                 if (isExpanded) {
@@ -3234,6 +3255,13 @@
             
             key.addEventListener('mousedown', (e) => {
                 e.preventDefault();
+                
+                // 如果是浊音键，不支持长按フリック功能
+                if (isVoicingKey) {
+                    console.log('浊音键不支持长按フリック功能');
+                    return;
+                }
+                
                 isLongPress = false;
                 longPressTimer = setTimeout(() => {
                     isLongPress = true;
@@ -3244,6 +3272,13 @@
             key.addEventListener('touchstart', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
+                
+                // 如果是浊音键，不支持长按フリック功能
+                if (isVoicingKey) {
+                    console.log('浊音键不支持触摸长按フリック功能');
+                    return;
+                }
+                
                 isLongPress = false;
                 longPressTimer = setTimeout(() => {
                     isLongPress = true;
@@ -3539,8 +3574,14 @@
             console.log('📝 输入前的内容:', answerInput?.value);
             
             if (answerInput && !answerInput.readOnly) {
+                // 检查是否是重复点击的浊音/半浊音/小假名键
+                if (char === '小') {
+                    handleRepeatedVoicingClick();
+                    return;
+                }
+                
                 // 检查是否是浊音/半浊音/小假名切换
-                if (char === '゛' || char === '゜' || char === '小') {
+                if (char === '゛' || char === '゜') {
                     handleVoicingCycle(char);
                     return;
                 }
@@ -3615,6 +3656,113 @@
             } else {
                 console.log('❌ 无法应用浊音/半浊音/小假名转换');
             }
+        }
+        
+        // 处理重复点击的浊音/半浊音/小假名键
+        function handleRepeatedVoicingClick() {
+            const answerInput = document.getElementById('answer-input');
+            if (!answerInput || answerInput.readOnly) return;
+            
+            const currentValue = answerInput.value;
+            if (currentValue.length === 0) {
+                console.log('输入框为空，无法应用浊音/半浊音/小假名');
+                return;
+            }
+            
+            // 获取最后一个字符
+            const lastChar = currentValue[currentValue.length - 1];
+            console.log('=== 重复点击调试 ===');
+            console.log('最后一个字符:', lastChar);
+            console.log('当前点击计数:', voicingClickCount);
+            
+            // 根据点击次数循环切换不同的效果，如果无效则尝试下一个
+            let newChar = '';
+            let appliedMode = '';
+            const clickMode = voicingClickCount % 3; // 0: 小假名, 1: 浊音, 2: 半浊音
+            
+            // 尝试按顺序应用转换，直到找到有效的转换
+            if (clickMode === 0) {
+                // 尝试小假名转换
+                newChar = cycleSmall(lastChar);
+                if (newChar !== lastChar) {
+                    appliedMode = '小假名';
+                    console.log('应用小假名转换');
+                } else {
+                    // 小假名无效，尝试浊音
+                    newChar = cycleVoiced(lastChar);
+                    if (newChar !== lastChar) {
+                        appliedMode = '浊音';
+                        console.log('小假名无效，应用浊音转换');
+                    } else {
+                        // 浊音也无效，尝试半浊音
+                        newChar = cycleSemiVoiced(lastChar);
+                        if (newChar !== lastChar) {
+                            appliedMode = '半浊音';
+                            console.log('小假名和浊音无效，应用半浊音转换');
+                        }
+                    }
+                }
+            } else if (clickMode === 1) {
+                // 尝试浊音转换
+                newChar = cycleVoiced(lastChar);
+                if (newChar !== lastChar) {
+                    appliedMode = '浊音';
+                    console.log('应用浊音转换');
+                } else {
+                    // 浊音无效，尝试半浊音
+                    newChar = cycleSemiVoiced(lastChar);
+                    if (newChar !== lastChar) {
+                        appliedMode = '半浊音';
+                        console.log('浊音无效，应用半浊音转换');
+                    } else {
+                        // 半浊音也无效，尝试小假名
+                        newChar = cycleSmall(lastChar);
+                        if (newChar !== lastChar) {
+                            appliedMode = '小假名';
+                            console.log('浊音和半浊音无效，应用小假名转换');
+                        }
+                    }
+                }
+            } else if (clickMode === 2) {
+                // 尝试半浊音转换
+                newChar = cycleSemiVoiced(lastChar);
+                if (newChar !== lastChar) {
+                    appliedMode = '半浊音';
+                    console.log('应用半浊音转换');
+                } else {
+                    // 半浊音无效，尝试小假名
+                    newChar = cycleSmall(lastChar);
+                    if (newChar !== lastChar) {
+                        appliedMode = '小假名';
+                        console.log('半浊音无效，应用小假名转换');
+                    } else {
+                        // 小假名也无效，尝试浊音
+                        newChar = cycleVoiced(lastChar);
+                        if (newChar !== lastChar) {
+                            appliedMode = '浊音';
+                            console.log('半浊音和小假名无效，应用浊音转换');
+                        }
+                    }
+                }
+            }
+            
+            if (newChar !== lastChar) {
+                // 替换最后一个字符
+                const newValue = currentValue.slice(0, -1) + newChar;
+                answerInput.value = newValue;
+                console.log('✅ 重复点击切换成功:', lastChar, '->', newChar, '（应用模式:', appliedMode, '）');
+                
+                // 触发input事件
+                const inputEvent = new Event('input', { bubbles: true });
+                answerInput.dispatchEvent(inputEvent);
+            } else {
+                console.log('❌ 所有转换都无效，无法进行重复点击切换');
+            }
+            
+            // 增加点击计数
+            voicingClickCount++;
+            console.log('更新点击计数:', voicingClickCount);
+            console.log('=== 重复点击调试结束 ===');
         }
         
         // 处理浊音/半浊音/小假名的循环切换
