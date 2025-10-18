@@ -689,22 +689,18 @@
     
     .flick-indicator.up {
         top: -29px;
-        transform: translateX(-50%) translateY(-8px);
     }
     
     .flick-indicator.down {
         bottom: -29px;
-        transform: translateX(-50%) translateY(8px);
     }
     
     .flick-indicator.left {
         left: -52px;
-        transform: translateY(-50%) translateX(-8px);
     }
     
     .flick-indicator.right {
         right: -52px;
-        transform: translateY(-50%) translateX(8px);
     }
 }
 
