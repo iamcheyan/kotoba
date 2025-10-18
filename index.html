@@ -2283,7 +2283,7 @@
             const kanaIndicator = document.querySelector('.kana-indicator');
             if (kanaButton && kanaIndicator) {
                 kanaButton.classList.toggle('katakana-mode', katakanaMode);
-                kanaIndicator.textContent = katakanaMode ? 'カタ' : 'ひら';
+                kanaIndicator.textContent = katakanaMode ? 'カタ' : 'カタ';
             }
             
             // 更新虚拟键盘上的字母显示
@@ -2522,7 +2522,7 @@
             <!-- QWERTY 第三行 -->
             <div class="keyboard-row">
                 <button class="key key-kana-toggle" data-key="kana-toggle">
-                    <span class="kana-indicator">ひら</span>
+                    <span class="kana-indicator">カタ</span>
                 </button>
                 <button class="key" data-key="z">z</button>
                 <button class="key" data-key="x">x</button>

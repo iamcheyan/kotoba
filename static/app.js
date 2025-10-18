@@ -3012,10 +3012,8 @@
                 // 更新按钮状态
                 if (isKatakanaMode) {
                     flickKatakana.classList.add('active');
-                    flickKatakana.style.background = '#4a90e2';
                 } else {
                     flickKatakana.classList.remove('active');
-                    flickKatakana.style.background = '#4a5568';
                 }
                 
                 // 更新所有字符键显示

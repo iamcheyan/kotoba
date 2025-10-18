@@ -126,7 +126,7 @@
 }
 
 .key:active {
-    background: rgba(74, 144, 226, 0.95);
+    background: #007AFF;
     transform: scale(0.9);
     box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
     border-color: #9ca3af;
@@ -137,7 +137,7 @@
 .key-kana-toggle {
     flex: 1.2;
     max-width: 60px;
-    background: #4a90e2;
+    /* background: #4a90e2; */
     color: #ffffff;
     transition: all 0.2s ease;
     font-weight: bold;
@@ -254,8 +254,10 @@
 .key-enter {
     flex: 1.5;
     max-width: 80px;
-    background: #007AFF;
-    color: #ffffff;
+    background: linear-gradient(180deg, #98e66d, #64c33d);
+    color: #2f4b1d;
+    border: none;
+    /* box-shadow: 0 4px 0 #3b7b25, 0 6px 10px rgba(0, 0, 0, 0.3); */
 }
 
 .key-enter:hover {
@@ -404,7 +406,7 @@
 .key-flick-toggle {
     flex: 1;
     min-width: 78px;
-    background: #4a5568;
+    /* background: #4a5568; */
     color: #ffffff;
     font-size: 12px;
     font-weight: 500;
@@ -422,10 +424,10 @@
 /* フリック键样式 */
 .flick-key {
     position: relative;
-    background: #2d3748;
+    background: #333333;
     color: #ffffff;
-    border: 1px solid #4a5568;
-    border-radius: 6px;
+    border: 1px solid #444444;
+    border-radius: 8px;
     font-size: 14px;
     font-weight: 500;
     min-height: 40px;
@@ -433,7 +435,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.1s ease;
+    transition: all 0.15s ease;
     z-index: 1;
     user-select: none;
     -webkit-user-select: none;
@@ -457,21 +459,24 @@
 }
 
 .flick-key:hover {
-    background: #4a5568;
-    transform: scale(1.02);
+    background: #404040;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
 }
 
 .flick-key:active {
-    background: #1a202c;
-    transform: scale(0.98);
+    background: #1f1f1f;
+    transform: scale(0.95);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+    transition: all 0.05s ease;
 }
 
 /* フリック功能键样式 */
 .flick-function-key {
     position: relative;
-    background: #6b7280;
+    background: #333333;
     color: #ffffff;
-    border: 1px solid #9ca3af;
+    border: 1px solid #444444;
     border-radius: 8px;
     font-size: 12px;
     font-weight: 500;
@@ -480,7 +485,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.1s ease;
+    transition: all 0.15s ease;
     user-select: none;
     -webkit-user-select: none;
     -moz-user-select: none;
@@ -490,13 +495,16 @@
 }
 
 .flick-function-key:hover {
-    background: #7b8280;
-    transform: scale(1.02);
+    background: #404040;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
 }
 
 .flick-function-key:active {
-    background: #5b6280;
-    transform: scale(0.98);
+    background: #1f1f1f;
+    transform: scale(0.95);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+    transition: all 0.05s ease;
 }
 
 /* フリック展开效果 */
@@ -511,11 +519,11 @@
 .flick-key.flick-expanded::before {
     content: '';
     position: absolute;
-    top: -2px;
-    left: -2px;
-    right: -2px;
-    bottom: -2px;
-    background: linear-gradient(45deg, #4a90e2, #5ba0f2);
+    top: -0;
+    left: -0;
+    right: -0;
+    bottom: -0;
+    background: linear-gradient(45deg, #0075ff, #0065dd);
     border-radius: 10px;
     z-index: -1;
 }
@@ -523,7 +531,7 @@
 /* フリック方向指示器 */
 .flick-indicator {
     position: absolute;
-    background: rgba(74, 144, 226, 0.95);
+    background: #007AFF;
     color: #ffffff;
     border-radius: 8px;
     padding: 8px 12px;
@@ -683,7 +691,7 @@
     .flick-indicator {
         font-size: 16px;
         padding: 5px 10px;
-        min-width: 64px;
+        min-width: 60px;
         min-height: 36px;
     }
     
@@ -696,11 +704,11 @@
     }
     
     .flick-indicator.left {
-        left: -52px;
+        left: -49px;
     }
     
     .flick-indicator.right {
-        right: -52px;
+        right: -49px;
     }
 }
 
@@ -732,30 +740,44 @@
 
 /* 片假名按钮样式 */
 .flick-katakana {
-    background: #4a5568;
-    border-color: #718096;
+    background: #333333;
+    border-color: #444444;
 }
 
 .flick-katakana:hover {
-    background: #5a6578;
+    background: #404040;
 }
 
 .flick-katakana:active {
-    background: #3a4558;
+    background: #1f1f1f;
+}
+
+/* 片假名按钮激活状态 */
+.flick-katakana.active {
+    background: #ff6b35;
+    border-color: #ff6b35;
+}
+
+.flick-katakana.active:hover {
+    background: #ff6b35;
+}
+
+.flick-katakana.active:active {
+    background: #ff6b35;
 }
 
 /* 返回按钮样式 */
 .flick-back {
-    background: #6b7280;
-    border-color: #9ca3af;
+    background: #333333;
+    border-color: #444444;
 }
 
 .flick-back:hover {
-    background: #7b8288;
+    background: #404040;
 }
 
 .flick-back:active {
-    background: #5b6270;
+    background: #1f1f1f;
 }
 
 /* 片假名文字样式 */
@@ -767,16 +789,16 @@
 
 /* Esc按钮样式 */
 .flick-escape {
-    background: #dc3545;
-    border-color: #c82333;
+    background: #444444;
+    border-color: #555555;
 }
 
 .flick-escape:hover {
-    background: #c82333;
+    background: #555555;
 }
 
 .flick-escape:active {
-    background: #bd2130;
+    background: #2d2d2d;
 }
 
 /* Esc文字样式 */
@@ -798,45 +820,47 @@
 
 /* 删除按钮样式 */
 .flick-delete {
-    background: #dc3545;
-    border-color: #c82333;
+    background: #444444;
+    border-color: #555555;
 }
 
 .flick-delete:hover {
-    background: #c82333;
+    background: #555555;
 }
 
 .flick-delete:active {
-    background: #bd2130;
+    background: #2d2d2d;
 }
 
 /* 空白按钮样式 */
 .flick-space {
-    background: #6c757d;
-    border-color: #5a6268;
+    background: #333333;
+    border-color: #444444;
 }
 
 .flick-space:hover {
-    background: #5a6268;
+    background: #404040;
 }
 
 .flick-space:active {
-    background: #545b62;
+    background: #1f1f1f;
 }
 
 /* 提交按钮样式 */
 .flick-submit {
-    background: #28a745;
-    border-color: #1e7e34;
+    background: linear-gradient(180deg, #98e66d, #64c33d);
+    color: #2f4b1d;
+    border: none;
+    /* box-shadow: 0 4px 0 #3b7b25, 0 6px 10px rgba(0, 0, 0, 0.3); */
     min-height: 60px;
 }
 
 .flick-submit:hover {
-    background: #1e7e34;
+    background: #0056CC;
 }
 
 .flick-submit:active {
-    background: #1c7430;
+    background: #003d82;
 }
 
 /* 功能按钮文字样式 */
