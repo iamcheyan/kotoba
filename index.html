@@ -2491,8 +2491,10 @@
         });
     </script>
     
-    <!-- 虚拟键盘 -->
-    <div id="virtual-keyboard" class="virtual-keyboard show">
+    <!-- 键盘容器 -->
+    <div id="keyboard-container" class="keyboard-container">
+        <!-- 虚拟键盘 -->
+        <div id="virtual-keyboard" class="virtual-keyboard show">
         <div class="keyboard-body">
             <!-- QWERTY 第一行 -->
             <div class="keyboard-row">
@@ -2556,10 +2558,10 @@
                 </button>
             </div>
         </div>
-    </div>
+        </div>
 
-    <!-- フリック键盘 -->
-    <div id="flick-keyboard" class="flick-keyboard hidden">
+        <!-- フリック键盘 -->
+        <div id="flick-keyboard" class="flick-keyboard hidden">
         <div class="keyboard-body flick-keyboard-body">
             <div class="flick-keyboard-layout">
                 <!-- 左侧功能按钮 -->
@@ -2632,6 +2634,7 @@
                     </button>
                 </div>
             </div>
+        </div>
         </div>
     </div>
 </body>

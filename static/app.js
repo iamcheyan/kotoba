@@ -2817,23 +2817,43 @@
         return false;
     }
 
+    // 检测设备类型
+    function isMobileDevice() {
+        // 检测触摸设备
+        const hasTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+        
+        // 检测屏幕尺寸
+        const isSmallScreen = window.innerWidth <= 768;
+        
+        // 检测用户代理字符串
+        const userAgent = navigator.userAgent.toLowerCase();
+        const isMobileUA = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent);
+        
+        // 检测设备像素比（移动设备通常有更高的像素比）
+        const isHighDPR = window.devicePixelRatio > 1.5;
+        
+        // 综合判断：触摸设备 + (小屏幕 或 移动UA 或 高像素比)
+        return hasTouch && (isSmallScreen || isMobileUA || isHighDPR);
+    }
+
     function initVirtualKeyboard() {
         const keyboardToggle = document.getElementById('keyboard-toggle');
+        const keyboardContainer = document.getElementById('keyboard-container');
         const virtualKeyboard = document.getElementById('virtual-keyboard');
+        const flickKeyboard = document.getElementById('flick-keyboard');
         const answerInput = document.getElementById('answer-input');
         
-        console.log('初始化虚拟键盘:', { keyboardToggle, virtualKeyboard, answerInput });
+        console.log('初始化虚拟键盘:', { keyboardToggle, keyboardContainer, virtualKeyboard, flickKeyboard, answerInput });
         
-        if (!keyboardToggle || !virtualKeyboard || !answerInput) {
-            console.error('虚拟键盘元素未找到');
+        if (!keyboardToggle || !keyboardContainer || !virtualKeyboard || !flickKeyboard || !answerInput) {
+            console.error('键盘元素未找到');
             return;
         }
         
         // 恢复键盘状态
         const savedKeyboardType = localStorage.getItem('keyboardType');
-        const flickKeyboard = document.getElementById('flick-keyboard');
         
-        if (savedKeyboardType === 'flick' && flickKeyboard) {
+        if (savedKeyboardType === 'flick') {
             console.log('恢复フリック键盘状态');
             virtualKeyboard.classList.add('hidden');
             virtualKeyboard.classList.remove('show');
@@ -2841,58 +2861,130 @@
             flickKeyboard.classList.add('show');
         } else {
             console.log('使用默认虚拟键盘状态');
-        }
-        
-        // 防止输入框获得焦点时弹出原生键盘
-        answerInput.addEventListener('focus', (e) => {
-            e.preventDefault();
-            e.target.blur();
-            console.log('阻止输入框获得焦点，防止原生键盘弹出');
-        });
-        
-        // 禁用输入框的触摸事件
-        answerInput.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-        });
-        
-        answerInput.addEventListener('touchend', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-        });
-        
-        // 从localStorage读取保存的键盘状态，如果没有保存则默认为隐藏
-        const savedKeyboardState = localStorage.getItem('keyboardVisible');
-        const shouldShowKeyboard = savedKeyboardState === 'true';
-        
-        if (shouldShowKeyboard) {
-            // 显示键盘
             virtualKeyboard.classList.remove('hidden');
             virtualKeyboard.classList.add('show');
+            flickKeyboard.classList.add('hidden');
+            flickKeyboard.classList.remove('show');
+        }
+        
+        // 根据虚拟键盘状态决定是否阻止焦点
+        function setupInputEventListeners(shouldPreventFocus) {
+            console.log('setupInputEventListeners called with shouldPreventFocus:', shouldPreventFocus, 'isMobile:', isMobileDevice());
+            
+            // 移除之前的事件监听器
+            answerInput.removeEventListener('focus', forcePreventFocus);
+            answerInput.removeEventListener('click', forcePreventFocus);
+            answerInput.removeEventListener('touchstart', forcePreventFocus);
+            answerInput.removeEventListener('touchend', forcePreventFocus);
+            answerInput.removeEventListener('mousedown', forcePreventFocus);
+            answerInput.removeEventListener('mouseup', forcePreventFocus);
+            answerInput.removeEventListener('pointerdown', forcePreventFocus);
+            answerInput.removeEventListener('pointerup', forcePreventFocus);
+            
+            if (shouldPreventFocus) {
+                // 虚拟键盘启用时，阻止焦点和触摸事件
+                answerInput.addEventListener('focus', (e) => {
+                    e.preventDefault();
+                    e.target.blur();
+                    console.log('阻止输入框获得焦点，防止原生键盘弹出');
+                });
+                
+                answerInput.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                });
+                
+                answerInput.addEventListener('touchend', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                });
+            } else {
+                // 虚拟键盘禁用时，允许正常焦点
+                console.log('允许input获得焦点，使用物理键盘输入');
+            }
+        }
+        
+        // 从localStorage读取保存的键盘状态
+        const savedKeyboardState = localStorage.getItem('keyboardVisible');
+        
+        // 根据设备类型设置默认状态
+        const isMobile = isMobileDevice();
+        console.log('设备检测结果:', {
+            isMobile,
+            hasTouch: 'ontouchstart' in window || navigator.maxTouchPoints > 0,
+            screenWidth: window.innerWidth,
+            userAgent: navigator.userAgent,
+            devicePixelRatio: window.devicePixelRatio
+        });
+        
+        // PC设备上隐藏键盘切换按钮并禁用虚拟键盘
+        if (!isMobile) {
+            console.log('PC设备：隐藏虚拟键盘功能');
+            keyboardToggle.style.display = 'none';
+            keyboardContainer.classList.add('hidden');
+            keyboardContainer.classList.remove('show');
+            keyboardToggle.setAttribute('aria-pressed', 'false');
+            // PC设备上允许物理键盘输入
+            if (answerInput) {
+                answerInput.readOnly = false;
+                // 强制移除所有可能的事件监听器
+                answerInput.removeEventListener('focus', forcePreventFocus);
+                answerInput.removeEventListener('click', forcePreventFocus);
+                answerInput.removeEventListener('touchstart', forcePreventFocus);
+                answerInput.removeEventListener('touchend', forcePreventFocus);
+                answerInput.removeEventListener('mousedown', forcePreventFocus);
+                answerInput.removeEventListener('mouseup', forcePreventFocus);
+                answerInput.removeEventListener('pointerdown', forcePreventFocus);
+                answerInput.removeEventListener('pointerup', forcePreventFocus);
+                // 移除capture模式的事件监听器
+                answerInput.removeEventListener('focus', forcePreventFocus, { passive: false, capture: true });
+                answerInput.removeEventListener('click', forcePreventFocus, { passive: false, capture: true });
+                answerInput.removeEventListener('touchstart', forcePreventFocus, { passive: false, capture: true });
+                answerInput.removeEventListener('touchend', forcePreventFocus, { passive: false, capture: true });
+                answerInput.removeEventListener('mousedown', forcePreventFocus, { passive: false, capture: true });
+                answerInput.removeEventListener('mouseup', forcePreventFocus, { passive: false, capture: true });
+                answerInput.removeEventListener('pointerdown', forcePreventFocus, { passive: false, capture: true });
+                answerInput.removeEventListener('pointerup', forcePreventFocus, { passive: false, capture: true });
+                console.log('PC设备：已移除所有焦点阻止事件监听器');
+            }
+            return; // 在PC设备上直接返回，不初始化虚拟键盘功能
+        }
+        
+        // 移动设备上的虚拟键盘逻辑
+        let shouldShowKeyboard;
+        if (savedKeyboardState !== null) {
+            // 如果用户之前设置过，使用保存的状态
+            shouldShowKeyboard = savedKeyboardState === 'true';
+            console.log('使用保存的键盘状态:', shouldShowKeyboard);
+        } else {
+            // 如果没有保存过，移动设备默认显示虚拟键盘
+            shouldShowKeyboard = true;
+            // 保存默认状态到localStorage
+            localStorage.setItem('keyboardVisible', shouldShowKeyboard.toString());
+            console.log('移动设备：默认显示虚拟键盘');
+        }
+        
+        if (shouldShowKeyboard) {
+            // 显示键盘容器
+            keyboardContainer.classList.remove('hidden');
+            keyboardContainer.classList.add('show');
             keyboardToggle.setAttribute('aria-pressed', 'true');
-            // 键盘显示时，设置input为readonly
+            // 键盘显示时，设置input为readonly并阻止焦点
             if (answerInput) {
                 answerInput.readOnly = true;
                 answerInput.blur();
-                // 添加焦点阻止事件监听器
-                answerInput.addEventListener('focus', forcePreventFocus, { passive: false, capture: true });
-                answerInput.addEventListener('click', forcePreventFocus, { passive: false, capture: true });
-                answerInput.addEventListener('touchstart', forcePreventFocus, { passive: false, capture: true });
-                answerInput.addEventListener('touchend', forcePreventFocus, { passive: false, capture: true });
-                answerInput.addEventListener('mousedown', forcePreventFocus, { passive: false, capture: true });
-                answerInput.addEventListener('mouseup', forcePreventFocus, { passive: false, capture: true });
-                answerInput.addEventListener('pointerdown', forcePreventFocus, { passive: false, capture: true });
-                answerInput.addEventListener('pointerup', forcePreventFocus, { passive: false, capture: true });
+                setupInputEventListeners(true);
             }
             console.log('键盘初始状态：显示，按钮设置为激活状态，input设置为readonly');
         } else {
-            // 隐藏键盘
-            virtualKeyboard.classList.remove('show');
-            virtualKeyboard.classList.add('hidden');
+            // 隐藏键盘容器
+            keyboardContainer.classList.remove('show');
+            keyboardContainer.classList.add('hidden');
             keyboardToggle.setAttribute('aria-pressed', 'false');
             // 键盘隐藏时，恢复input的正常状态
             if (answerInput) {
                 answerInput.readOnly = false;
+                setupInputEventListeners(false);
             }
             console.log('键盘初始状态：隐藏，按钮设置为未激活状态，input恢复正常');
         }
@@ -2902,16 +2994,16 @@
             e.preventDefault();
             e.stopPropagation();
             console.log('键盘切换按钮被点击');
-            console.log('当前键盘状态:', virtualKeyboard.classList.toString());
+            console.log('当前键盘容器状态:', keyboardContainer.classList.toString());
             console.log('当前按钮aria-pressed:', keyboardToggle.getAttribute('aria-pressed'));
             
             // 检查当前状态并切换
-            if (virtualKeyboard.classList.contains('show')) {
+            if (keyboardContainer.classList.contains('show')) {
                 // 当前显示，切换为隐藏
-                virtualKeyboard.classList.remove('show');
-                virtualKeyboard.classList.add('hidden');
+                keyboardContainer.classList.remove('show');
+                keyboardContainer.classList.add('hidden');
                 keyboardToggle.setAttribute('aria-pressed', 'false');
-                console.log('键盘隐藏');
+                console.log('键盘容器隐藏');
                 
                 // 保存键盘状态到localStorage
                 localStorage.setItem('keyboardVisible', 'false');
@@ -2919,45 +3011,28 @@
                 // 恢复input的正常状态
                 if (answerInput) {
                     answerInput.readOnly = false;
-                    // 移除所有焦点阻止事件监听器
-                    answerInput.removeEventListener('focus', forcePreventFocus, { passive: false, capture: true });
-                    answerInput.removeEventListener('click', forcePreventFocus, { passive: false, capture: true });
-                    answerInput.removeEventListener('touchstart', forcePreventFocus, { passive: false, capture: true });
-                    answerInput.removeEventListener('touchend', forcePreventFocus, { passive: false, capture: true });
-                    answerInput.removeEventListener('mousedown', forcePreventFocus, { passive: false, capture: true });
-                    answerInput.removeEventListener('mouseup', forcePreventFocus, { passive: false, capture: true });
-                    answerInput.removeEventListener('pointerdown', forcePreventFocus, { passive: false, capture: true });
-                    answerInput.removeEventListener('pointerup', forcePreventFocus, { passive: false, capture: true });
-                    console.log('已移除所有焦点阻止事件监听器');
+                    setupInputEventListeners(false);
+                    console.log('已移除所有焦点阻止事件监听器，允许物理键盘输入');
                 }
             } else {
                 // 当前隐藏，切换为显示
-                virtualKeyboard.classList.remove('hidden');
-                virtualKeyboard.classList.add('show');
+                keyboardContainer.classList.remove('hidden');
+                keyboardContainer.classList.add('show');
                 keyboardToggle.setAttribute('aria-pressed', 'true');
-                console.log('键盘显示');
+                console.log('键盘容器显示');
                 
                 // 保存键盘状态到localStorage
                 localStorage.setItem('keyboardVisible', 'true');
                 
-                // 当虚拟键盘显示时，设置input为readonly并永远禁止获取焦点
+                // 当键盘容器显示时，设置input为readonly并阻止焦点
                 if (answerInput) {
                     answerInput.readOnly = true;
                     answerInput.blur(); // 移除焦点，防止手机输入法弹出
-                    
-                    // 添加全面的焦点阻止事件监听器
-                    answerInput.addEventListener('focus', forcePreventFocus, { passive: false, capture: true });
-                    answerInput.addEventListener('click', forcePreventFocus, { passive: false, capture: true });
-                    answerInput.addEventListener('touchstart', forcePreventFocus, { passive: false, capture: true });
-                    answerInput.addEventListener('touchend', forcePreventFocus, { passive: false, capture: true });
-                    answerInput.addEventListener('mousedown', forcePreventFocus, { passive: false, capture: true });
-                    answerInput.addEventListener('mouseup', forcePreventFocus, { passive: false, capture: true });
-                    answerInput.addEventListener('pointerdown', forcePreventFocus, { passive: false, capture: true });
-                    answerInput.addEventListener('pointerup', forcePreventFocus, { passive: false, capture: true });
+                    setupInputEventListeners(true);
                 }
             }
             
-            console.log('切换后键盘状态:', virtualKeyboard.classList.toString());
+            console.log('切换后键盘容器状态:', keyboardContainer.classList.toString());
             console.log('切换后按钮aria-pressed:', keyboardToggle.getAttribute('aria-pressed'));
         });
         
@@ -3007,6 +3082,13 @@
 
     // 初始化フリック键盘
     function initFlickKeyboard() {
+        // 检查是否为移动设备，PC设备上不初始化フリック键盘
+        const isMobile = isMobileDevice();
+        if (!isMobile) {
+            console.log('PC设备：跳过フリック键盘初始化');
+            return;
+        }
+        
         const flickKeyboard = document.getElementById('flick-keyboard');
         const flickToggle = document.querySelector('[data-key="flick-toggle"]');
         const virtualKeyboard = document.getElementById('virtual-keyboard');
@@ -4764,7 +4846,36 @@
                     answerInput.removeEventListener('pointerup', forcePreventFocus, { passive: false, capture: true });
                 }
             } else if (mode === 'input') {
-                // 在输入模式下恢复保存的键盘状态
+                // 检查设备类型，PC设备上不处理虚拟键盘
+                const isMobile = isMobileDevice();
+                if (!isMobile) {
+                    // PC设备上确保input可以正常获得焦点
+                    if (answerInput) {
+                        answerInput.readOnly = false;
+                        // 强制移除所有可能的事件监听器
+                        answerInput.removeEventListener('focus', forcePreventFocus);
+                        answerInput.removeEventListener('click', forcePreventFocus);
+                        answerInput.removeEventListener('touchstart', forcePreventFocus);
+                        answerInput.removeEventListener('touchend', forcePreventFocus);
+                        answerInput.removeEventListener('mousedown', forcePreventFocus);
+                        answerInput.removeEventListener('mouseup', forcePreventFocus);
+                        answerInput.removeEventListener('pointerdown', forcePreventFocus);
+                        answerInput.removeEventListener('pointerup', forcePreventFocus);
+                        // 移除capture模式的事件监听器
+                        answerInput.removeEventListener('focus', forcePreventFocus, { passive: false, capture: true });
+                        answerInput.removeEventListener('click', forcePreventFocus, { passive: false, capture: true });
+                        answerInput.removeEventListener('touchstart', forcePreventFocus, { passive: false, capture: true });
+                        answerInput.removeEventListener('touchend', forcePreventFocus, { passive: false, capture: true });
+                        answerInput.removeEventListener('mousedown', forcePreventFocus, { passive: false, capture: true });
+                        answerInput.removeEventListener('mouseup', forcePreventFocus, { passive: false, capture: true });
+                        answerInput.removeEventListener('pointerdown', forcePreventFocus, { passive: false, capture: true });
+                        answerInput.removeEventListener('pointerup', forcePreventFocus, { passive: false, capture: true });
+                        console.log('PC设备模式切换：已移除所有焦点阻止事件监听器');
+                    }
+                    return; // PC设备上直接返回，不处理虚拟键盘
+                }
+                
+                // 移动设备上恢复保存的键盘状态
                 const savedKeyboardState = localStorage.getItem('keyboardVisible');
                 const shouldShowKeyboard = savedKeyboardState === 'true';
                 

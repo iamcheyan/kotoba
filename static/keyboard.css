@@ -1,3 +1,22 @@
+/* === 键盘容器样式 === */
+.keyboard-container {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    transform: translateY(100%);
+    transition: transform 0.3s ease;
+}
+
+.keyboard-container.show {
+    transform: translateY(0) !important;
+}
+
+.keyboard-container.hidden {
+    display: none !important;
+}
+
 /* === 虚拟键盘样式 - 深色主题 === */
 .keyboard-toggle {
     position: absolute;
@@ -14,6 +33,17 @@
     z-index: 10;
 }
 
+/* PC设备上隐藏键盘切换按钮和键盘容器 */
+@media (min-width: 769px) {
+    .keyboard-toggle {
+        display: none !important;
+    }
+    
+    .keyboard-container {
+        display: none !important;
+    }
+}
+
 .keyboard-toggle:hover {
     background: rgba(0, 0, 0, 0.2);
     transform: translateY(-50%) scale(1.05);
@@ -25,16 +55,9 @@
 }
 
 .virtual-keyboard {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
     background: #000000;
     border-top: 1px solid #333333;
     box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.5);
-    z-index: 1000;
-    transform: translateY(100%);
-    transition: transform 0.3s ease;
     touch-action: manipulation;
     -webkit-touch-callout: none;
     -webkit-user-select: none;
@@ -44,7 +67,7 @@
 }
 
 .virtual-keyboard.show {
-    transform: translateY(0) !important;
+    display: block !important;
 }
 
 .virtual-keyboard.hidden {
@@ -300,16 +323,9 @@
 
 /* === フリック键盘样式 === */
 .flick-keyboard {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
     background: #000000;
     border-top: 1px solid #333333;
     box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.5);
-    z-index: 1000;
-    transform: translateY(100%);
-    transition: transform 0.3s ease;
     touch-action: none;
     -webkit-touch-callout: none;
     -webkit-user-select: none;
@@ -325,10 +341,19 @@
 }
 
 .flick-keyboard.show {
-    transform: translateY(0) !important;
+    display: block !important;
 }
 
 .flick-keyboard.hidden {
+    display: none !important;
+}
+
+/* 确保两个键盘永远不会同时显示 */
+.keyboard-container .virtual-keyboard.show ~ .flick-keyboard {
+    display: none !important;
+}
+
+.keyboard-container .flick-keyboard.show ~ .virtual-keyboard {
     display: none !important;
 }
 
