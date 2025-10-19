@@ -1770,14 +1770,26 @@
     }
 
     function createErrorAnalysis(userAnswer, correctEntry) {
-        const trimmedAnswer = (userAnswer || '').replace(/\s+/g, '').trim();
+        // 使用与evaluateAnswer相同的规范化逻辑
+        function normalizeForCompare(text) {
+            if (!text) return '';
+            let t = text.normalize('NFKC');
+            t = t.replace(/[ｰ－—–]/g, 'ー');
+            t = t.replace(/[\u0000-\u001F\u007F\s]+/g, '');
+            t = removePunctuation(t);
+            try { t = window.wanakana ? window.wanakana.toHiragana(t) : t; } catch (_) {}
+            return t.toLowerCase();
+        }
+        
+        // 先判断原始输入类型，再进行规范化
+        const originalAnswer = (userAnswer || '').replace(/\s+/g, '').trim();
+        const isUserInputKanji = isKanjiText(originalAnswer);
+        const isUserInputHiragana = isHiraganaText(originalAnswer);
+        const isUserInputMixedKana = isMixedKanaText(originalAnswer);
+        
+        const trimmedAnswer = normalizeForCompare(userAnswer);
         const correctKanji = correctEntry.kanji;
         const correctReading = correctEntry.normalizedReading;
-        
-        // 判断用户输入的类型
-        const isUserInputKanji = isKanjiText(trimmedAnswer);
-        const isUserInputHiragana = isHiraganaText(trimmedAnswer);
-        const isUserInputMixedKana = isMixedKanaText(trimmedAnswer);
         
         let analysis = {
             correctDisplay: '',
@@ -1795,10 +1807,10 @@
         }
         
         if (isUserInputKanji) {
-            // 汉字分析
-            const kanjiAnalysis = analyzeKanjiForSingleToast(trimmedAnswer, correctKanji);
+            // 汉字分析 - 使用原始输入进行字符级比较
+            const kanjiAnalysis = analyzeKanjiForSingleToast(originalAnswer, correctKanji);
             analysis.correctDisplay = createCorrectAnswerCards(correctKanji);
-            analysis.userDisplay = createAlignedUserAnswerCards(trimmedAnswer, correctKanji);
+            analysis.userDisplay = createAlignedUserAnswerCards(originalAnswer, correctKanji);
             analysis.analysisMessage = kanjiAnalysis.message;
             analysis.hasAnalysis = kanjiAnalysis.hasDifference;
         } else if (isUserInputHiragana || isUserInputMixedKana) {
@@ -2096,14 +2108,23 @@
         entry.reading = reading || entry.kanji;
         entry.romaji = romaji || entry.kanji;
         entry.furigana = furigana;
-        entry.normalizedKanji = removePunctuation(entry.kanji.replace(/\s+/g, '')).toLowerCase();
-        // 规范化reading用于比较：NFKC + 长音统一 + 去空白 + 转平假名 + 去标点
+        // 规范化kanji用于比较：与normalizeForCompare保持一致
+        (function(){
+            let k = entry.kanji || '';
+            try { k = k.normalize('NFKC'); } catch(_) {}
+            k = k.replace(/[ｰ－—–]/g, 'ー').replace(/\s+/g, '');
+            k = removePunctuation(k);
+            try { k = window.wanakana ? window.wanakana.toHiragana(k) : k; } catch(_) {}
+            entry.normalizedKanji = k.toLowerCase();
+        })();
+        // 规范化reading用于比较：与normalizeForCompare保持一致
         (function(){
             let r = entry.reading || '';
             try { r = r.normalize('NFKC'); } catch(_) {}
             r = r.replace(/[ｰ－—–]/g, 'ー').replace(/\s+/g, '');
+            r = removePunctuation(r);
             try { r = window.wanakana ? window.wanakana.toHiragana(r) : r; } catch(_) {}
-            entry.normalizedReading = removePunctuation(r).toLowerCase();
+            entry.normalizedReading = r.toLowerCase();
         })();
         entry.normalizedRomaji = removePunctuation((romaji || '').replace(/\s+/g, '')).toLowerCase();
         entry.segments = parseRubySegments(furigana, entry.kanji);
@@ -2361,6 +2382,9 @@
             }
             
             localStorage.setItem('wrongWords', JSON.stringify(wrongWords));
+            
+            // 更新菜单可见性
+            updateWrongWordsMenuVisibility();
             
             // 自动同步到云端
             if (window.autoSyncData) {
@@ -2675,12 +2699,35 @@
             
             displayWrongWords(newPage);
             
+            // 更新菜单可见性
+            updateWrongWordsMenuVisibility();
+            
             // 自动同步到云端
             if (window.autoSyncData) {
                 window.autoSyncData();
             }
         } catch (error) {
             console.error('删除错题失败:', error);
+        }
+    }
+
+    // 检查是否有错题
+    function hasWrongWords() {
+        try {
+            const wrongWords = JSON.parse(localStorage.getItem('wrongWords') || '[]');
+            return wrongWords.length > 0;
+        } catch (error) {
+            console.error('Error checking wrong words:', error);
+            return false;
+        }
+    }
+
+    // 更新用户菜单中错题练习按钮的可见性
+    function updateWrongWordsMenuVisibility() {
+        const practiceWrongWordsButton = document.getElementById('practiceWrongWordsButton');
+        if (practiceWrongWordsButton) {
+            const hasWrong = hasWrongWords();
+            practiceWrongWordsButton.style.display = hasWrong ? 'flex' : 'none';
         }
     }
 
@@ -2695,6 +2742,9 @@
             localStorage.setItem('wrongWords', '[]');
             console.log('已清空错题本');
             displayWrongWords();
+            
+            // 更新菜单可见性
+            updateWrongWordsMenuVisibility();
             
             // 自动同步到云端
             if (window.autoSyncData) {
@@ -4023,6 +4073,9 @@
         
         // 测试代码已移除，键盘切换功能已在initVirtualKeyboard中实现
         
+        // 初始化错题菜单可见性
+        updateWrongWordsMenuVisibility();
+        
         const viewWrongWordsButton = document.getElementById('viewWrongWordsButton');
         const practiceButton = document.getElementById('practice-wrong-words');
         const practiceWrongWordsButton = document.getElementById('practiceWrongWordsButton');
@@ -4127,33 +4180,34 @@
         if (!entry) {
             throw new Error('問題が読み込まれていません');
         }
-    // 统一比较：规范化、统一长音、去空白、统一到平假名
-    function normalizeForCompare(text) {
-        if (!text) return '';
-        let t = text.normalize('NFKC');
-        // 统一长音符号到「ー」
-        t = t.replace(/[ｰ－—–]/g, 'ー');
-        // 去掉所有空白/控制
-        t = t.replace(/[\u0000-\u001F\u007F\s]+/g, '');
-        // 去标点
-        t = removePunctuation(t);
-        // 统一到平假名进行比较（保留汉字不变）
-        try { t = window.wanakana ? window.wanakana.toHiragana(t) : t; } catch (_) {}
-        return t.toLowerCase();
-    }
+        
+        // 统一比较：规范化、统一长音、去空白、统一到平假名
+        function normalizeForCompare(text) {
+            if (!text) return '';
+            let t = text.normalize('NFKC');
+            // 统一长音符号到「ー」
+            t = t.replace(/[ｰ－—–]/g, 'ー');
+            // 去掉所有空白/控制
+            t = t.replace(/[\u0000-\u001F\u007F\s]+/g, '');
+            // 去标点
+            t = removePunctuation(t);
+            // 统一到平假名进行比较（保留汉字不变）
+            try { t = window.wanakana ? window.wanakana.toHiragana(t) : t; } catch (_) {}
+            return t.toLowerCase();
+        }
 
-    const trimmed = normalizeForCompare(answer);
+        const trimmed = normalizeForCompare(answer);
         if (!trimmed) {
             return { correct: false, match: null, userRomaji: '' };
         }
         
         // 汉字判断
-    if (trimmed === entry.normalizedKanji) {
+        if (trimmed === entry.normalizedKanji) {
             return { correct: true, match: 'kanji', userRomaji: entry.normalizedRomaji };
         }
         
         // 假名判断
-    const normalizedReading = normalizeForCompare(answer);
+        const normalizedReading = normalizeForCompare(answer);
         
         if (normalizedReading === entry.normalizedReading) {
             return { correct: true, match: 'reading', userRomaji: entry.normalizedRomaji };

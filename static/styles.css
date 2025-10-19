@@ -4812,8 +4812,8 @@ ease;
     .stat-item { padding: 10px 12px; }
 
     /* 模态框尺寸与滚动区域 */
-    .modal { width: 100%; max-width: 94vw; margin: 0 auto; }
-    .modal .modal-body { max-height: 60vh; overflow: auto; }
+    .modal { width: 100%; max-width: 94vw; margin: 0 auto; height: 95vh;}
+    .modal .modal-body { max-height: 85vh; overflow: auto; }
     .modal .modal-header, .modal .modal-footer { padding: 12px 14px; }
 
     /* 排行榜弹窗适配 */
