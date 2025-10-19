@@ -3260,26 +3260,15 @@
                 e.preventDefault();
                 e.stopPropagation();
                 
-                console.log('提交答案');
+                console.log('フリック键盘提交按钮被点击');
                 
-                const answerInput = document.getElementById('answer-input');
-                if (answerInput && !answerInput.readOnly) {
-                    const answer = answerInput.value.trim();
-                    if (answer) {
-                        // 触发提交事件（模拟回车键）
-                        const submitEvent = new KeyboardEvent('keydown', {
-                            key: 'Enter',
-                            code: 'Enter',
-                            keyCode: 13,
-                            which: 13,
-                            bubbles: true
-                        });
-                        answerInput.dispatchEvent(submitEvent);
-                        
-                        console.log('已提交答案:', answer);
-                    } else {
-                        console.log('答案为空，无法提交');
-                    }
+                // 直接点击主界面的提交按钮
+                const submitBtn = document.getElementById('answer-submit');
+                if (submitBtn && !submitBtn.disabled) {
+                    console.log('触发主界面提交按钮点击');
+                    submitBtn.click();
+                } else {
+                    console.log('主界面提交按钮未找到或已禁用');
                 }
             });
         }
